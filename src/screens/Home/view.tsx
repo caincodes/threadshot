@@ -7,7 +7,7 @@ import { Title, Caption, Paragraph } from "../../components/typography/";
 import { lightTheme } from "../../styles/themes";
 
 interface HomeScreenViewProps {
-  onSubmit: (input: string) => void;
+  onSubmit: (input: string) => void | Promise<void>;
 }
 
 export const HomeScreenView: React.FC<HomeScreenViewProps> = ({ onSubmit }) => {
@@ -18,11 +18,11 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({ onSubmit }) => {
     setInput(newInput);
   };
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     try {
       setError("");
-      onSubmit(input);
+      await onSubmit(input);
     } catch (error: unknown) {
       setError((error as Error).message);
     }

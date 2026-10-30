@@ -16,16 +16,16 @@ const App = ({ Component, pageProps }: AppProps) => {
     <ChakraProvider>
       <Head>
         <head>
-          <link href="%PUBLIC_URL%/favicon.ico" rel="icon" />
+          <link href="/favicon.ico" rel="icon" />
           <meta content="width=device-width, initial-scale=1" name="viewport" />
           <meta content="#000000" name="theme-color" />
           <meta
             content="The comprehensive reddit screenshot tool."
             name="description"
           />
-          <link href="%PUBLIC_URL%/logo192.png" rel="apple-touch-icon" />
+          <link href="/logo192.png" rel="apple-touch-icon" />
 
-          <link href="%PUBLIC_URL%/manifest.json" rel="manifest" />
+          <link href="/manifest.json" rel="manifest" />
 
           <title>shareddit</title>
         </head>

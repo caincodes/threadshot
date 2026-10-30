@@ -28,3 +28,4 @@ jet-logger.log*
 
 # Local Next folder
 .next
+tsconfig.tsbuildinfo
