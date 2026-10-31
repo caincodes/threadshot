@@ -59,7 +59,7 @@ export const mockRedditResponse = (commentId?: string) => [
           data: {
             ...base("mock01", "mock_op", 1234, 7200),
             subreddit_name_prefixed: "r/mocksub",
-            title: "Sample post for testing post-share-web",
+            title: "Sample post for testing threadshot",
             domain: "self.mocksub",
             is_self: true,
             locked: false,

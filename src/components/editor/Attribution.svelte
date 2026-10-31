@@ -6,5 +6,5 @@
 </script>
 
 <Caption bold class="px-[18px]" style="color: {editor.theme.contrast[100]}">
-  Captured via post-share-web on {today}
+  Captured via threadshot on {today}
 </Caption>

@@ -1,4 +1,4 @@
-# post-share-web
+# threadshot
 
 Turn a Reddit post or comment thread into a clean, shareable screenshot.
 

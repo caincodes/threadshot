@@ -11,7 +11,7 @@ export const parseComments = (
       const comment = parseComment(item.data, modhash);
       output.push(comment);
     } else {
-      // Comment was a more children object, out of scope for shareddit.
+      // Comment was a more children object, out of scope for threadshot.
     }
   });
   return output;

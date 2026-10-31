@@ -5,7 +5,7 @@ import {
 } from "astro:env/server";
 
 export const USER_AGENT =
-  "web:post-share-web:2.0.0 (personal screenshot tool)";
+  "web:threadshot:2.0.0 (personal screenshot tool)";
 
 export const isMockMode = REDDIT_MOCK === "1";
 

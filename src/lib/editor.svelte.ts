@@ -39,7 +39,7 @@ class EditorState {
       });
 
       const link = document.createElement("a");
-      link.download = "post-share-web.png";
+      link.download = "threadshot.png";
       link.href = dataUrl;
       link.click();
     } catch (error) {
