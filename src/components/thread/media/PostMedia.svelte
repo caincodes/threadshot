@@ -22,6 +22,7 @@
       ? applyCensoring(html, {
           subreddits: editor.isCensorSubreddits,
           usernames: editor.isCensorUsernames,
+          style: editor.redactStyle,
         })
       : "";
   });

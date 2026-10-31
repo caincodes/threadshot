@@ -1,5 +1,6 @@
 import { domToBlob } from "modern-screenshot";
 
+import type { RedactStyle } from "../functions/util/censorText";
 import type { CommentSort } from "../types/reddit";
 
 export type ScreenshotTheme = "light" | "dark";
@@ -28,6 +29,7 @@ class EditorState {
   bodySelection = $state<string | null>(null);
   isCensorUsernames = $state(false);
   isCensorSubreddits = $state(false);
+  redactStyle = $state<RedactStyle>("box");
   hidePostTags = $state(false);
   hideUserFlair = $state(false);
   hideBots = $state(true);

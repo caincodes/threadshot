@@ -36,6 +36,12 @@
     text: value.charAt(0).toUpperCase() + value.slice(1),
   }));
 
+  const redactStyles = [
+    { value: "box", text: "Box" },
+    { value: "scribble", text: "Scribble" },
+    { value: "hide", text: "Hide" },
+  ] as const;
+
   const bodyModes = [
     { value: "full", text: "Full" },
     { value: "snippet", text: "Snippet" },
@@ -184,6 +190,13 @@
       {@render heading("Privacy")}
       <Switch label="Redact usernames" bind:checked={editor.isCensorUsernames} />
       <Switch label="Redact subreddit" bind:checked={editor.isCensorSubreddits} />
+      {#if editor.isCensorUsernames || editor.isCensorSubreddits}
+        <Segmented
+          label="Redact with"
+          options={redactStyles}
+          bind:value={editor.redactStyle}
+        />
+      {/if}
     </div>
 
     <div class="py-2">

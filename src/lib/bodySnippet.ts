@@ -61,6 +61,11 @@ export const snippetFromSelection = (selection: Selection | null) => {
   const { isCutBefore, isCutAfter } = cutSides(range, body);
   const snippet = document.createElement("div");
   snippet.append(range.cloneContents());
+  // Back to plain "u/xxxx" text, which redaction boxes again when it renders.
+  snippet.querySelectorAll(".redacted").forEach((box) => {
+    box.replaceWith(box.textContent ?? "");
+  });
+  snippet.normalize();
   const nodes = textNodes(snippet);
   const first = nodes[0];
   const last = nodes[nodes.length - 1];

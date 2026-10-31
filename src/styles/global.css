@@ -199,6 +199,39 @@
   --ap-t6: #bf5af2;
 }
 
+/* A redacted name: masked text covered by a box or scribble in the text colour. */
+.ap .redacted {
+  background: var(--ap-text);
+  border-radius: 4px;
+  color: transparent;
+  display: inline-block;
+  /* Sized by line height, since the export resets explicit heights. */
+  line-height: 0.95;
+  margin: 0.04em 0.08em;
+  vertical-align: -0.08em;
+}
+
+.ap .redacted[data-style="scribble"] {
+  background: none;
+  color: inherit;
+  margin-inline: 0.42em;
+  position: relative;
+}
+
+.ap .redacted svg {
+  fill: none;
+  height: calc(100% + 0.7em);
+  left: -0.25em;
+  overflow: visible;
+  position: absolute;
+  stroke: var(--ap-text);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3.2;
+  top: -0.35em;
+  width: calc(100% + 0.5em);
+}
+
 /* Reddit's rendered markdown (body_html) */
 .ap .md > :first-child {
   margin-top: 0;
