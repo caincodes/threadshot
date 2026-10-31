@@ -59,7 +59,7 @@
       ? `var(--ap-t${((level - 1) % 6) + 1})`
       : undefined}
   >
-    <div class="flex items-baseline justify-between gap-3 text-[13px] leading-5">
+    <div class="flex items-center justify-between gap-3 text-[13px] leading-5">
       <span class="flex min-w-0 flex-wrap items-center gap-x-2">
         {#if editor.showProfileIcons && !editor.isCensorUsernames}
           <Avatar name={comment.author} src={comment.authorIcon} />

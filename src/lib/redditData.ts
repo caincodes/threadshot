@@ -133,9 +133,26 @@ export const parseThread = (
   ];
 };
 
-// The bundled sample thread, parsed exactly like a real response.
-export const loadSampleData = (sort: CommentSort = "best"): RedditData =>
-  parseThread(sampleRedditResponse(), sort);
+const withSampleIcons = (list: Comments): Comments =>
+  list.map((item) =>
+    item.type === "comment"
+      ? {
+          ...item,
+          authorIcon: `/sample/avatars/${item.author}.svg`,
+          replyTree: withSampleIcons(item.replyTree),
+        }
+      : item
+  );
+
+// The bundled sample thread, parsed exactly like a real response, with its own
+// pictures in place of the ones Reddit would supply.
+export const loadSampleData = (sort: CommentSort = "best"): RedditData => {
+  const [submission, comments] = parseThread(sampleRedditResponse(), sort);
+  return [
+    { ...submission, subredditIcon: "/sample/woodworking.svg" },
+    withSampleIcons(comments),
+  ];
+};
 
 // Guards data that arrives from outside (a window message) before it is parsed.
 export const isRawThread = (value: unknown): value is RawThread => {

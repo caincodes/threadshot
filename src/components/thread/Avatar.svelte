@@ -13,6 +13,7 @@
     hasFallback?: boolean;
   } = $props();
 
+  // Reddit's pictures go through the proxy; the sample's own are served here.
   let hasFailed = $state(false);
   // Without a picture, the first letter of the name stands in.
   const initial = $derived(name.match(/[a-z0-9]/i)?.[0].toUpperCase() ?? "");
@@ -24,7 +25,7 @@
     alt=""
     height={size}
     onerror={() => (hasFailed = true)}
-    src={proxiedImageSrc(src)}
+    src={src.startsWith("/") ? src : proxiedImageSrc(src)}
     width={size}
   />
 {:else if hasFallback}
