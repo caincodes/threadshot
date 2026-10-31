@@ -11,12 +11,19 @@
   import { credentials } from "../lib/credentials.svelte";
   import { detectDevice, methodsFor, type SendMethod } from "../lib/device";
   import Connect from "./Connect.svelte";
+  import Segmented from "./ui/Segmented.svelte";
 
   const POST_PATH = /^\/r\/([\w-]+)\/comments\/(\w+)(?:\/[^/]*)?(?:\/(\w+))?/;
   const SHARE_PATH = /^\/r\/([\w-]+)\/s\/([\w-]+)/;
 
-  const INSTALL_COMMAND =
-    "git clone https://github.com/caincodes/threadshot && threadshot/extension/install.sh";
+  const INSTALL_COMMANDS = {
+    curl: "curl -fsSL https://threadshot.app/extension.sh | sh",
+    git: "git clone https://github.com/caincodes/threadshot && threadshot/extension/install.sh",
+  };
+  const INSTALL_TOOLS = [
+    { value: "curl", text: "curl" },
+    { value: "git", text: "git clone" },
+  ] as const;
   const INSTALL_GUIDE =
     "https://github.com/caincodes/threadshot/blob/main/extension/README.md";
 
@@ -70,6 +77,8 @@
   let link = $state("");
   let error = $state("");
   let copied = $state<"command" | "bookmark" | null>(null);
+  let installTool = $state<keyof typeof INSTALL_COMMANDS>("curl");
+  const installCommand = $derived(INSTALL_COMMANDS[installTool]);
 
   const isConnected = $derived(credentials.value !== null);
   const bookmark = bookmarkletHref(window.location.origin);
@@ -160,14 +169,19 @@
 {/snippet}
 
 {#snippet extensionSteps()}
+  <Segmented
+    label="Install with"
+    options={INSTALL_TOOLS}
+    bind:value={installTool}
+  />
   <div class="flex items-start gap-1 rounded-ui bg-canvas pl-3">
     <code class="min-w-0 flex-1 py-3 font-mono text-sm [overflow-wrap:anywhere]">
-      {INSTALL_COMMAND}
+      {installCommand}
     </code>
     <button
       class="btn-icon"
       aria-label={copied === "command" ? "Copied" : "Copy command"}
-      onclick={() => copy("command", INSTALL_COMMAND)}
+      onclick={() => copy("command", installCommand)}
       type="button"
     >
       {#if copied === "command"}
