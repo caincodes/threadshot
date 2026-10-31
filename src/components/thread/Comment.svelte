@@ -3,6 +3,7 @@
   import Medal from "phosphor-svelte/lib/Medal";
 
   import { applyCensoring } from "../../functions/util/censorText";
+  import { withoutBots } from "../../functions/util/isBot";
   import { formatAgo, formatCount } from "../../functions/util/format";
   import { editor } from "../../lib/editor.svelte";
   import type { MoreChildren, RedditComment } from "../../types/reddit";
@@ -23,9 +24,9 @@
   );
   const replies = $derived(
     comment
-      ? comment.replyTree
-          .slice(0, editor.commentReplies)
+      ? withoutBots(comment.replyTree, editor.hideBots)
           .filter((reply) => reply.type === "comment")
+          .slice(0, editor.commentReplies)
       : []
   );
   const body = $derived(
@@ -57,7 +58,9 @@
         >
           <Username name={comment.author} />
         </span>
-        {#if comment.flair}<FlairBadge flair={comment.flair} />{/if}
+        {#if comment.flair && !editor.hideTags}
+          <FlairBadge flair={comment.flair} />
+        {/if}
         <span class="inline-flex items-center gap-0.5 font-medium text-ap-muted">
           <ArrowUp size={13} weight="bold" />
           {formatCount(comment.score)}

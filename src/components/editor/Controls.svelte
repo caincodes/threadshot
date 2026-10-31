@@ -8,8 +8,11 @@
   import Spinner from "../ui/Spinner.svelte";
   import Switch from "../ui/Switch.svelte";
 
-  let { canDownload, isAlbum }: { canDownload: boolean; isAlbum: boolean } =
-    $props();
+  let {
+    canDownload,
+    isAlbum,
+    botCount,
+  }: { canDownload: boolean; isAlbum: boolean; botCount: number } = $props();
 
   const themes = [
     { value: "light", text: "Light" },
@@ -41,12 +44,13 @@
     {@render heading("Appearance")}
     <Segmented label="Theme" options={themes} bind:value={editor.theme} />
     <Switch label="Show watermark" bind:checked={editor.showAttribution} />
+    <Switch label="Hide tags" bind:checked={editor.hideTags} />
   </div>
 
   <div class="mt-3 border-t border-line">
     {@render heading("Privacy")}
-    <Switch label="Hide usernames" bind:checked={editor.isCensorUsernames} />
-    <Switch label="Hide subreddit" bind:checked={editor.isCensorSubreddits} />
+    <Switch label="Redact usernames" bind:checked={editor.isCensorUsernames} />
+    <Switch label="Redact subreddit" bind:checked={editor.isCensorSubreddits} />
   </div>
 
   <!-- Only meaningful for album posts, so only shown for them. -->
@@ -66,6 +70,10 @@
     {@render heading("Comments")}
     <Switch label="Show comments" bind:checked={editor.showComments} />
     {#if editor.showComments}
+      <Switch
+        label={botCount ? `Hide bot comments (${botCount} found)` : "Hide bot comments (none found)"}
+        bind:checked={editor.hideBots}
+      />
       <NumberField
         label="Top-level comments"
         max={50}

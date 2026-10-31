@@ -1,14 +1,17 @@
-export const censorUsernames = (text: string) => {
-  const usernames = /(\/u\/\w+)+/g;
+// Redaction replaces the name but keeps the "u/" or "r/" in front of it, so a
+// redacted image still reads "u/REDACTED" and "r/REDACTED". Names are matched
+// only when the prefix is not part of a longer word ("menu/..." is left alone),
+// which also covers links such as reddit.com/u/name.
+export const REDACTED = "REDACTED";
 
-  return text.replaceAll(usernames, "[a redditor]");
-};
+const MENTION = (prefix: string) =>
+  new RegExp(`(?<!\\w)(\\/?${prefix}\\/)[\\w-]+`, "gi");
 
-export const censorSubreddits = (text: string) => {
-  const subreddits = /(\/r\/\w+)+/g;
+export const censorUsernames = (text: string) =>
+  text.replaceAll(MENTION("u(?:ser)?"), `$1${REDACTED}`);
 
-  return text.replaceAll(subreddits, "[a subreddit]");
-};
+export const censorSubreddits = (text: string) =>
+  text.replaceAll(MENTION("r"), `$1${REDACTED}`);
 
 export const applyCensoring = (
   text: string,

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { withoutBots } from "../../functions/util/isBot";
   import { editor } from "../../lib/editor.svelte";
   import { siteHost } from "../../lib/siteHost";
   import type {
@@ -27,7 +28,7 @@
   <Post {submission} />
 
   {#if editor.showComments}
-    {#each comments.slice(0, editor.topLevelComments) as comment (comment.id)}
+    {#each withoutBots(comments, editor.hideBots).slice(0, editor.topLevelComments) as comment (comment.id)}
       <Comment data={comment} />
     {/each}
   {/if}

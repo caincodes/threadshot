@@ -23,12 +23,32 @@ interface Spec {
   /** Seconds before now. */
   age: number;
   controversial?: boolean;
+  /** Pinned by the moderators. */
+  stickied?: boolean;
+  /** User flair shown next to the name. */
+  flair?: string;
   replies?: Spec[];
 }
 
 const OP = "plane_and_simple";
 
 const thread: Spec[] = [
+  // A pinned moderator bot, like most big subreddits have. Hidden by default.
+  {
+    author: "AutoModerator",
+    text: "Thanks for posting to r/woodworking! Please read the sidebar rules before commenting. <em>I am a bot, and this action was performed automatically.</em>",
+    score: 1,
+    age: 9 * 3600 - 60,
+    stickied: true,
+    replies: [
+      {
+        author: "thumbwheel_tom",
+        text: "good bot",
+        score: 14,
+        age: 9 * 3600 - 600,
+      },
+    ],
+  },
   {
     author: "chiselgoblin",
     text: "That gap on the left is the tell that you cut the tails first and traced them. Try pins first next time, and mark with a knife, not a pencil.",
@@ -90,7 +110,7 @@ const thread: Spec[] = [
       },
       {
         author: "coping_saw_carl",
-        text: "A coping saw and a sharp chisel are all you need. Skip the jig.",
+        text: "A coping saw and a sharp chisel are all you need. Skip the jig, like u/chiselgoblin says.",
         score: 402,
         age: 2000,
       },
@@ -236,6 +256,7 @@ const thread: Spec[] = [
     text: "Congrats! My first set looked like a bear chewed them. Keep going.",
     score: 301,
     age: 9000,
+    flair: "Hand tools",
   },
   {
     author: "jointer_jess",
@@ -296,6 +317,12 @@ const toComment = (spec: Spec, depth: number): unknown => ({
     parent_id: depth === 0 ? "t3_sample01" : "t1_parent",
     is_submitter: spec.author === OP,
     controversiality: spec.controversial ? 1 : 0,
+    stickied: spec.stickied ?? false,
+    author_flair_richtext: spec.flair
+      ? // eslint-disable-next-line id-length -- reddit's richtext keys
+        [{ e: "text", t: spec.flair }]
+      : [],
+    author_flair_background_color: spec.flair ? "#d5e8f7" : "",
     body_html: html(spec.text),
     depth,
     replies: spec.replies

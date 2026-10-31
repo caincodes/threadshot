@@ -12,6 +12,8 @@ class EditorState {
   imageColumns = $state(3);
   isCensorUsernames = $state(false);
   isCensorSubreddits = $state(false);
+  hideTags = $state(false);
+  hideBots = $state(true);
   showComments = $state(true);
   topLevelComments = $state(2);
   commentReplies = $state(1);
@@ -29,11 +31,14 @@ class EditorState {
         );
       }
 
-      // The export re-lays text out slightly differently from the live page,
-      // so a title that wraps on screen can take one line fewer in the image.
-      // Let every cloned box size to its own content instead of inheriting the
-      // live heights, which would leave a blank gap. Fixed-size boxes opt out
-      // with data-keep-size.
+      // The export lays text out slightly differently from the live page. Each
+      // cloned element would otherwise keep the exact height AND width it had
+      // on screen, so a title that wraps differently leaves a gap, and a
+      // shrink-to-fit header that now needs one pixel more wraps onto a second
+      // line and pushes the bottom out of the image. Let every cloned box size
+      // itself from its content instead. The card keeps its 390px width, images
+      // keep their size, and boxes that must stay fixed opt out with
+      // data-keep-size.
       const dataUrl = await domToPng(node, {
         scale: 3,
         backgroundColor: getComputedStyle(node).backgroundColor,
@@ -44,6 +49,9 @@ class EditorState {
             !cloned.hasAttribute("data-keep-size")
           ) {
             cloned.style.height = "auto";
+            if (cloned.id !== node.id) {
+              cloned.style.width = "auto";
+            }
           }
         },
       });

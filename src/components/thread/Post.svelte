@@ -4,6 +4,7 @@
   import Clock from "phosphor-svelte/lib/Clock";
   import Medal from "phosphor-svelte/lib/Medal";
 
+  import { REDACTED } from "../../functions/util/censorText";
   import { formatAgo, formatCount } from "../../functions/util/format";
   import { editor } from "../../lib/editor.svelte";
   import type { RedditSubmission } from "../../types/reddit";
@@ -13,20 +14,28 @@
 
   let { submission }: { submission: RedditSubmission } = $props();
 
-  const subreddit = $derived(
-    editor.isCensorSubreddits ? "a subreddit" : submission.subreddit_name_prefixed
-  );
+  // "r/" (or "u/" for a post on a profile) is always shown; only the name is
+  // replaced when redacting.
+  const community = $derived.by(() => {
+    const prefixed =
+      submission.subreddit_name_prefixed ?? `r/${submission.subreddit}`;
+    return editor.isCensorSubreddits
+      ? `${prefixed.slice(0, 2)}${REDACTED}`
+      : prefixed;
+  });
 </script>
 
 <article class="border-b border-ap-line px-4 pt-5 pb-4">
   <h1 class="text-[22px] leading-[1.2] font-bold">{submission.title}</h1>
 
   <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
-    <span class="font-semibold text-ap-link">{subreddit}</span>
+    <span class="font-semibold text-ap-link">{community}</span>
     <span class="text-ap-muted"><Username name={submission.author} /></span>
-    {#if submission.userFlair}<FlairBadge flair={submission.userFlair} />{/if}
+    {#if submission.userFlair && !editor.hideTags}
+      <FlairBadge flair={submission.userFlair} />
+    {/if}
   </div>
-  {#if submission.flair}
+  {#if submission.flair && !editor.hideTags}
     <div class="mt-2"><FlairBadge flair={submission.flair} /></div>
   {/if}
 

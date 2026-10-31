@@ -4,6 +4,7 @@
     BOOKMARK_MESSAGE,
     REDDIT_ORIGINS,
   } from "../lib/bookmarklet";
+  import { countBotComments } from "../functions/util/isBot";
   import { credentials } from "../lib/credentials.svelte";
   import { editor } from "../lib/editor.svelte";
   import {
@@ -150,6 +151,7 @@
     <aside class="order-2 lg:sticky lg:top-6 lg:order-1">
       <Controls
         canDownload={Boolean(data) && !errorMessage}
+        botCount={data ? countBotComments(data[1]) : 0}
         isAlbum={data?.[0].linkType === "album"}
       />
     </aside>

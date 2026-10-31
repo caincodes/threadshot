@@ -1,17 +1,9 @@
 <script lang="ts">
-  import uniqolor from "uniqolor";
-
+  import { REDACTED } from "../../functions/util/censorText";
   import { editor } from "../../lib/editor.svelte";
 
   let { name }: { name: string } = $props();
 </script>
 
-{#if editor.isCensorUsernames}
-  <span
-    class="inline-block h-3 w-16 rounded-sm align-middle"
-    data-keep-size
-    style:background-color={uniqolor(name).color}
-  ></span>
-{:else}
-  <span>{name}</span>
-{/if}
+<!-- The "u/" is always shown; only the name is replaced when redacting. -->
+<span>u/{editor.isCensorUsernames ? REDACTED : name}</span>
