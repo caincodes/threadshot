@@ -6,9 +6,9 @@
 //   node scripts/build-shortcut.mjs [origin] [output path]
 //
 // Shared from Safari, it reads the post and opens the editor in the same tab,
-// because window.open is blocked there. Shared from the Reddit app, it has only
-// a URL: Reddit blocks downloads made by the shortcut itself, so it opens the
-// post in Safari to be shared again.
+// because window.open is blocked there. Shared from the Reddit app, or from the
+// Share buttons on Reddit's own pages, it has only a URL: Reddit blocks downloads
+// made by the shortcut itself, so it opens the post in Safari to be shared again.
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -142,8 +142,9 @@ const workflow = {
       WFReplaceTextReplace: "x-safari-https://",
     }),
     action("alert", {
-      WFAlertActionTitle: "Opening in Safari",
-      WFAlertActionMessage: "Then tap Share in Safari and choose threadshot again.",
+      WFAlertActionTitle: "Use Safari's Share button",
+      WFAlertActionMessage:
+        "Reddit's Share button only sends a link, so threadshot can't read the page. It will open in Safari. Then tap Safari's own Share button and choose threadshot.",
       WFAlertActionCancelButtonShown: false,
     }),
     action("openurl", {

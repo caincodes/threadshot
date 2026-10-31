@@ -167,7 +167,10 @@
             In the Settings app, open Shortcuts, then Advanced, and turn on
             Allow Running Scripts.
           </li>
-          <li>On a Reddit post in Safari, tap Share and choose threadshot.</li>
+          <li>
+            On a Reddit post or comment in Safari, tap Safari's Share button,
+            not Reddit's, and choose threadshot.
+          </li>
           <li>
             In the Reddit app, the same steps open the post in Safari. Share it
             again from there.
