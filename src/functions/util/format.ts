@@ -41,7 +41,12 @@ export interface TimestampOptions {
 
 const twoDigits = (value: number) => String(value).padStart(2, "0");
 
-export const formatDate = (date: Date, format: DateFormat) => {
+// `withYear` false drops the year, for comments that only need the day.
+export const formatDate = (
+  date: Date,
+  format: DateFormat,
+  withYear = true
+) => {
   const year = date.getFullYear();
   const month = twoDigits(date.getMonth() + 1);
   const day = twoDigits(date.getDate());
@@ -53,14 +58,14 @@ export const formatDate = (date: Date, format: DateFormat) => {
       return date.toLocaleDateString("en-US", {
         day: "numeric",
         month: format,
-        year: "numeric",
+        year: withYear ? "numeric" : undefined,
       });
     case "us":
-      return `${month}/${day}/${year}`;
+      return withYear ? `${month}/${day}/${year}` : `${month}/${day}`;
     case "world":
-      return `${day}/${month}/${year}`;
+      return withYear ? `${day}/${month}/${year}` : `${day}/${month}`;
     case "iso":
-      return `${year}-${month}-${day}`;
+      return withYear ? `${year}-${month}-${day}` : `${month}-${day}`;
   }
 };
 
@@ -94,8 +99,8 @@ export const formatTimestamp = (
     .join(", ");
 };
 
-// A comment's time alone, with a short "Oct 21" in front only when it was made
-// on a different day from the post.
+// A comment's time alone, with its date (minus the year) in front only when it
+// was made on a different day from the post.
 export const formatCommentTimestamp = (
   createdUtc: number,
   postUtc: number,
@@ -108,9 +113,7 @@ export const formatCommentTimestamp = (
   const isPostDay =
     date.toDateString() === new Date(postUtc * 1000).toDateString();
   return [
-    showDate &&
-      !isPostDay &&
-      date.toLocaleDateString("en-US", { day: "numeric", month: "short" }),
+    showDate && !isPostDay && formatDate(date, dateFormat, false),
     timeDisplay !== "off" && formatTime(date, timeFormat),
   ]
     .filter(Boolean)
