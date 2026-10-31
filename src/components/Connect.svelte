@@ -3,7 +3,11 @@
   import { credentials } from "../lib/credentials.svelte";
 
   // Show the form even when a key is saved, e.g. after Reddit rejected it.
-  let { editing = false }: { editing?: boolean } = $props();
+  // On the home page it sits in a panel that already says what it is for.
+  let {
+    editing = false,
+    isEmbedded = false,
+  }: { editing?: boolean; isEmbedded?: boolean } = $props();
 
   const uid = $props.id();
 
@@ -38,7 +42,10 @@
 
 {#if isConnected && credentials.value}
   <div
-    class="flex flex-wrap items-center justify-between gap-3 border border-line p-4"
+    class={[
+      "flex flex-wrap items-center justify-between gap-3",
+      !isEmbedded && "border border-line p-4",
+    ]}
   >
     <p class="text-sm">
       Connected with client ID
@@ -46,14 +53,14 @@
     </p>
     <div class="flex gap-2">
       <button
-        class="btn btn-secondary h-9 px-3 text-sm"
+        class="btn btn-secondary"
         onclick={() => (isChanging = true)}
         type="button"
       >
         Change
       </button>
       <button
-        class="btn btn-secondary h-9 px-3 text-sm"
+        class="btn btn-secondary"
         onclick={() => credentials.forget()}
         type="button"
       >
@@ -62,14 +69,20 @@
     </div>
   </div>
 {:else}
-  <form class="flex flex-col gap-3 border border-line p-4" onsubmit={save} novalidate>
-    <h2 class="font-display text-xl font-extrabold tracking-[-0.02em]">
-      Connect your Reddit app
-    </h2>
-    <p class="text-sm text-ink-2">
-      threadshot.app reads posts through Reddit's API using your own app, so nobody
-      else's key is involved. Paste your app's client ID below.
-    </p>
+  <form
+    class={["flex flex-col gap-3", !isEmbedded && "border border-line p-4"]}
+    onsubmit={save}
+    novalidate
+  >
+    {#if !isEmbedded}
+      <h2 class="heading text-xl">
+        Connect your Reddit app
+      </h2>
+      <p class="text-sm text-ink-2">
+        threadshot.app reads posts through Reddit's API using your own app, so
+        nobody else's key is involved. Paste your app's client ID below.
+      </p>
+    {/if}
 
     <div class="flex flex-col gap-1">
       <label class="text-sm font-semibold" for="{uid}-client-id">
@@ -129,11 +142,13 @@
       {/if}
     </div>
 
-    <p class="text-xs text-ink-2">
+    <p class="text-sm text-ink-2">
       Stored in this browser only. It travels over HTTPS to this site's server so
-      it can talk to Reddit for you, and is never saved there. Reddit may need to
-      approve your app first. No app? Use the
-      <a class="link" href="/#bookmark">bookmark</a> instead.
+      it can talk to Reddit for you, and is never saved there.
+      {#if !isEmbedded}
+        Reddit may need to approve your app first. No app?
+        <a class="link" href="/#no-key">Send posts without a key</a>.
+      {/if}
     </p>
   </form>
 {/if}

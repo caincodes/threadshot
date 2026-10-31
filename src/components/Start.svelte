@@ -1,67 +1,84 @@
 <script lang="ts">
   import BookmarkSimple from "phosphor-svelte/lib/BookmarkSimple";
+  import CaretDown from "phosphor-svelte/lib/CaretDown";
+  import Check from "phosphor-svelte/lib/Check";
+  import Copy from "phosphor-svelte/lib/Copy";
+  import Export from "phosphor-svelte/lib/Export";
+
+  import type { Snippet } from "svelte";
 
   import { bookmarkletHref } from "../lib/bookmarklet";
   import { credentials } from "../lib/credentials.svelte";
+  import { detectDevice, methodsFor, type SendMethod } from "../lib/device";
   import Connect from "./Connect.svelte";
 
   const POST_PATH = /^\/r\/([\w-]+)\/comments\/(\w+)(?:\/[^/]*)?(?:\/(\w+))?/;
   const SHARE_PATH = /^\/r\/([\w-]+)\/s\/([\w-]+)/;
 
-  type Mode = "key" | "bookmark";
+  const INSTALL_COMMAND =
+    "git clone https://github.com/caincodes/threadshot && threadshot/extension/install.sh";
+  const INSTALL_GUIDE =
+    "https://github.com/caincodes/threadshot/blob/main/extension/README.md";
 
-  const OPTIONS: { id: Mode; title: string; description: string }[] = [
-    {
-      id: "key",
-      title: "I have a Reddit key",
-      description: "Paste your app's client ID, then load any post by link.",
-    },
-    {
-      id: "bookmark",
-      title: "I don't have a key",
-      description:
-        "Use a bookmark that sends a post from Reddit to threadshot.app. No sign-up.",
-    },
-  ];
+  const METHODS: Record<SendMethod, { tab: string; title: string }> = {
+    shortcut: { tab: "Shortcut", title: "iOS Shortcut" },
+    extension: { tab: "Extension", title: "Safari extension" },
+    bookmark: { tab: "Bookmark", title: "Browser bookmark" },
+  };
 
-  // Links to "/#bookmark" (from the key form, the guide, error screens) open
-  // the bookmark option directly.
-  let mode = $state<Mode>(
-    window.location.hash === "#bookmark" ? "bookmark" : "key"
-  );
+  const device = detectDevice();
+  const methods = methodsFor(device);
 
-  const choose = (next: Mode) => {
-    mode = next;
-    history.replaceState(
-      null,
-      "",
-      next === "bookmark" ? "#bookmark" : window.location.pathname
-    );
+  // Links to "/#no-key" (from the key form, the guide, error screens) open the
+  // method that fits this device. A saved key means this visitor uses it.
+  let method = $state(methods[0]);
+  let isUsingKey = $state(credentials.value !== null);
+
+  // Panels are stacked, so the block takes its height from the open one.
+  let heights = $state<Partial<Record<SendMethod, number>>>({});
+
+  const readHash = () => {
+    const hash = window.location.hash.slice(1);
+    if (hash === "key") {
+      isUsingKey = true;
+    } else if (hash === "no-key" || Object.hasOwn(METHODS, hash)) {
+      method = hash === "no-key" ? methods[0] : (hash as SendMethod);
+      isUsingKey = false;
+    }
+  };
+  readHash();
+
+  const clearHash = () =>
+    history.replaceState(null, "", window.location.pathname);
+
+  const chooseMethod = (next: SendMethod) => {
+    method = next;
+    isUsingKey = false;
+    clearHash();
+  };
+
+  const toggleKey = () => {
+    isUsingKey = !isUsingKey;
+    clearHash();
   };
 
   $effect(() => {
-    const onHashChange = () => {
-      mode = window.location.hash === "#bookmark" ? "bookmark" : "key";
-    };
-    window.addEventListener("hashchange", onHashChange);
-    // The island renders after load, so the browser could not scroll to it.
-    if (window.location.hash === "#bookmark") {
-      document.getElementById("bookmark")?.scrollIntoView();
-    }
-    return () => window.removeEventListener("hashchange", onHashChange);
+    window.addEventListener("hashchange", readHash);
+    return () => window.removeEventListener("hashchange", readHash);
   });
 
   let link = $state("");
   let error = $state("");
+  let copied = $state<"command" | "bookmark" | null>(null);
 
   const isConnected = $derived(credentials.value !== null);
   const bookmark = bookmarkletHref(window.location.origin);
 
-  // iOS Safari refuses to run bookmarks like this one, so it gets a shortcut.
-  // iPads identify as Macs, but Macs have no touch screen.
-  const isIOS =
-    /iPhone|iPad|iPod/.test(navigator.userAgent) ||
-    (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1);
+  const copy = async (what: "command" | "bookmark", text: string) => {
+    await navigator.clipboard.writeText(text);
+    copied = what;
+    setTimeout(() => (copied = null), 2000);
+  };
 
   const go = (event: SubmitEvent) => {
     event.preventDefault();
@@ -98,117 +115,246 @@
   };
 </script>
 
-<div id="bookmark" class="mt-8 flex flex-col gap-5">
+<!-- Panels stay mounted so changing them can animate. Inert keeps a closed one
+     out of the tab order. -->
+{#snippet panel(id: string, isOpen: boolean, content: Snippet)}
   <div
-    class="grid gap-3 sm:grid-cols-2"
-    aria-label="How do you want to start?"
-    role="radiogroup"
+    id="{id}-panel"
+    class="accordion-panel"
+    data-open={isOpen || undefined}
+    inert={!isOpen}
   >
-    {#each OPTIONS as option (option.id)}
-      <button
-        class={[
-          "flex min-h-11 flex-col gap-1 border-2 p-4 text-left transition-colors duration-150",
-          mode === option.id ? "border-ink" : "border-line hover:border-ink-2",
-        ]}
-        aria-checked={mode === option.id}
-        onclick={() => choose(option.id)}
-        role="radio"
-        type="button"
-      >
-        <span class="font-semibold">{option.title}</span>
-        <span class="text-sm text-ink-2">{option.description}</span>
-      </button>
-    {/each}
+    <div class="accordion-clip">
+      {@render content()}
+    </div>
   </div>
+{/snippet}
 
-  {#if mode === "key"}
-    <Connect />
+{#snippet step(number: number, content: Snippet)}
+  <li class="flex items-baseline gap-3">
+    <span class="heading text-2xl leading-none tabular-nums">{number}</span>
+    <span>{@render content()}</span>
+  </li>
+{/snippet}
 
-    <!-- The link field appears once a key is saved, so the key form is the
-         only step until then. -->
-    {#if isConnected}
-      <form class="flex flex-col gap-3" onsubmit={go} novalidate>
-        <label class="text-sm font-semibold" for="url-input">
-          Reddit post or comment link
-        </label>
-        <input
-          id="url-input"
-          class="field"
-          aria-describedby="url-error"
-          autocapitalize="off"
-          autocomplete="off"
-          bind:value={link}
-          inputmode="url"
-          placeholder="https://www.reddit.com/r/woodworking/comments/..."
-          spellcheck="false"
-          type="text"
-        />
-        {#if error}
-          <p id="url-error" class="text-sm font-medium text-accent" role="alert">
-            {error}
-          </p>
-        {/if}
-        <button class="btn btn-primary self-start" type="submit">
-          Generate screenshot
-        </button>
-      </form>
-    {/if}
+{#snippet shortcutSteps()}
+  {#if device === "ios"}
+    <a class="btn btn-primary self-start" href="/threadshot.shortcut">
+      <Export size={20} weight="bold" />
+      Add the Shortcut
+    </a>
   {:else}
-    <section class="flex flex-col gap-4 border border-line p-4">
-      <p class="text-ink-2">
-        Reddit now approves API keys by hand, so you may not have one. This
-        bookmark reads a post from the Reddit page you are already viewing, then
-        sends it here. It needs no key.
-      </p>
-      {#if isIOS}
-        <ol class="list-decimal space-y-1 pl-5">
-          <li>Add the shortcut with the button below.</li>
-          <li>
-            In the Settings app, open Shortcuts, then Advanced, and turn on
-            Allow Running Scripts.
-          </li>
-          <li>
-            On a Reddit post or comment in Safari, tap Safari's Share button,
-            not Reddit's, and choose threadshot.
-          </li>
-          <li>
-            In the Reddit app, the same steps open the post in Safari. Share it
-            again from there.
-          </li>
-        </ol>
-        <a class="btn btn-primary self-start" href="/threadshot.shortcut">
-          <BookmarkSimple size={20} weight="bold" />
-          Add the shortcut
-        </a>
-      {:else}
-        <ol class="list-decimal space-y-1 pl-5">
-          <li>Drag the button below up to your bookmarks bar.</li>
-          <li>Open any Reddit post.</li>
-          <li>Click the bookmark.</li>
-        </ol>
-        <a
-          class="btn btn-primary self-start"
-          draggable="true"
-          href={bookmark}
-        >
-          <BookmarkSimple size={20} weight="bold" />
-          Send to threadshot.app
-        </a>
-      {/if}
-      <p class="text-sm text-ink-2">
-        {#if !isIOS}
-          Can't see your bookmarks bar? Press Ctrl+Shift+B (Cmd+Shift+B on a
-          Mac) to show it.
-        {/if}
-        Have a key after all?
-        <button class="link" onclick={() => choose("key")} type="button">
-          Use it instead
-        </button>.
-      </p>
-    </section>
+    <p class="font-semibold">Open this page on your iPhone or iPad to add it.</p>
   {/if}
+  <ol class="flex flex-col gap-3">
+    {#snippet allowScripts()}
+      In Settings, go to Shortcuts, then Advanced, and turn on Allow Running
+      Scripts.
+    {/snippet}
+    {#snippet share()}
+      In Safari, tap Safari's Share button on a post and choose threadshot.
+    {/snippet}
+    {@render step(1, allowScripts)}
+    {@render step(2, share)}
+  </ol>
+{/snippet}
 
+{#snippet extensionSteps()}
+  <div class="flex items-start gap-1 rounded-ui bg-canvas pl-3">
+    <code class="min-w-0 flex-1 py-3 font-mono text-sm [overflow-wrap:anywhere]">
+      {INSTALL_COMMAND}
+    </code>
+    <button
+      class="btn-icon"
+      aria-label={copied === "command" ? "Copied" : "Copy command"}
+      onclick={() => copy("command", INSTALL_COMMAND)}
+      type="button"
+    >
+      {#if copied === "command"}
+        <Check size={18} weight="bold" />
+      {:else}
+        <Copy size={18} weight="bold" />
+      {/if}
+    </button>
+  </div>
+  <ol class="flex flex-col gap-3">
+    {#snippet install()}
+      Quit Safari and run this in Terminal.
+    {/snippet}
+    {#snippet enable()}
+      Turn on Threadshot in Safari's Extensions settings.
+    {/snippet}
+    {@render step(1, install)}
+    {@render step(2, enable)}
+  </ol>
   <p class="text-sm text-ink-2">
-    Just looking? <a class="link" href="/generate?sample=1">Try a sample post</a>
+    Needs Safari 27 and Full Disk Access for Terminal.
+    <a class="link" href={INSTALL_GUIDE} rel="noopener">Install guide</a>
   </p>
+{/snippet}
+
+{#snippet keyForm()}
+  <Connect isEmbedded />
+
+  <!-- The link field appears once a key is saved, so the key form is the only
+       step until then. -->
+  {#if isConnected}
+    <form class="flex flex-col gap-3" onsubmit={go} novalidate>
+      <label class="font-semibold" for="url-input">
+        Reddit post or comment link
+      </label>
+      <input
+        id="url-input"
+        class="field"
+        aria-describedby="url-error"
+        autocapitalize="off"
+        autocomplete="off"
+        bind:value={link}
+        inputmode="url"
+        placeholder="https://www.reddit.com/r/woodworking/comments/..."
+        spellcheck="false"
+        type="text"
+      />
+      {#if error}
+        <p id="url-error" class="font-medium text-accent" role="alert">
+          {error}
+        </p>
+      {/if}
+      <button class="btn btn-primary self-start" type="submit">
+        Generate screenshot
+      </button>
+    </form>
+  {/if}
+{/snippet}
+
+{#snippet bookmarkSteps()}
+  {#if device === "android"}
+    <button
+      class="btn btn-primary self-start"
+      onclick={() => copy("bookmark", bookmark)}
+      type="button"
+    >
+      {#if copied === "bookmark"}
+        <Check size={20} weight="bold" />
+        Copied
+      {:else}
+        <Copy size={20} weight="bold" />
+        Copy bookmark code
+      {/if}
+    </button>
+    <ol class="flex flex-col gap-3">
+      {#snippet paste()}
+        Save any page as a bookmark named threadshot, with this code as its URL.
+      {/snippet}
+      {#snippet open()}
+        On a Reddit post, type threadshot in the address bar and tap it.
+      {/snippet}
+      {@render step(1, paste)}
+      {@render step(2, open)}
+    </ol>
+  {:else}
+    <a
+      class="btn btn-primary cursor-grab self-start active:cursor-grabbing"
+      draggable="true"
+      href={bookmark}
+    >
+      <BookmarkSimple size={20} weight="bold" />
+      Send to threadshot.app
+    </a>
+    <ol class="flex flex-col gap-3">
+      {#snippet drag()}
+        Drag this button to your bookmarks bar.
+      {/snippet}
+      {#snippet click()}
+        Click it on any Reddit post.
+      {/snippet}
+      {@render step(1, drag)}
+      {@render step(2, click)}
+    </ol>
+    {#if device === "ios"}
+      <p class="text-sm text-ink-2">For computers. iOS Safari won't run bookmarks.</p>
+    {/if}
+  {/if}
+{/snippet}
+
+{#snippet methodPanel(id: SendMethod, index: number)}
+  <div class="flex flex-col gap-4 p-5">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+      <h2 class="heading text-2xl">{METHODS[id].title}</h2>
+      {#if index === 0}
+        <span class="text-sm text-ink-2">Best for this device</span>
+      {/if}
+    </div>
+    {#if id === "shortcut"}
+      {@render shortcutSteps()}
+    {:else if id === "extension"}
+      {@render extensionSteps()}
+    {:else}
+      {@render bookmarkSteps()}
+    {/if}
+  </div>
+{/snippet}
+
+<div class="mt-8 flex flex-col gap-3">
+  <section class="border-2 border-ink">
+    <div class="grid grid-cols-3 divide-x-2 divide-ink border-b-2 border-ink">
+      {#each methods as id (id)}
+        <button
+          class="block-control h-12"
+          aria-controls="{id}-panel"
+          aria-expanded={!isUsingKey && method === id}
+          onclick={() => chooseMethod(id)}
+          type="button"
+        >
+          {METHODS[id].tab}
+        </button>
+      {/each}
+    </div>
+    <div
+      class="tab-stack"
+      style:height={isUsingKey ? "0px" : heights[method] && `${heights[method]}px`}
+    >
+      {#each methods as id, index (id)}
+        {@const isOpen = !isUsingKey && method === id}
+        <div
+          id="{id}-panel"
+          class="tab-panel"
+          bind:offsetHeight={heights[id]}
+          data-open={isOpen || undefined}
+          inert={!isOpen}
+        >
+          {@render methodPanel(id, index)}
+        </div>
+      {/each}
+    </div>
+  </section>
+
+  <section class="border border-line">
+    <button
+      class="block-control block-header flex min-h-12 w-full items-center justify-between gap-3 px-5 text-left"
+      aria-controls="key-panel"
+      aria-expanded={isUsingKey}
+      onclick={toggleKey}
+      type="button"
+    >
+      I have a Reddit key
+      <span class={["accordion-caret", isUsingKey && "rotate-180"]}>
+        <CaretDown size={18} weight="bold" />
+      </span>
+    </button>
+    {#snippet keyContent()}
+      <div class="flex flex-col gap-4 px-5 pb-5">
+        {@render keyForm()}
+      </div>
+    {/snippet}
+    {@render panel("key", isUsingKey, keyContent)}
+  </section>
+
+  {#snippet fasterLine()}
+    <p class="text-sm text-ink-2">
+      For a faster experience,
+      <a class="link" href="/get-a-key">request a key from Reddit</a>.
+    </p>
+  {/snippet}
+  {@render panel("faster", !isUsingKey, fasterLine)}
 </div>

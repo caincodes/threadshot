@@ -61,6 +61,42 @@
 }
 
 @layer components {
+  .heading {
+    @apply font-display font-extrabold tracking-[-0.02em] text-pretty;
+  }
+
+  .steps {
+    @apply list-decimal space-y-2 pl-5 marker:font-semibold marker:tabular-nums;
+  }
+
+  /* Height animates through the grid row, so panels need no measured height. */
+  .accordion-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition:
+      grid-template-rows 240ms cubic-bezier(0.2, 0, 0, 1),
+      opacity 80ms ease;
+  }
+
+  /* The closing panel is gone before this one fades in, so they never overlap. */
+  .accordion-panel[data-open] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transition:
+      grid-template-rows 240ms cubic-bezier(0.2, 0, 0, 1),
+      opacity 160ms ease 80ms;
+  }
+
+  /* The side padding keeps focus rings from being clipped. */
+  .accordion-clip {
+    @apply -mx-1 min-h-0 overflow-hidden px-1;
+  }
+
+  .accordion-caret {
+    transition: rotate 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
   .btn {
     @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-ui px-5 text-base font-semibold transition-colors duration-150;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
@@ -74,13 +110,51 @@
     @apply border border-ink bg-white text-ink hover:bg-canvas active:bg-line;
   }
 
+  .btn-icon {
+    @apply flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-ui transition-colors duration-150 hover:bg-line active:bg-line;
+  }
+
+  .nav-link {
+    @apply flex h-11 items-center px-2.5 text-sm font-semibold transition-colors duration-150 hover:text-accent active:text-accent-press;
+  }
+
+  /* Tabs and block headers share one hover and press. */
+  .block-control {
+    @apply cursor-pointer font-semibold transition-colors duration-150 hover:bg-canvas active:bg-line;
+  }
+
+  .block-control[aria-expanded="true"]:not(.block-header) {
+    @apply bg-ink text-white hover:bg-ink active:bg-ink;
+  }
+
+  /* Open, the header runs straight into its content, so it has no hover fill. */
+  .block-header[aria-expanded="true"] {
+    @apply hover:bg-transparent active:bg-transparent;
+  }
+
+  .tab-stack {
+    @apply relative overflow-hidden;
+    transition: height 240ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  /* The old panel fades out first, so the two never overlap. */
+  .tab-panel {
+    @apply absolute inset-x-0 top-0 opacity-0;
+    transition: opacity 100ms ease;
+  }
+
+  .tab-panel[data-open] {
+    opacity: 1;
+    transition: opacity 200ms ease 80ms;
+  }
+
   .field {
     @apply h-11 rounded-ui border border-line bg-white px-3 text-base text-ink transition-colors duration-150;
     @apply hover:border-ink-2 focus-visible:border-ink focus-visible:outline-offset-0;
   }
 
   .link {
-    @apply cursor-pointer font-medium text-accent underline underline-offset-2 hover:text-accent-hover;
+    @apply cursor-pointer font-medium text-accent underline underline-offset-2 hover:text-accent-hover active:text-accent-press;
   }
 
 }
@@ -196,5 +270,14 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-spin {
     animation-duration: 3s;
+  }
+
+  .btn,
+  .field,
+  .accordion-panel,
+  .accordion-caret,
+  .tab-stack,
+  .tab-panel {
+    transition: none;
   }
 }

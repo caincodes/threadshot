@@ -8,6 +8,7 @@
   } from "../../types/reddit";
   import Comment from "./Comment.svelte";
   import Post from "./Post.svelte";
+  import Watermark from "./Watermark.svelte";
 
   interface Props {
     id?: string;
@@ -16,6 +17,17 @@
   }
 
   let { id, submission, comments }: Props = $props();
+
+  const shownComments = $derived(
+    editor.showComments
+      ? withoutBots(comments, editor.hideBots)
+          .slice(0, editor.topLevelComments)
+          .filter((comment) => comment.type === "comment")
+      : []
+  );
+  // With no comments the post's stats are the last line, so the watermark sits
+  // beside them and wraps below if they leave no room. Otherwise it gets a row.
+  const isPostLast = $derived(shownComments.length === 0);
 </script>
 
 <!-- A 390px share card: phone width, exported at 3x for large, crisp type. -->
@@ -24,17 +36,13 @@
   class="ap w-[390px] bg-ap-bg font-export text-left text-ap-text"
   data-theme={editor.theme}
 >
-  <Post {submission} />
+  <Post {submission} {isPostLast} />
 
-  {#if editor.showComments}
-    {#each withoutBots(comments, editor.hideBots).slice(0, editor.topLevelComments) as comment (comment.id)}
-      <Comment data={comment} />
-    {/each}
-  {/if}
+  {#each shownComments as comment (comment.id)}
+    <Comment data={comment} />
+  {/each}
 
-  {#if editor.showAttribution}
-    <div class="px-4 py-3 text-center text-xs text-ap-muted">
-      <p>Made with threadshot.app</p>
-    </div>
+  {#if editor.showAttribution && !isPostLast}
+    <Watermark class="px-4 py-3 text-right" />
   {/if}
 </div>

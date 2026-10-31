@@ -4,6 +4,8 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 import { execSync } from "node:child_process";
 
+import { versionAt } from "./scripts/version.mjs";
+
 // The public site URL, used for canonical links. It is threadshot.app unless
 // SITE_URL overrides it (for a fork or a staging copy).
 const siteDomain = process.env.SITE_URL || "threadshot.app";
@@ -20,6 +22,8 @@ const fullCommit = () => {
   }
 };
 
+const commit = fullCommit();
+
 export default defineConfig({
   site: /^https?:\/\//i.test(siteDomain) ? siteDomain : `https://${siteDomain}`,
   output: "server",
@@ -31,7 +35,8 @@ export default defineConfig({
     // Compiled in here because pages render per request in server output, where
     // a new Date() would be the time of the visit rather than of the build.
     define: {
-      __BUILD_COMMIT__: JSON.stringify(fullCommit()),
+      __BUILD_COMMIT__: JSON.stringify(commit),
+      __BUILD_VERSION__: JSON.stringify(versionAt(commit)),
       __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     },
   },

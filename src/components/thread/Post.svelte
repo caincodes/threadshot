@@ -11,8 +11,12 @@
   import FlairBadge from "./FlairBadge.svelte";
   import PostMedia from "./media/PostMedia.svelte";
   import Username from "./Username.svelte";
+  import Watermark from "./Watermark.svelte";
 
-  let { submission }: { submission: RedditSubmission } = $props();
+  let {
+    submission,
+    isPostLast = false,
+  }: { submission: RedditSubmission; isPostLast?: boolean } = $props();
 
   // "r/" (or "u/" for a post on a profile) is always shown; only the name is
   // replaced when redacting.
@@ -25,7 +29,9 @@
   });
 </script>
 
-<article class="border-b border-ap-line px-4 pt-5 pb-4">
+<article
+  class={["border-ap-line px-4 pt-5 pb-4", isPostLast ? "" : "border-b"]}
+>
   <h1 class="text-[22px] leading-[1.2] font-bold">{submission.title}</h1>
 
   <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
@@ -61,6 +67,9 @@
         <Medal size={15} weight="bold" />
         {submission.awardCount}
       </span>
+    {/if}
+    {#if isPostLast && editor.showAttribution}
+      <Watermark class="ml-auto font-normal" />
     {/if}
   </footer>
 </article>
