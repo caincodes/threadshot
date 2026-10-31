@@ -110,30 +110,28 @@
   <h2 class="option-row text-sm font-semibold">{text}</h2>
 {/snippet}
 
-<div class="flex flex-col border border-line bg-white px-4 pt-4">
-  <!-- On small screens this sits between the preview and the options. -->
-  <div>
-    <button
-      class="btn btn-primary w-full"
-      disabled={!canDownload || editor.isDownloading}
-      onclick={editor.download}
-      type="button"
-    >
-      {#if editor.isDownloading}
-        <Spinner />
-        Rendering
-      {:else if isTouch}
-        <Export size={20} weight="bold" />
-        Share image
-      {:else}
-        <DownloadSimple size={20} weight="bold" />
-        Download PNG
-      {/if}
-    </button>
-  </div>
+<!-- On small screens this sits between the preview and the options. -->
+<button
+  class="btn btn-primary w-full"
+  disabled={!canDownload || editor.isDownloading}
+  onclick={editor.download}
+  type="button"
+>
+  {#if editor.isDownloading}
+    <Spinner />
+    Rendering
+  {:else if isTouch}
+    <Export size={20} weight="bold" />
+    Share image
+  {:else}
+    <DownloadSimple size={20} weight="bold" />
+    Download PNG
+  {/if}
+</button>
 
+<div class="mt-4 flex flex-col border border-line bg-white px-4">
   <div
-    class="mt-5 grid grid-cols-2 border-b border-line"
+    class="grid grid-cols-2 border-b border-line"
     aria-label="Options"
     role="group"
   >
