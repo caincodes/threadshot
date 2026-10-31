@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 import { mockRedditResponse } from "../../src/server/mockReddit";
-import { getRedditToken, redditUserAgent } from "../../src/server/redditAuth";
+import { hasRedditCredentials, redditFetch } from "../../src/server/redditAuth";
 
 const SAFE = /^[\w-]+$/;
 const SORTS = new Set([
@@ -45,16 +45,16 @@ export default async function handler(
   }
 
   try {
-    const token = await getRedditToken();
     const path = commentId
       ? `/r/${sub}/comments/${postId}/title/${commentId}.json?context=10000&raw_json=1&sort=${sort}`
       : `/r/${sub}/comments/${postId}/.json?raw_json=1&sort=${sort}`;
-    const upstream = await fetch(`https://oauth.reddit.com${path}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "User-Agent": redditUserAgent,
-      },
-    });
+    const upstream = await redditFetch(path);
+    if (!upstream.ok && !hasRedditCredentials()) {
+      res.status(502).json({
+        error: `Reddit refused the unauthenticated request (${upstream.status}). Set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET.`,
+      });
+      return;
+    }
     const body = await upstream.text();
     res
       .status(upstream.status)

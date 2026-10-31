@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-import { getRedditToken, redditUserAgent } from "../../src/server/redditAuth";
+import { redditFetch } from "../../src/server/redditAuth";
 
 const SHARE = /^\/r\/([\w-]+)\/s\/([\w-]+)\/?$/;
 const POST = /\/r\/([\w-]+)\/comments\/(\w+)(?:\/[^/]*)?(?:\/(\w+))?/;
@@ -22,17 +22,9 @@ export default async function handler(
   }
 
   try {
-    const token = await getRedditToken();
-    const upstream = await fetch(
-      `https://oauth.reddit.com/r/${match[1]}/s/${match[2]}`,
-      {
-        redirect: "manual",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "User-Agent": redditUserAgent,
-        },
-      }
-    );
+    const upstream = await redditFetch(`/r/${match[1]}/s/${match[2]}`, {
+      redirect: "manual",
+    });
     const location = upstream.headers.get("location");
     const target = location && POST.exec(new URL(location, "https://www.reddit.com").pathname);
     if (!target) {

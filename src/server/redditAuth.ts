@@ -34,3 +34,25 @@ export const getRedditToken = async (): Promise<string> => {
   };
   return cached.token;
 };
+
+export const hasRedditCredentials = () =>
+  Boolean(process.env.REDDIT_CLIENT_ID && process.env.REDDIT_CLIENT_SECRET);
+
+// Uses the OAuth API when credentials are configured, otherwise falls back to
+// Reddit's public JSON pages. The fallback is best-effort: Reddit may block it.
+export const redditFetch = async (
+  path: string,
+  init: { redirect?: "manual" } = {}
+): Promise<Response> => {
+  if (hasRedditCredentials()) {
+    const token = await getRedditToken();
+    return fetch(`https://oauth.reddit.com${path}`, {
+      ...init,
+      headers: { Authorization: `Bearer ${token}`, "User-Agent": USER_AGENT },
+    });
+  }
+  return fetch(`https://www.reddit.com${path}`, {
+    ...init,
+    headers: { "User-Agent": USER_AGENT },
+  });
+};
