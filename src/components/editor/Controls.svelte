@@ -8,7 +8,8 @@
   import Spinner from "../ui/Spinner.svelte";
   import Switch from "../ui/Switch.svelte";
 
-  let { canDownload }: { canDownload: boolean } = $props();
+  let { canDownload, isAlbum }: { canDownload: boolean; isAlbum: boolean } =
+    $props();
 
   const themes = [
     { value: "light", text: "Light" },
@@ -48,15 +49,18 @@
     <Switch label="Hide subreddit" bind:checked={editor.isCensorSubreddits} />
   </div>
 
-  <div class="mt-3 border-t border-line">
-    {@render heading("Post")}
-    <NumberField
-      label="Album columns"
-      max={50}
-      min={1}
-      bind:value={editor.imageColumns}
-    />
-  </div>
+  <!-- Only meaningful for album posts, so only shown for them. -->
+  {#if isAlbum}
+    <div class="mt-3 border-t border-line">
+      {@render heading("Post")}
+      <NumberField
+        label="Album columns"
+        max={50}
+        min={1}
+        bind:value={editor.imageColumns}
+      />
+    </div>
+  {/if}
 
   <div class="mt-3 border-t border-line">
     {@render heading("Comments")}

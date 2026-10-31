@@ -27,7 +27,7 @@
 
   $effect(() => {
     if (isSample) {
-      data = loadSampleData();
+      data = loadSampleData(editor.commentSort);
       isLoading = false;
       return;
     }
@@ -73,7 +73,10 @@
     class="mx-auto grid w-full max-w-[1280px] gap-6 px-4 py-6 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:px-8"
   >
     <aside class="order-2 lg:sticky lg:top-6 lg:order-1">
-      <Controls canDownload={Boolean(data) && !errorMessage} />
+      <Controls
+        canDownload={Boolean(data) && !errorMessage}
+        isAlbum={data?.[0].linkType === "album"}
+      />
     </aside>
 
     <section

@@ -16,12 +16,42 @@ export type RedditData = [
   Array<RedditComment | MoreChildren>,
 ];
 
+type Comments = Array<RedditComment | MoreChildren>;
+
+// reddit sorts server-side for real posts; the sample sorts itself the same
+// way. "best" keeps the fixture's order.
+const comparators: Record<
+  CommentSort,
+  ((a: RedditComment, b: RedditComment) => number) | null
+> = {
+  best: null,
+  top: (a, b) => b.score - a.score,
+  old: (a, b) => a.created_utc - b.created_utc,
+  controversial: (a, b) =>
+    (b.controversiality ?? 0) - (a.controversiality ?? 0) ||
+    b.score - a.score,
+};
+
+const sortComments = (list: Comments, sort: CommentSort): Comments => {
+  const compare = comparators[sort];
+  const sorted = list.map((item) =>
+    item.type === "comment"
+      ? { ...item, replyTree: sortComments(item.replyTree, sort) }
+      : item
+  );
+  return compare
+    ? sorted.sort((a, b) =>
+        a.type === "comment" && b.type === "comment" ? compare(a, b) : 0
+      )
+    : sorted;
+};
+
 // The bundled sample thread, parsed exactly like a real response.
-export const loadSampleData = (): RedditData => {
+export const loadSampleData = (sort: CommentSort = "best"): RedditData => {
   const [submissionListing, commentListing] = sampleRedditResponse();
   return [
     parseSubmission(submissionListing.data.children[0].data, ""),
-    parseComments(commentListing.data.children, ""),
+    sortComments(parseComments(commentListing.data.children, ""), sort),
   ];
 };
 
