@@ -3,7 +3,11 @@
   import { credentials } from "../lib/credentials.svelte";
 
   // Show the form even when a key is saved, e.g. after Reddit rejected it.
-  let { editing = false }: { editing?: boolean } = $props();
+  // On the home page it sits in a panel that already says what it is for.
+  let {
+    editing = false,
+    isEmbedded = false,
+  }: { editing?: boolean; isEmbedded?: boolean } = $props();
 
   const uid = $props.id();
 
@@ -62,10 +66,16 @@
     </div>
   </div>
 {:else}
-  <form class="flex flex-col gap-3 border border-line p-4" onsubmit={save} novalidate>
-    <h2 class="font-display text-xl font-extrabold tracking-[-0.02em]">
-      Connect your Reddit app
-    </h2>
+  <form
+    class={["flex flex-col gap-3", !isEmbedded && "border border-line p-4"]}
+    onsubmit={save}
+    novalidate
+  >
+    {#if !isEmbedded}
+      <h2 class="heading text-xl">
+        Connect your Reddit app
+      </h2>
+    {/if}
     <p class="text-sm text-ink-2">
       threadshot.app reads posts through Reddit's API using your own app, so nobody
       else's key is involved. Paste your app's client ID below.
@@ -132,8 +142,8 @@
     <p class="text-xs text-ink-2">
       Stored in this browser only. It travels over HTTPS to this site's server so
       it can talk to Reddit for you, and is never saved there. Reddit may need to
-      approve your app first. No app? Use the
-      <a class="link" href="/#bookmark">bookmark</a> instead.
+      approve your app first. No app?
+      <a class="link" href="/#no-key">Send posts without a key</a>.
     </p>
   </form>
 {/if}

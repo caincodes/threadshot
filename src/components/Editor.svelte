@@ -28,8 +28,8 @@
   const shareCode = params.get("share");
   const commentId = params.get("commentId");
   const isSample = params.get("sample") === "1";
-  // Opened by the "Send to threadshot.app" bookmark, which posts the thread over,
-  // or by the iOS shortcut, which puts it in the URL fragment.
+  // Opened by the bookmark or Safari extension, which post the thread over, or
+  // by the iOS Shortcut, which puts it in the URL fragment.
   const isFromBookmark = params.get("from") === "reddit";
   const bookmarkNonce = params.get("n");
 
@@ -149,15 +149,15 @@
 {#if !isSample && !isFromBookmark && !hasTarget}
   <div class="mx-auto w-full max-w-[1280px] px-4 py-16 lg:px-8">
     <div class="max-w-xl">
-      <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
+      <h1 class="heading text-3xl">
         No thread selected
       </h1>
       <p class="mt-3 text-ink-2">
-        Paste a Reddit link on the home page, or send a post here with the
+        Send a post here from Reddit with the iOS Shortcut, Safari extension or
         bookmark.
       </p>
       <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
-        <a class="btn btn-primary" href="/">Paste a Reddit link</a>
+        <a class="btn btn-primary" href="/">Choose how to send a post</a>
         <a class="link" href="/generate?sample=1">Try a sample post</a>
       </div>
     </div>
@@ -165,7 +165,7 @@
 {:else if needsCredentials}
   <div class="mx-auto w-full max-w-[1280px] px-4 py-12 lg:px-8">
     <div class="max-w-xl">
-      <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
+      <h1 class="heading text-3xl">
         Connect Reddit to load this post
       </h1>
       <p class="mt-3 text-ink-2">
@@ -207,14 +207,14 @@
         <div class="flex min-h-52 items-center justify-center gap-3 text-ink-2">
           <Spinner />
           {isFromBookmark
-            ? "Waiting for the thread from Reddit. If nothing arrives, click the bookmark again."
+            ? "Waiting for the thread from Reddit. If nothing arrives, send it again."
             : "Loading thread"}
         </div>
       {/if}
 
       {#if errorMessage}
         <div class="mx-auto max-w-lg py-10" role="alert">
-          <h1 class="font-display text-2xl font-extrabold tracking-[-0.02em]">
+          <h1 class="heading text-2xl">
             Could not load this thread
           </h1>
           <p class="mt-3 text-ink-2">{errorMessage}</p>
@@ -222,8 +222,7 @@
             <div class="mt-6"><Connect editing /></div>
           {/if}
           <p class="mt-4">
-            <a class="link" href="/">Try another link</a>
-            or <a class="link" href="/#bookmark">use the Reddit bookmark</a>
+            <a class="link" href="/#no-key">Send the post from Reddit instead</a>
           </p>
         </div>
       {/if}

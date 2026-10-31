@@ -61,6 +61,14 @@
 }
 
 @layer components {
+  .heading {
+    @apply font-display font-extrabold tracking-[-0.02em];
+  }
+
+  .steps {
+    @apply list-decimal space-y-2 pl-5 marker:font-semibold marker:tabular-nums;
+  }
+
   .btn {
     @apply inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-ui px-5 text-base font-semibold transition-colors duration-150;
     @apply disabled:cursor-not-allowed disabled:opacity-50;
@@ -196,5 +204,11 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-spin {
     animation-duration: 3s;
+  }
+
+  .btn,
+  .field,
+  [aria-expanded] > span {
+    transition: none;
   }
 }
