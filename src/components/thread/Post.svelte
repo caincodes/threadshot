@@ -34,8 +34,12 @@
     <!-- "r/" (or "u/" for a post on a profile) stays when the name is covered, and
          both go when it is hidden. -->
     <!-- The icon would give the community away, so it goes when that is redacted. -->
-    {#if editor.showSubredditIcon && !editor.isCensorSubreddits}
-      <Avatar name={community.slice(2)} src={submission.subredditIcon} />
+    {#if editor.showSubredditIcon && !editor.isCensorSubreddits && submission.subredditIcon}
+      <Avatar
+        name={community.slice(2)}
+        src={submission.subredditIcon}
+        hasFallback={false}
+      />
     {/if}
     {#if !editor.isCensorSubreddits}
       <span class="font-semibold text-ap-link">{community}</span>

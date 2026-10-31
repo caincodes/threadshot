@@ -5,7 +5,13 @@
     src,
     name,
     size = 20,
-  }: { src?: string; name: string; size?: number } = $props();
+    hasFallback = true,
+  }: {
+    src?: string;
+    name: string;
+    size?: number;
+    hasFallback?: boolean;
+  } = $props();
 
   let hasFailed = $state(false);
   // Without a picture, the first letter of the name stands in.
@@ -21,7 +27,7 @@
     src={proxiedImageSrc(src)}
     width={size}
   />
-{:else}
+{:else if hasFallback}
   <span
     class="inline-flex shrink-0 items-center justify-center rounded-full bg-ap-line font-semibold text-ap-muted"
     style:width="{size}px"
