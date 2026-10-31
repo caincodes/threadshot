@@ -5,12 +5,15 @@ export const parseFlair = (
   textColor: string,
   backgroundColor: string
 ): RedditFlair | undefined => {
-  return flair && flair.length === 2
-    ? {
-        img: flair[0].u,
-        text: flair[1].t,
-        textColor,
-        backgroundColor,
-      }
-    : undefined;
+  if (!flair?.length) {
+    return undefined;
+  }
+
+  const img = flair.find((part) => part.u)?.u;
+  const text = flair
+    .map((part) => part.t ?? "")
+    .join("")
+    .trim();
+
+  return img || text ? { img, text, textColor, backgroundColor } : undefined;
 };

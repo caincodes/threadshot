@@ -16,12 +16,14 @@
   };
 </script>
 
-<input
-  class="w-20 rounded-md border border-gray-200 bg-white px-2 py-1 text-sm outline-none hover:border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-  aria-label={label}
-  {max}
-  {min}
-  oninput={handleInput}
-  type="number"
-  {value}
-/>
+<label class="flex min-h-12 items-center justify-between gap-3">
+  <span class="text-sm">{label}</span>
+  <input
+    class="field w-20 text-center tabular-nums"
+    {max}
+    {min}
+    oninput={handleInput}
+    type="number"
+    {value}
+  />
+</label>

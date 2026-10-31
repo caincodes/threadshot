@@ -21,7 +21,7 @@ const redirectToEditor = (post: {
   return Astro.redirect(`/generate?${params}`, 308);
 };
 
-let message = "Please enter a reddit submission or comment URL.";
+let message = "That does not look like a Reddit post or comment link.";
 
 if (sub && kind === "comments" && id) {
   return redirectToEditor({ sub, postId: id, commentId });
@@ -33,18 +33,22 @@ if (sub && kind === "s" && id) {
     if (resolved) {
       return redirectToEditor(resolved);
     }
-    message = "Could not resolve that reddit share link.";
+    message = "Could not resolve that Reddit share link.";
   } catch {
-    message = "Could not reach reddit to resolve that share link.";
+    message = "Could not reach Reddit to resolve that share link.";
   }
 }
 
 Astro.response.status = 404;
 ---
 
-<Base title="threadshot">
-  <div class="flex flex-col items-center gap-4">
-    <p class="text-sm text-accent-red">{message}</p>
-    <a href="/" class="text-sm underline">Back to start</a>
+<Base title="Link not found | threadshot">
+  <div class="mx-auto max-w-[1280px] px-4 py-16 lg:px-8">
+    <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
+      {message}
+    </h1>
+    <p class="mt-4">
+      <a href="/" class="link">Try another link</a>
+    </p>
   </div>
 </Base>

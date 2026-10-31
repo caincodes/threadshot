@@ -5,6 +5,14 @@ Turn a Reddit post or comment thread into a clean, shareable screenshot.
 Built with [Astro](https://astro.build) (server output, Vercel adapter),
 [Tailwind CSS](https://tailwindcss.com) and a [Svelte](https://svelte.dev) island for the editor.
 
+## Design
+
+The app UI is deliberately plain: ink on white, one vermilion accent, 6px
+radius, hairline borders, Archivo and IBM Plex Sans. The exported screenshot
+is a separate system (`.rd` in `src/styles/global.css`) that follows Reddit's
+own light and dark palettes in Reddit Sans, with Phosphor icons. All fonts are
+self-hosted so html-to-image can embed them in the PNG.
+
 ## Develop
 
 Requires Node 22.23.4+ (24 recommended).

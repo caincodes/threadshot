@@ -72,6 +72,7 @@ export type PreviewEntry = {
 
 export interface RawSubmission extends RedditContent {
   subreddit_name_prefixed: string;
+  num_comments?: number;
   title: string;
   domain: string;
   is_self: boolean;
@@ -268,7 +269,7 @@ export interface Paginated<T> {
   data: T;
 }
 
-export type RawFlair = [{ u?: string }, { t?: string }];
+export type RawFlair = Array<{ e?: string; u?: string; t?: string }>;
 export interface RedditFlair {
   img?: string;
   text?: string;
