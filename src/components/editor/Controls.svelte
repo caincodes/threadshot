@@ -1,18 +1,22 @@
 <script lang="ts">
   import DownloadSimple from "phosphor-svelte/lib/DownloadSimple";
+  import Export from "phosphor-svelte/lib/Export";
 
-  import { editor } from "../../lib/editor.svelte";
+  import { editor, isTouchDevice } from "../../lib/editor.svelte";
   import { SORT_TYPES } from "../../types/reddit";
   import NumberField from "../ui/NumberField.svelte";
   import Segmented from "../ui/Segmented.svelte";
   import Spinner from "../ui/Spinner.svelte";
   import Switch from "../ui/Switch.svelte";
+  import ExportPreview from "./ExportPreview.svelte";
 
   let {
     canDownload,
     isAlbum,
     botCount,
   }: { canDownload: boolean; isAlbum: boolean; botCount: number } = $props();
+
+  const isTouch = isTouchDevice();
 
   const themes = [
     { value: "light", text: "Light" },
@@ -41,6 +45,9 @@
       {#if editor.isDownloading}
         <Spinner />
         Rendering
+      {:else if isTouch}
+        <Export size={20} weight="bold" />
+        Share image
       {:else}
         <DownloadSimple size={20} weight="bold" />
         Download PNG
@@ -113,3 +120,5 @@
     {/if}
   </div>
 </div>
+
+<ExportPreview />
