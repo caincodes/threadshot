@@ -21,18 +21,20 @@ with Phosphor icons. Fonts are self-hosted so modern-screenshot can embed them i
 This branch needs no Reddit API keys. It runs on your own computer and reads
 Reddit's public pages from your own connection, so requests come from your IP.
 
-It asks Reddit straight from your browser first, so the request carries your
-browser's own user agent, headers and connection. If the browser is not allowed
-to read the response (CORS) or Reddit refuses it, it falls back to the local
-server, which forwards your browser's user agent. If both fail, the error says
-what each attempt got. Share links (`/s/...`) are always resolved by the server,
-because a browser cannot follow Reddit's redirect across origins.
+Reddit refuses most requests that come from tools, so there are two ways in:
 
-```sh
-git checkout local-only
-npm ci
-npm run dev        # then open http://localhost:4321
-```
+1. **The bookmark (reliable).** The home page has a "Send to threadshot" button.
+   Drag it to your bookmarks bar, open any Reddit post, and click it. The
+   bookmark runs on reddit.com, so it reads the post's JSON as an ordinary
+   same-origin load with your own session, IP and user agent, then hands it to
+   this app in a new window with `postMessage`. Nothing is fetched by a server.
+   Only pages on reddit.com can send data, only well-formed threads are
+   accepted, and each click carries a one-time id so a window that is being
+   replaced cannot acknowledge it by mistake. Sorting then happens in the
+   browser.
+2. **Pasting a link.** The app asks Reddit from your browser, then from the
+   local server (forwarding your browser's user agent). This only works if
+   Reddit allows it; if both fail, the error says what each attempt got.
 
 Requires Node 22.23.4+ (24 recommended).
 
@@ -41,8 +43,10 @@ Things to know:
 - **It is a personal tool.** Reddit asks for approval before automated access,
   and reading its public pages this way may go against its terms. Keep the
   volume low, and do not run it as a service.
-- **It can be blocked.** Reddit may rate limit or refuse unauthenticated
-  requests (the app shows the status it got). Waiting a bit usually helps.
+- **Pasted links can be blocked.** Reddit may refuse unauthenticated requests
+  (the app shows the status it got). The bookmark avoids this.
+- **Re-make the bookmark if you change the port,** since it remembers the
+  address of the page it was dragged from.
 - **It refuses to run anywhere but localhost.** The API routes return 403 unless
   the page is addressed as `localhost` and the connection comes from the same
   machine, so a deployed copy cannot be used as an open Reddit proxy.

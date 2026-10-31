@@ -46,16 +46,46 @@ const sortComments = (list: Comments, sort: CommentSort): Comments => {
     : sorted;
 };
 
-// The bundled sample thread, parsed exactly like a real response.
-export const loadSampleData = (sort: CommentSort = "best"): RedditData => {
-  const [submissionListing, commentListing] = sampleRedditResponse();
+// Parse a raw reddit thread (the sample, or data sent by the bookmark) and
+// apply the chosen sort, since nothing server-side sorts it for us.
+export const parseThread = (
+  thread: RawThread,
+  sort: CommentSort = "best"
+): RedditData => {
+  const [submissionListing, commentListing] = thread;
+  const modhash = submissionListing.data.modhash ?? "";
   return [
-    parseSubmission(submissionListing.data.children[0].data, ""),
-    sortComments(parseComments(commentListing.data.children, ""), sort),
+    parseSubmission(submissionListing.data.children[0].data, modhash),
+    sortComments(parseComments(commentListing.data.children, modhash), sort),
   ];
 };
 
-type RawThread = [Listing<ListedRawSubmission>, Listing<ListedRawComment>];
+// The bundled sample thread, parsed exactly like a real response.
+export const loadSampleData = (sort: CommentSort = "best"): RedditData =>
+  parseThread(sampleRedditResponse(), sort);
+
+// Guards data that arrives from outside (a window message) before it is parsed.
+export const isRawThread = (value: unknown): value is RawThread => {
+  if (!Array.isArray(value) || value.length < 2) {
+    return false;
+  }
+  const [post, comments] = value as Array<{
+    kind?: string;
+    data?: { children?: Array<{ kind?: string }> };
+  }>;
+  return (
+    post?.kind === "Listing" &&
+    Array.isArray(post.data?.children) &&
+    post.data.children[0]?.kind === "t3" &&
+    comments?.kind === "Listing" &&
+    Array.isArray(comments.data?.children)
+  );
+};
+
+export type RawThread = [
+  Listing<ListedRawSubmission>,
+  Listing<ListedRawComment>,
+];
 
 const SORT_PARAM: Record<CommentSort, string> = {
   best: "confidence",

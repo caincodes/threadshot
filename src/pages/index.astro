@@ -58,8 +58,37 @@ const sample = {
       </form>
 
       <p class="mt-6 text-sm text-ink-2">
-        Full links and the share links from the Reddit app both work.
+        Pasted links only work when Reddit allows the request. If one fails, use
+        the bookmark below.
       </p>
+
+      <section id="bookmark" class="mt-8 border-t border-line pt-6">
+        <h2 class="font-display text-xl font-extrabold tracking-[-0.02em]">
+          Link not loading?
+        </h2>
+        <p class="mt-2 text-ink-2">
+          Reddit often refuses requests that don't come from a normal page. This
+          bookmark reads the post from the page you are already viewing, then
+          sends it here.
+        </p>
+        <ol class="mt-3 list-decimal space-y-1 pl-5 text-ink-2">
+          <li>Drag the button below to your bookmarks bar.</li>
+          <li>Open any Reddit post.</li>
+          <li>Click the bookmark.</li>
+        </ol>
+        <a
+          id="bookmarklet"
+          href="#bookmark"
+          class="btn mt-4 border border-ink bg-white text-ink hover:bg-canvas"
+          draggable="true"
+        >
+          Send to threadshot
+        </a>
+        <p class="mt-3 text-sm text-ink-2">
+          The bookmark remembers this address, so make a new one if you change
+          the port.
+        </p>
+      </section>
     </section>
 
     <div
@@ -79,6 +108,12 @@ const sample = {
 </Base>
 
 <script>
+  import { bookmarkletHref } from "../lib/bookmarklet";
+
+  document
+    .querySelector<HTMLAnchorElement>("#bookmarklet")!
+    .setAttribute("href", bookmarkletHref(window.location.origin));
+
   const form = document.querySelector<HTMLFormElement>("#url-form")!;
   const input = document.querySelector<HTMLInputElement>("#url-input")!;
   const error = document.querySelector<HTMLElement>("#url-error")!;
