@@ -14,6 +14,13 @@ const {
 // The old *.vercel.app address still serves the site (bookmarks made there
 // keep working), so every page names threadshot.app as the real address.
 const canonical = new URL(Astro.url.pathname, Astro.site);
+
+const REPOSITORY = "https://github.com/caincodes/threadshot";
+const deployedAt = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "UTC",
+}).format(new Date(__BUILD_TIME__));
 ---
 
 <!doctype html>
@@ -44,10 +51,34 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       <slot />
     </main>
     <footer class="border-t border-line">
-      <p class="mx-auto max-w-[1280px] px-4 py-5 text-sm text-ink-2 lg:px-8">
-        threadshot.app is not affiliated with Reddit. Posts and comments belong to
-        their authors.
-      </p>
+      <div
+        class="mx-auto flex max-w-[1280px] flex-col gap-2 px-4 py-5 text-sm text-ink-2 lg:px-8"
+      >
+        <p>
+          threadshot.app is not affiliated with Reddit. Posts and comments belong
+          to their authors.
+        </p>
+        <p class="flex flex-wrap gap-x-4 gap-y-1">
+          <a class="link" href={REPOSITORY} rel="noopener">GitHub</a>
+          {
+            __BUILD_COMMIT__ && (
+              <span>
+                Version{" "}
+                <a
+                  class="link font-mono"
+                  href={`${REPOSITORY}/commit/${__BUILD_COMMIT__}`}
+                  rel="noopener"
+                >
+                  {__BUILD_COMMIT__.slice(0, 7)}
+                </a>
+              </span>
+            )
+          }
+          <span>
+            Deployed <time datetime={__BUILD_TIME__}>{deployedAt} UTC</time>
+          </span>
+        </p>
+      </div>
     </footer>
   </body>
 </html>
