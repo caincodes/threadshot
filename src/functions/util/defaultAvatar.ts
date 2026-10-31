@@ -60,7 +60,7 @@ const toHex = (rgb: number[]) =>
 export const defaultAvatarColors = (name: string): AvatarColors => {
   const seed = hash(name);
   const hue = seed % 360;
-  const saturation = 65 + ((seed >>> 9) % 36);
+  const saturation = 40 + ((seed >>> 9) % 31);
   let lightness = 45 + ((seed >>> 16) % 16);
 
   // Rounded to whole 8-bit values first, so the checks measure the final colour.
