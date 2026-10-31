@@ -11,6 +11,7 @@ import type {
 } from "../types/reddit";
 import type { Credentials } from "./credentials.svelte";
 import { sampleRedditResponse } from "./sampleThread";
+import { sanitizeHtml } from "./sanitizeHtml";
 
 export type RedditData = [
   RedditSubmission,
@@ -47,17 +48,40 @@ const sortComments = (list: Comments, sort: CommentSort): Comments => {
     : sorted;
 };
 
-// Parse a raw reddit thread (the sample, or data sent by the bookmark) and
-// apply the chosen sort, since nothing server-side sorts it for us.
+const sanitizeComments = (list: Comments): Comments =>
+  list.map((item) =>
+    item.type === "comment"
+      ? {
+          ...item,
+          body_html: sanitizeHtml(item.body_html),
+          replyTree: sanitizeComments(item.replyTree),
+        }
+      : item
+  );
+
+// Parse a raw reddit thread (the sample, or data sent from Reddit) and apply the
+// chosen sort, since nothing server-side sorts it for us. Every thread the
+// browser receives passes through here, so this is where its HTML is cleaned.
 export const parseThread = (
   thread: RawThread,
   sort: CommentSort = "best"
 ): RedditData => {
   const [submissionListing, commentListing] = thread;
   const modhash = submissionListing.data.modhash ?? "";
+  const submission = parseSubmission(
+    submissionListing.data.children[0].data,
+    modhash
+  );
   return [
-    parseSubmission(submissionListing.data.children[0].data, modhash),
-    sortComments(parseComments(commentListing.data.children, modhash), sort),
+    {
+      ...submission,
+      selftext_html:
+        submission.selftext_html && sanitizeHtml(submission.selftext_html),
+    },
+    sortComments(
+      sanitizeComments(parseComments(commentListing.data.children, modhash)),
+      sort
+    ),
   ];
 };
 

@@ -32,15 +32,19 @@ page, so threadshot.app has two ways in, and neither uses anyone else's key.
    An app with no secret uses Reddit's installed-client login; with a secret it
    uses the standard app login. Reddit may need to approve your app first.
 2. **The bookmark (no key).** The home page has a "Send to threadshot.app" button.
-   Drag it to your bookmarks bar, open any Reddit post, and click it. iPhones
-   and iPads can't drag bookmarks, so they get a button that copies the bookmark
-   code and steps for pasting it into a Safari bookmark. The bookmark runs on
-   reddit.com, so it reads the post's JSON as an ordinary
+   Drag it to your bookmarks bar, open any Reddit post, and click it. The
+   bookmark runs on reddit.com, so it reads the post's JSON as an ordinary
    same-origin load with your own session, IP and user agent, then hands it to
    this app in a new window with `postMessage`. Only pages on reddit.com can
    send data, only well-formed threads are accepted, and each click carries a
    one-time id so a window that is being replaced cannot acknowledge it by
    mistake. Sorting then happens in the browser.
+3. **The iOS shortcut (no key).** iOS Safari won't run bookmarks like this, so
+   iPhones and iPads get a Share sheet shortcut instead. It reads the post the
+   same way, then opens the editor in the same tab with the compressed thread in
+   the URL fragment, which is never sent to a server. A link can't prove where
+   it came from, so thread HTML is sanitized before it is shown. Rebuild
+   `public/threadshot.shortcut` with `node scripts/build-shortcut.mjs` on a Mac.
 
 The "Try a sample post" link (`/generate?sample=1`) needs neither.
 

@@ -26,10 +26,11 @@
 
 <div class="flex flex-col border border-line bg-white p-4">
   <!-- On small screens the preview comes first, so the download button is
-       pinned to the bottom of the screen instead of sitting below it. -->
+       pinned to the bottom of the screen instead of sitting below it. The white
+       continues past the bar, where Safari's floating toolbar leaves a gap. -->
   <div
     data-download-bar
-    class="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:static lg:border-0 lg:p-0"
+    class="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] after:absolute after:inset-x-0 after:top-full after:h-screen after:bg-white lg:static lg:border-0 lg:p-0 lg:after:hidden"
   >
     <button
       class="btn btn-primary w-full"

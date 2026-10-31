@@ -57,24 +57,13 @@
   const isConnected = $derived(credentials.value !== null);
   const bookmark = bookmarkletHref(window.location.origin);
 
-  // iOS has no drag-to-bookmarks, so the bookmark's address is pasted in by
-  // hand. iPads identify as Macs, but Macs have no touch screen.
+  // iOS Safari refuses to run bookmarks like this one, so it gets a shortcut.
+  // iPads identify as Macs, but Macs have no touch screen.
   const isIOS =
     /iPhone|iPad|iPod/.test(navigator.userAgent) ||
     (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1);
 
-  let copyState = $state<"idle" | "copied" | "failed">("idle");
-
-  const copyBookmark = async () => {
-    try {
-      await navigator.clipboard.writeText(bookmark);
-      copyState = "copied";
-    } catch {
-      copyState = "failed";
-    }
-  };
-
-  const go =(event: SubmitEvent) => {
+  const go = (event: SubmitEvent) => {
     event.preventDefault();
     error = "";
     const value = link.trim();
@@ -173,39 +162,21 @@
       </p>
       {#if isIOS}
         <ol class="list-decimal space-y-1 pl-5">
-          <li>Copy the bookmark code with the button below.</li>
-          <li>Bookmark this page from Safari's share menu.</li>
+          <li>Add the shortcut with the button below.</li>
           <li>
-            Open your bookmarks, tap Edit, then tap the new bookmark. Name it
-            threadshot and replace its address with the code you copied.
+            In the Settings app, open Shortcuts, then Advanced, and turn on
+            Allow Running Scripts.
           </li>
-          <li>Open any Reddit post in Safari, not the Reddit app.</li>
+          <li>On a Reddit post in Safari, tap Share and choose threadshot.</li>
           <li>
-            Tap the address bar, type threadshot, and tap the bookmark in the
-            results.
+            In the Reddit app, the same steps open the post in Safari. Share it
+            again from there.
           </li>
         </ol>
-        <button
-          class="btn btn-primary self-start"
-          onclick={copyBookmark}
-          type="button"
-        >
+        <a class="btn btn-primary self-start" href="/threadshot.shortcut">
           <BookmarkSimple size={20} weight="bold" />
-          {copyState === "copied" ? "Copied" : "Copy bookmark code"}
-        </button>
-        {#if copyState === "failed"}
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-medium text-accent">
-              Could not copy automatically. Select everything below and copy it.
-            </span>
-            <textarea
-              class="field h-24 py-2 font-mono text-sm"
-              onfocus={(event) => event.currentTarget.select()}
-              readonly
-              value={bookmark}
-            ></textarea>
-          </label>
-        {/if}
+          Add the shortcut
+        </a>
       {:else}
         <ol class="list-decimal space-y-1 pl-5">
           <li>Drag the button below up to your bookmarks bar.</li>

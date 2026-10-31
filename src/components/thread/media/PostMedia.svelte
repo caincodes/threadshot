@@ -38,7 +38,7 @@
 {#if submission.linkType === "self"}
   {#if selfText}
     <div class="md text-base leading-[22px]">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -- reddit's own sanitized HTML -->
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -- cleaned by parseThread -->
       {@html selfText}
     </div>
   {/if}

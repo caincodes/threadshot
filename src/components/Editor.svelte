@@ -16,6 +16,7 @@
     type RawThread,
     type RedditData,
   } from "../lib/redditData";
+  import { decodeThread, THREAD_FRAGMENT } from "../lib/threadLink";
   import Connect from "./Connect.svelte";
   import Controls from "./editor/Controls.svelte";
   import ShareImage from "./thread/ShareImage.svelte";
@@ -27,7 +28,8 @@
   const shareCode = params.get("share");
   const commentId = params.get("commentId");
   const isSample = params.get("sample") === "1";
-  // Opened by the "Send to threadshot.app" bookmark, which posts the thread over.
+  // Opened by the "Send to threadshot.app" bookmark, which posts the thread over,
+  // or by the iOS shortcut, which puts it in the URL fragment.
   const isFromBookmark = params.get("from") === "reddit";
   const bookmarkNonce = params.get("n");
 
@@ -49,12 +51,29 @@
   let isCredentialError = $state(false);
   let received = $state<RawThread>();
 
+  // A link can't prove where it came from, so unlike a window message this data
+  // may be crafted by anyone. parseThread cleans its HTML before it is rendered.
+  $effect(() => {
+    const { hash } = window.location;
+    if (!isFromBookmark || !hash.startsWith(THREAD_FRAGMENT)) {
+      return;
+    }
+    decodeThread(hash.slice(THREAD_FRAGMENT.length))
+      .then((thread) => {
+        received = thread;
+      })
+      .catch(() => {
+        errorMessage = "That link did not contain a Reddit thread this app can read.";
+        isLoading = false;
+      });
+  });
+
   // Only pages on reddit.com may send data, and only a well-formed thread is used.
   $effect(() => {
     if (!isFromBookmark) {
       return;
     }
-    const onMessage = (event: MessageEvent) => {
+    const onMessage =(event: MessageEvent) => {
       if (
         !REDDIT_ORIGINS.has(event.origin) ||
         event.data?.type !== BOOKMARK_MESSAGE ||

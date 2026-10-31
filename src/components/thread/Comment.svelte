@@ -76,7 +76,7 @@
     </div>
 
     <div class="md mt-1 text-base leading-[22px]">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -- reddit's own sanitized HTML -->
+      <!-- eslint-disable-next-line svelte/no-at-html-tags -- cleaned by parseThread -->
       {@html body}
     </div>
 

@@ -23,6 +23,7 @@ const fullCommit = () => {
 export default defineConfig({
   site: /^https?:\/\//i.test(siteDomain) ? siteDomain : `https://${siteDomain}`,
   output: "server",
+  devToolbar: { enabled: false },
   adapter: vercel(),
   integrations: [svelte()],
   vite: {
