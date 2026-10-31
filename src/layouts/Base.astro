@@ -1,4 +1,6 @@
 ---
+import { Icon } from "astro-iconify";
+
 import "../styles/global.css";
 
 interface Props {
@@ -8,7 +10,7 @@ interface Props {
 
 const {
   title = "threadshot.app: Reddit threads as clean images",
-  description = "Paste a Reddit post or comment link and download a PNG that looks like Reddit.",
+  description = "Send a Reddit post or comment from your browser and download it as a clean PNG.",
 } = Astro.props;
 
 // The old *.vercel.app address still serves the site (bookmarks made there
@@ -16,11 +18,10 @@ const {
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
 const REPOSITORY = "https://github.com/caincodes/threadshot";
-const deployedAt = new Intl.DateTimeFormat("en-US", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-}).format(new Date(__BUILD_TIME__));
+// "2026-10-31T19:05:12.000Z" becomes "2026/10/31, 19:05".
+const releasedAt = __BUILD_TIME__.slice(0, 16)
+  .replaceAll("-", "/")
+  .replace("T", ", ");
 ---
 
 <!doctype html>
@@ -38,12 +39,22 @@ const deployedAt = new Intl.DateTimeFormat("en-US", {
   </head>
   <body class="flex min-h-screen flex-col">
     <header class="border-b border-line">
-      <div class="mx-auto flex h-14 max-w-[1280px] items-center px-4 lg:px-8">
+      <div
+        class="mx-auto flex h-14 max-w-[1280px] items-center justify-between px-4 lg:px-8"
+      >
         <a
           href="/"
-          class="font-display text-xl font-extrabold tracking-[-0.02em]"
+          class="heading text-xl"
         >
           threadshot.app
+        </a>
+        <a
+          class="-mr-2.5 flex size-11 items-center justify-center rounded-ui transition-colors duration-150 hover:bg-canvas active:bg-line"
+          aria-label="threadshot.app on GitHub"
+          href={REPOSITORY}
+          rel="noopener"
+        >
+          <Icon class="size-6" name="github" optimize={false} />
         </a>
       </div>
     </header>
@@ -58,12 +69,11 @@ const deployedAt = new Intl.DateTimeFormat("en-US", {
           threadshot.app is not affiliated with Reddit. Posts and comments belong
           to their authors.
         </p>
-        <p class="flex flex-wrap gap-x-4 gap-y-1">
-          <a class="link" href={REPOSITORY} rel="noopener">GitHub</a>
+        <p class="flex flex-wrap gap-x-4 gap-y-1 tabular-nums">
           {
             __BUILD_COMMIT__ && (
               <span>
-                Version{" "}
+                {__BUILD_VERSION__ && `v${__BUILD_VERSION__} `}(
                 <a
                   class="link font-mono"
                   href={`${REPOSITORY}/commit/${__BUILD_COMMIT__}`}
@@ -71,11 +81,12 @@ const deployedAt = new Intl.DateTimeFormat("en-US", {
                 >
                   {__BUILD_COMMIT__.slice(0, 7)}
                 </a>
+                )
               </span>
             )
           }
           <span>
-            Deployed <time datetime={__BUILD_TIME__}>{deployedAt} UTC</time>
+            Released <time datetime={__BUILD_TIME__}>{releasedAt} UTC</time>
           </span>
         </p>
       </div>
