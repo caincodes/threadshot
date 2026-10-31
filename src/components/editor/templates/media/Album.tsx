@@ -1,27 +1,27 @@
-import { Grid } from "@chakra-ui/react";
-import React from "react";
-
 import { useEditorData } from "../../../../contexts/EditorContext";
-import { RedditSubmission } from "../../../../types/reddit";
+import type { RedditSubmission } from "../../../../types/reddit";
 import { Image } from "./Image";
 
 interface AlbumProps {
   submission: RedditSubmission;
 }
 
-export const Album: React.FC<AlbumProps> = ({ submission }) => {
+export const Album = ({ submission }: AlbumProps) => {
   const { media_metadata } = submission;
   const { imageColumns } = useEditorData();
 
-  if (media_metadata) {
-    return (
-      <Grid gridGap="8px" gridTemplateColumns={`repeat(${imageColumns}, 1fr)`}>
-        {Object.entries(media_metadata).map(([key, img]) => (
-          <Image key={key} src={img.s.u} />
-        ))}
-      </Grid>
-    );
-  } else {
-    return <></>;
+  if (!media_metadata) {
+    return null;
   }
+
+  return (
+    <div
+      className="grid gap-2"
+      style={{ gridTemplateColumns: `repeat(${imageColumns}, 1fr)` }}
+    >
+      {Object.entries(media_metadata).map(([key, img]) => (
+        <Image key={key} src={img.s.u} />
+      ))}
+    </div>
+  );
 };

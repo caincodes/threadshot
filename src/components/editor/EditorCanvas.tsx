@@ -1,64 +1,53 @@
-import { Flex, FlexProps, Spinner } from "@chakra-ui/react";
-import React from "react";
-
 import { useEditorData } from "../../contexts/EditorContext";
-import { lightTheme } from "../../styles/themes";
-import {
-  RedditSubmission,
-  RedditComment,
+import type {
   MoreChildren,
+  RedditComment,
+  RedditSubmission,
 } from "../../types/reddit";
-import { Paragraph, Title } from "../typography";
+import { cx } from "../../lib/cx";
+import { Spinner } from "../ui/PrimaryButton";
+import { Paragraph, Title } from "../ui/typography";
 import { CommentHeader } from "./CommentHeader";
 import { RootComment } from "./templates/comments/RootComment";
 import { Submission } from "./templates/submissions/Submission";
-import { ViaShareddit } from "./ViaShareddit";
+import { Attribution } from "./Attribution";
 
-interface EditorCanvasProps extends FlexProps {
+interface EditorCanvasProps {
   isLoading: boolean;
   isError: boolean;
   submission: RedditSubmission | undefined;
   comments: (RedditComment | MoreChildren)[] | undefined;
 }
 
-export const EditorCanvas: React.FC<EditorCanvasProps> = ({
+export const EditorCanvas = ({
   submission,
   comments,
   isLoading,
   isError,
-  ...props
-}) => {
+}: EditorCanvasProps) => {
   const { theme, showComments, topLevelComments } = useEditorData();
-  const backgroundColor = theme.background["100"];
-  const align = !isLoading && !isError ? "left" : "center";
-  const justify = !isLoading && !isError ? "left" : "center";
+  const isReady = !isLoading && !isError;
   const commentsBeingShown = Boolean(comments?.length && showComments);
 
   return (
-    <Flex
-      alignItems="center"
-      borderRadius="8px"
-      direction="column"
-      maxWidth="100vw"
-    >
-      <Title height="32px">Image Preview</Title>
-      <Flex
-        align={align}
-        backgroundColor={backgroundColor}
-        height="100%"
+    <div className="flex max-w-screen flex-col items-center rounded-lg">
+      <Title className="h-8">Image Preview</Title>
+      <div
+        className={cx(
+          "flex h-full max-h-[calc(100vh-96px-32px)] text-left",
+          isReady ? "items-start justify-start" : "items-center justify-center"
+        )}
         id="reddit-preview"
-        justify={justify}
-        textAlign="left"
-        {...props}
+        style={{ backgroundColor: theme.background["100"] }}
       >
-        <Flex direction="column" gap="8px">
+        <div className="flex flex-col gap-2">
           {submission && (
             <>
               <Submission
                 commentsBeingShown={commentsBeingShown}
                 submission={submission}
               />
-              <ViaShareddit />
+              <Attribution />
             </>
           )}
           {comments && showComments && (
@@ -69,14 +58,14 @@ export const EditorCanvas: React.FC<EditorCanvasProps> = ({
               ))}
             </>
           )}
-        </Flex>
+        </div>
         {isLoading && <Spinner />}
         {isError && (
-          <Paragraph color={lightTheme.accents[100]}>
+          <Paragraph style={{ color: theme.accents[100] }}>
             Something went wrong 😔
           </Paragraph>
         )}
-      </Flex>
-    </Flex>
+      </div>
+    </div>
   );
 };

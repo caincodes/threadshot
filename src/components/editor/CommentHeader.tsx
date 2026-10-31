@@ -1,13 +1,11 @@
-import React from "react";
-
 import { useEditorData } from "../../contexts/EditorContext";
-import { Caption } from "../typography";
+import { Caption } from "../ui/typography";
 
-export const CommentHeader: React.FC = () => {
+export const CommentHeader = () => {
   const { commentSort, theme } = useEditorData();
 
   return (
-    <Caption color={theme.contrast[100]} fontWeight={700} paddingX="18px">
+    <Caption bold className="px-[18px]" style={{ color: theme.contrast[100] }}>
       Comments sorted by {commentSort}
     </Caption>
   );

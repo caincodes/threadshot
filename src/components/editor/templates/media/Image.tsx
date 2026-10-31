@@ -1,31 +1,19 @@
-import React, { useState, useEffect } from "react";
-
 import { useEditorData } from "../../../../contexts/EditorContext";
+import { proxiedImageSrc } from "./proxy";
 
 interface ImageProps {
   src: string;
 }
 
-export const Image: React.FC<ImageProps> = ({ src }) => {
+export const Image = ({ src }: ImageProps) => {
   const { imageScale } = useEditorData();
-  const [corsSrc, setCorsSrc] = useState<string>(src);
-
-  useEffect(() => {
-    if (window) {
-      setCorsSrc("/reddit-image/" + src.replace("https://", ""));
-    }
-  }, [src]);
 
   return (
     <img
       alt="content"
-      src={corsSrc}
-      style={{
-        height: imageScale,
-        width: imageScale,
-        borderWidth: "1px",
-        borderRadius: "8px",
-      }}
+      className="rounded-lg border border-gray-200"
+      src={proxiedImageSrc(src)}
+      style={{ height: imageScale, width: imageScale }}
     />
   );
 };

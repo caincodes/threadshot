@@ -1,7 +1,5 @@
-import React from "react";
-
-import { RedditSubmission } from "../../../../types/reddit";
-import { Title } from "../../../typography";
+import type { RedditSubmission } from "../../../../types/reddit";
+import { Title } from "../../../ui/typography";
 import { Album } from "../media/Album";
 import { Image } from "../media/Image";
 import { LinkPreview } from "../media/LinkPreview";
@@ -12,9 +10,7 @@ export interface SubmissionContentProps {
   submission: RedditSubmission;
 }
 
-export const SubmissionContent: React.FC<SubmissionContentProps> = ({
-  submission,
-}) => {
+export const SubmissionContent = ({ submission }: SubmissionContentProps) => {
   switch (submission.linkType) {
     case "image":
       return <Image src={submission.url ?? ""} />;

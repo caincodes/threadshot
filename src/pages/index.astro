@@ -1,0 +1,60 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base>
+  <div class="grid grid-cols-[1fr_minmax(240px,1fr)_1fr] gap-3">
+    <div class="col-start-2 flex flex-col gap-6">
+      <p class="text-xl font-bold">The comprehensive reddit screenshot tool.</p>
+      <form id="url-form" class="flex flex-col gap-2" novalidate>
+        <input
+          id="url-input"
+          type="text"
+          placeholder="reddit url"
+          autocomplete="off"
+          class="h-10 w-full rounded-md border border-gray-200 bg-white px-4 text-center outline-none hover:border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        />
+        <button
+          type="submit"
+          class="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 font-semibold text-white hover:bg-primary-hover hover:text-surface-300 active:bg-primary-active"
+        >
+          Generate Image
+        </button>
+      </form>
+      <p id="url-error" class="text-xs font-extralight break-keep text-accent-red">
+      </p>
+      <p class="text-sm">
+        post-share-web helps you capture the whole context of the reddit post with
+        a single image. No more cropping, no more scribbling out usernames,
+        post-share-web is the all-in-one tool to save or share your favorite
+        reddit moments.
+      </p>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>("#url-form")!;
+  const input = document.querySelector<HTMLInputElement>("#url-input")!;
+  const error = document.querySelector<HTMLElement>("#url-error")!;
+
+  const POST_PATH = /^\/r\/[\w-]+\/(comments\/\w+|s\/[\w-]+)(\/|$)/;
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    error.textContent = "";
+    const value = input.value.trim();
+    if (!value) {
+      return;
+    }
+    try {
+      const { pathname } = new URL(value);
+      if (!POST_PATH.test(pathname)) {
+        throw new Error();
+      }
+      window.location.href = pathname;
+    } catch {
+      error.textContent = "Please enter a reddit submission or comment URL";
+    }
+  });
+</script>

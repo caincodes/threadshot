@@ -1,4 +1,4 @@
-import { RedditComment, ListedRawComment } from "../../types/reddit";
+import type { RedditComment, ListedRawComment } from "../../types/reddit";
 import { parseComment } from "./parseComment";
 
 export const parseComments = (

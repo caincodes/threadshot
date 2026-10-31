@@ -1,12 +1,15 @@
 import * as htmlToImage from "html-to-image";
-import React, { useContext, createContext } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
-import { lightTheme, Theme } from "../styles/themes";
-import { CommentSort } from "../types/reddit";
-
-export interface EditorContextProps {
-  children: React.ReactNode;
-}
+import { lightTheme, type Theme } from "../styles/themes";
+import type { CommentSort } from "../types/reddit";
 
 export interface EditorContextState {
   fontSize: "small" | "medium" | "large";
@@ -31,7 +34,7 @@ export interface EditorContextFunctions {
     key: K,
     value: EditorContextState[K]
   ) => void;
-  download: () => void;
+  download: () => Promise<void>;
 }
 
 const initialState: EditorContextState = {
@@ -52,101 +55,73 @@ const initialState: EditorContextState = {
   isLoading: false,
 };
 
-const initialFunctions: EditorContextFunctions = {
-  setProperty: () => undefined,
-  download: () => undefined,
-};
-
 const EditorDataContext = createContext<EditorContextState>(initialState);
-const EditorMutationContext =
-  createContext<EditorContextFunctions>(initialFunctions);
+const EditorMutationContext = createContext<EditorContextFunctions>({
+  setProperty: () => undefined,
+  download: async () => undefined,
+});
 
-export const useEditorData = (): EditorContextState => {
-  return useContext(EditorDataContext);
+export const useEditorData = (): EditorContextState =>
+  useContext(EditorDataContext);
+
+export const useEditorMutation = (): EditorContextFunctions =>
+  useContext(EditorMutationContext);
+
+const downloadImage = (dataUrl: string) => {
+  const link = document.createElement("a");
+  link.download = "post-share-web.png";
+  link.href = dataUrl;
+  link.click();
 };
 
-export const useEditorMutation = (): EditorContextFunctions => {
-  return useContext(EditorMutationContext);
+const makeDataURL = async () => {
+  const node = document.getElementById("reddit-preview");
+  if (!node) {
+    throw new Error("Can't find the image preview to generate an image from.");
+  }
+
+  return htmlToImage.toPng(node, {
+    backgroundColor: "white",
+    pixelRatio: 2,
+    width: node.clientWidth,
+    height: node.scrollHeight,
+    includeQueryParams: true,
+    skipFonts: true,
+  });
 };
 
-export class EditorContextProvider extends React.Component<
-  EditorContextProps,
-  EditorContextState
-> {
-  constructor(props: EditorContextProps) {
-    super(props);
-    this.state = initialState;
-  }
+export const EditorContextProvider = ({ children }: { children: ReactNode }) => {
+  const [state, setState] = useState<EditorContextState>(initialState);
 
-  setProperty = <K extends keyof EditorContextState>(
-    key: K,
-    value: EditorContextState[K]
-  ): void => {
-    this.setState({ ...this.state, [key]: value });
-  };
+  const setProperty = useCallback(
+    <K extends keyof EditorContextState>(
+      key: K,
+      value: EditorContextState[K]
+    ) => setState((prev) => ({ ...prev, [key]: value })),
+    []
+  );
 
-  downloadImage = (base64: string) => {
-    const click = new MouseEvent("click", {
-      view: window,
-      bubbles: false,
-      cancelable: true,
-    });
-    const a = document.createElement("a");
-
-    a.setAttribute("download", `post-share-web.png`);
-    a.setAttribute("href", base64);
-    a.setAttribute("target", "_blank");
-    a.dispatchEvent(click);
-    a.remove();
-  };
-
-  makeDataURL = async () => {
-    const node = document.getElementById("reddit-preview");
-
-    if (!node) {
-      alert(
-        "There is an issue with the editor. Can't generate or download image."
-      );
-      return;
+  const download = useCallback(async () => {
+    setProperty("isLoading", true);
+    try {
+      downloadImage(await makeDataURL());
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setProperty("isLoading", false);
     }
+  }, [setProperty]);
 
-    const width = node.clientWidth;
-    const height = node.scrollHeight;
+  const mutation = useMemo(
+    () => ({ setProperty, download }),
+    [setProperty, download]
+  );
 
-    const dataURL = await htmlToImage.toPng(node, {
-      backgroundColor: "white",
-      pixelRatio: 2,
-      width,
-      height,
-      includeQueryParams: true,
-    });
-
-    return dataURL;
-  };
-
-  download = async () => {
-    this.setState({ isLoading: true });
-    const data = await this.makeDataURL();
-    if (!data) {
-      alert("Something went wrong");
-      return;
-    }
-    this.downloadImage(data);
-    this.setState({ isLoading: false });
-  };
-
-  render(): JSX.Element {
-    return (
-      <EditorDataContext.Provider value={this.state}>
-        <EditorMutationContext.Provider
-          value={{
-            setProperty: this.setProperty,
-            download: this.download,
-          }}
-        >
-          {this.props.children}
-        </EditorMutationContext.Provider>
-      </EditorDataContext.Provider>
-    );
-  }
-}
+  return (
+    <EditorDataContext.Provider value={state}>
+      <EditorMutationContext.Provider value={mutation}>
+        {children}
+      </EditorMutationContext.Provider>
+    </EditorDataContext.Provider>
+  );
+};

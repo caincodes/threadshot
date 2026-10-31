@@ -26,6 +26,9 @@ yarn-error.log*
 jet-logger.log*
 
 
-# Local Next folder
-.next
 tsconfig.tsbuildinfo
+
+# Astro
+.astro
+dist
+.vercel

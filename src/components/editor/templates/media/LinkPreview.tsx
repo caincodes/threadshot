@@ -1,44 +1,33 @@
-import { LinkIcon } from "@chakra-ui/icons";
-import { Flex } from "@chakra-ui/react";
-import React from "react";
-
 import { useEditorData } from "../../../../contexts/EditorContext";
-import { RedditSubmission } from "../../../../types/reddit";
-import { Caption } from "../../../typography";
+import type { RedditSubmission } from "../../../../types/reddit";
+import { LinkIcon } from "../../../ui/Link";
+import { Caption } from "../../../ui/typography";
 import { Image } from "./Image";
 
 interface LinkPreviewProps {
   submission: RedditSubmission;
 }
-export const LinkPreview: React.FC<LinkPreviewProps> = ({ submission }) => {
+
+export const LinkPreview = ({ submission }: LinkPreviewProps) => {
   const { preview, url: link } = submission;
   const { theme } = useEditorData();
 
   if (!preview) {
-    return <></>;
+    return null;
   }
 
   const { url } = preview.images[0].source;
   const host = link ? new URL(link).host : "";
 
   return (
-    <Flex borderRadius="8px" borderWidth="1px" overflow="hidden">
-      <Flex justifyContent="center" position="relative">
+    <div className="flex overflow-hidden rounded-lg border border-gray-200">
+      <div className="relative flex justify-center">
         <Image src={url} />
-        <Flex
-          alignItems="center"
-          backgroundColor="rgba(0,0,0,0.3)"
-          bottom="0"
-          gap="4px"
-          height="16px"
-          justifyContent="center"
-          position="absolute"
-          width="100%"
-        >
-          <LinkIcon color={theme.background[400]} height="14px" />
-          <Caption color={theme.background[400]}>{host}</Caption>
-        </Flex>
-      </Flex>
-    </Flex>
+        <div className="absolute bottom-0 flex h-4 w-full items-center justify-center gap-1 bg-black/30">
+          <LinkIcon color={theme.background[400]} />
+          <Caption style={{ color: theme.background[400] }}>{host}</Caption>
+        </div>
+      </div>
+    </div>
   );
 };

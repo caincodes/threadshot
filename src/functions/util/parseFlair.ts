@@ -1,4 +1,4 @@
-import { RawFlair, RedditFlair } from "../../types/reddit";
+import type { RawFlair, RedditFlair } from "../../types/reddit";
 
 export const parseFlair = (
   flair: RawFlair | undefined,

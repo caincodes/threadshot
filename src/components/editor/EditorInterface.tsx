@@ -1,18 +1,28 @@
-import { Flex, FlexProps } from "@chakra-ui/react";
-import React from "react";
+import type { ReactNode } from "react";
 
-import { Title } from "../../components/typography/Title";
 import { useEditorData, useEditorMutation } from "../../contexts/EditorContext";
-import { CommentSort, SORT_TYPES } from "../../types/reddit";
-import { PrimaryButton } from "../buttons";
-import { Seperator } from "../Seperator";
-import { EditorOption } from "./EditorOption";
-import { EditorOptionSection } from "./EditorOptionSection";
-import { MultiSelect } from "./MultiSelect";
-import { NumberInput } from "./NumberInput";
-import { Toggle } from "./Toggle";
+import { SORT_TYPES, type CommentSort } from "../../types/reddit";
+import { MultiSelect, NumberInput, Toggle } from "../ui/controls";
+import { PrimaryButton } from "../ui/PrimaryButton";
+import { Heading, Paragraph, Title } from "../ui/typography";
 
-export const EditorInterface: React.FC<FlexProps> = () => {
+const Section = ({ label, children }: { label: string; children: ReactNode }) => (
+  <div className="flex flex-col gap-2">
+    <Heading>{label}</Heading>
+    {children}
+  </div>
+);
+
+const Option = ({ label, children }: { label: string; children: ReactNode }) => (
+  <div className="flex items-center justify-between gap-1">
+    <Paragraph>{label}</Paragraph>
+    {children}
+  </div>
+);
+
+const Separator = () => <div className="h-px bg-surface-400" />;
+
+export const EditorInterface = () => {
   const {
     isCensorUsernames,
     isCensorSubreddits,
@@ -27,110 +37,98 @@ export const EditorInterface: React.FC<FlexProps> = () => {
   const { setProperty, download } = useEditorMutation();
 
   return (
-    <Flex alignItems="center" direction="column" maxWidth="100vw">
-      <Title height="32px">Image Options</Title>
-      <Flex
-        alignItems="left"
-        backgroundColor="#ffffff"
-        borderRadius="8px"
-        boxShadow="sm"
-        direction="column"
-        gap="6px"
-        paddingX="18px"
-        paddingY="4px"
-        textAlign="left"
-      >
+    <div className="flex max-w-screen flex-col items-center">
+      <Title className="h-8">Image Options</Title>
+      <div className="flex flex-col gap-1.5 rounded-lg bg-white px-[18px] py-1 text-left shadow-sm">
         <PrimaryButton isLoading={isLoading} onClick={download}>
           Download Image
         </PrimaryButton>
-        <EditorOptionSection label="Privacy">
-          <EditorOption label="Censor Usernames">
+        <Section label="Privacy">
+          <Option label="Censor Usernames">
             <Toggle
               isChecked={isCensorUsernames}
+              label="Censor Usernames"
               onChange={() =>
                 setProperty("isCensorUsernames", !isCensorUsernames)
               }
             />
-          </EditorOption>
-          <EditorOption label="Censor Subreddits">
+          </Option>
+          <Option label="Censor Subreddits">
             <Toggle
               isChecked={isCensorSubreddits}
+              label="Censor Subreddits"
               onChange={() =>
                 setProperty("isCensorSubreddits", !isCensorSubreddits)
               }
             />
-          </EditorOption>
-        </EditorOptionSection>
-        <Seperator />
-        <EditorOptionSection label="Submission">
-          <EditorOption label="Number of Image Album Columns">
+          </Option>
+        </Section>
+        <Separator />
+        <Section label="Submission">
+          <Option label="Number of Image Album Columns">
             <NumberInput
               defaultValue={imageColumns}
               max={50}
-              min={0}
-              onChange={(valueAsString, valueAsNumber) =>
-                setProperty("imageColumns", valueAsNumber)
-              }
+              min={1}
+              onChange={(value) => setProperty("imageColumns", value)}
             />
-          </EditorOption>
-        </EditorOptionSection>
-        <Seperator />
-        <EditorOptionSection label="Comments">
-          <EditorOption label="Show Comments">
+          </Option>
+        </Section>
+        <Separator />
+        <Section label="Comments">
+          <Option label="Show Comments">
             <Toggle
               isChecked={showComments}
+              label="Show Comments"
               onChange={() => setProperty("showComments", !showComments)}
             />
-          </EditorOption>
+          </Option>
           {showComments && (
             <>
-              <EditorOption label="Number of Top Level Comments">
+              <Option label="Number of Top Level Comments">
                 <NumberInput
                   defaultValue={topLevelComments}
                   max={50}
                   min={0}
-                  onChange={(valueAsString, valueAsNumber) =>
-                    setProperty("topLevelComments", valueAsNumber)
-                  }
+                  onChange={(value) => setProperty("topLevelComments", value)}
                 />
-              </EditorOption>
-              <EditorOption label="Comment Reply Depth">
+              </Option>
+              <Option label="Comment Reply Depth">
                 <NumberInput
                   defaultValue={replyDepth}
                   max={50}
                   min={0}
-                  onChange={(valueAsString, valueAsNumber) =>
-                    setProperty("replyDepth", valueAsNumber)
-                  }
+                  onChange={(value) => setProperty("replyDepth", value)}
                 />
-              </EditorOption>
-              <EditorOption label="Number of Replies to Each Comment">
+              </Option>
+              <Option label="Number of Replies to Each Comment">
                 <NumberInput
                   defaultValue={commentReplies}
                   max={50}
                   min={0}
-                  onChange={(valueAsString, valueAsNumber) =>
-                    setProperty("commentReplies", valueAsNumber)
-                  }
+                  onChange={(value) => setProperty("commentReplies", value)}
                 />
-              </EditorOption>
-              <EditorOption label="Sort">
+              </Option>
+              <Option label="Sort">
                 <MultiSelect
+                  aria-label="Sort"
                   defaultValue={commentSort}
-                  onChange={(event) => {
-                    const option = event.target.value as unknown as CommentSort;
-                    setProperty("commentSort", option);
-                  }}
+                  onChange={(event) =>
+                    setProperty(
+                      "commentSort",
+                      event.currentTarget.value as CommentSort
+                    )
+                  }
                 >
                   {SORT_TYPES.map((sort) => (
                     <option key={sort}>{sort}</option>
                   ))}
                 </MultiSelect>
-              </EditorOption>
+              </Option>
             </>
           )}
-        </EditorOptionSection>
-      </Flex>
-    </Flex>
+        </Section>
+      </div>
+    </div>
   );
 };

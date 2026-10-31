@@ -1,50 +1,37 @@
-import { Flex } from "@chakra-ui/react";
-import React from "react";
-
 import { useEditorData } from "../../../../contexts/EditorContext";
-import {
-  censorUsernames,
-  censorSubreddits,
-} from "../../../../functions/util/censorText";
-import { RedditSubmission } from "../../../../types/reddit";
-import { Paragraph } from "../../../typography/Paragraph";
+import { applyCensoring } from "../../../../functions/util/censorText";
+import type { RedditSubmission } from "../../../../types/reddit";
+import { Paragraph } from "../../../ui/typography";
 
 interface SelfTextProps {
   submission: RedditSubmission;
 }
 
-export const SelfText: React.FC<SelfTextProps> = ({ submission }) => {
+export const SelfText = ({ submission }: SelfTextProps) => {
   const { theme, isCensorSubreddits, isCensorUsernames } = useEditorData();
   const { selftext_html } = submission;
 
-  const backgroundColor = theme.background["100"];
-  const borderColor = theme.background["300"];
-
-  const body =
-    selftext_html && isCensorSubreddits && isCensorUsernames
-      ? censorSubreddits(censorUsernames(selftext_html))
-      : selftext_html && isCensorSubreddits
-      ? censorSubreddits(selftext_html)
-      : selftext_html && isCensorUsernames
-      ? censorUsernames(selftext_html)
-      : selftext_html;
-
-  if (selftext_html) {
-    return (
-      <Flex
-        backgroundColor={backgroundColor}
-        borderColor={borderColor}
-        borderRadius="8px"
-        borderWidth="1px"
-        maxWidth="100%"
-        padding="8px"
-      >
-        <Paragraph color={theme.contrast[300]}>
-          {body && <a dangerouslySetInnerHTML={{ __html: body }} />}
-        </Paragraph>
-      </Flex>
-    );
-  } else {
-    return <></>;
+  if (!selftext_html) {
+    return null;
   }
+
+  const body = applyCensoring(selftext_html, {
+    subreddits: isCensorSubreddits,
+    usernames: isCensorUsernames,
+  });
+
+  return (
+    <div
+      className="flex max-w-full rounded-lg border p-2"
+      style={{
+        backgroundColor: theme.background["100"],
+        borderColor: theme.background["300"],
+      }}
+    >
+      <Paragraph
+        dangerouslySetInnerHTML={{ __html: body }}
+        style={{ color: theme.contrast[300] }}
+      />
+    </div>
+  );
 };

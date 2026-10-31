@@ -1,4 +1,4 @@
-import { ColorWeight } from "./colors";
+import type { ColorWeight } from "./colors";
 
 interface ButtonColor {
   normal: string;

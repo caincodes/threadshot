@@ -1,9 +1,6 @@
-import { Flex } from "@chakra-ui/react";
-import React from "react";
-
 import { useEditorData } from "../../../../contexts/EditorContext";
-import { RedditSubmission } from "../../../../types/reddit";
-import { Title } from "../../../typography/Title";
+import type { RedditSubmission } from "../../../../types/reddit";
+import { Title } from "../../../ui/typography";
 import { Tagline } from "../tagline/Tagline";
 import { SubmissionContent } from "./SubmissionContent";
 
@@ -12,10 +9,10 @@ interface SubmissionCardProps {
   commentsBeingShown: boolean;
 }
 
-export const Submission: React.FC<SubmissionCardProps> = ({
+export const Submission = ({
   submission,
   commentsBeingShown,
-}) => {
+}: SubmissionCardProps) => {
   const { theme, isCensorUsernames, isCensorSubreddits } = useEditorData();
   const {
     title,
@@ -27,16 +24,12 @@ export const Submission: React.FC<SubmissionCardProps> = ({
     awardCount,
   } = submission;
 
-  const paddingBottom = commentsBeingShown ? 0 : 4;
-
   return (
-    <Flex
-      direction="column"
-      gap="8px"
-      paddingBottom={paddingBottom}
-      paddingX="18px"
+    <div
+      className="flex flex-col gap-2 px-[18px]"
+      style={{ paddingBottom: commentsBeingShown ? 0 : 16 }}
     >
-      <Title color={theme.contrast[300]}>{title}</Title>
+      <Title style={{ color: theme.contrast[300] }}>{title}</Title>
       <Tagline
         censorSubreddit={isCensorSubreddits}
         censorUser={isCensorUsernames}
@@ -49,6 +42,6 @@ export const Submission: React.FC<SubmissionCardProps> = ({
         username={author}
       />
       <SubmissionContent submission={submission} />
-    </Flex>
+    </div>
   );
 };

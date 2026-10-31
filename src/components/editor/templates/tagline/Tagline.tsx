@@ -1,10 +1,8 @@
-import { Flex } from "@chakra-ui/react";
-import React from "react";
 import uniqolor from "uniqolor";
 
 import { useEditorData } from "../../../../contexts/EditorContext";
-import { RedditFlair } from "../../../../types/reddit";
-import { Caption } from "../../../typography/Caption";
+import type { RedditFlair } from "../../../../types/reddit";
+import { Caption } from "../../../ui/typography";
 import { Awards } from "./Awards";
 import { BadgeContainer } from "./BadgeContainer";
 import { Flair } from "./Flair";
@@ -22,7 +20,9 @@ interface TaglineProps {
   censorSubreddit?: boolean;
 }
 
-export const Tagline: React.FC<TaglineProps> = ({
+const Dot = () => <Caption>{"•"}</Caption>;
+
+export const Tagline = ({
   username,
   score,
   date,
@@ -32,56 +32,52 @@ export const Tagline: React.FC<TaglineProps> = ({
   isSubmitter,
   censorUser,
   censorSubreddit = false,
-}) => {
+}: TaglineProps) => {
   const { theme } = useEditorData();
+
   return (
-    <Flex
-      alignItems="center"
-      color={theme.contrast[100]}
-      direction="row"
-      flexWrap="wrap"
-      gap={1}
+    <div
+      className="flex flex-row flex-wrap items-center gap-1"
+      style={{ color: theme.contrast[100] }}
     >
       {!censorUser ? (
-        <Caption fontWeight={700}>{username}</Caption>
+        <Caption bold>{username}</Caption>
       ) : (
-        <Flex
-          backgroundColor={uniqolor(username).color}
-          borderRadius={4}
-          height={4}
-          width={12}
+        <div
+          className="h-4 w-12 rounded"
+          style={{ backgroundColor: uniqolor(username).color }}
         />
       )}
-      <Caption>{"•"}</Caption>
+      <Dot />
       {isSubmitter && (
         <>
-          <BadgeContainer backgroundColor={theme.special.highlight}>
+          <BadgeContainer style={{ backgroundColor: theme.special.highlight }}>
             <Caption>OP</Caption>
           </BadgeContainer>
-          <Caption>{"•"}</Caption>
+          <Dot />
         </>
       )}
       {flair && (
         <>
           <Flair flair={flair} />
-          <Caption>{"•"}</Caption>
+          <Dot />
         </>
       )}
       <Caption>{score}</Caption>
-      <Caption>{"•"}</Caption>
+      <Dot />
       <Caption>{date}</Caption>
       {subreddit && (
         <>
-          <Caption>{"•"}</Caption>
+          <Dot />
           <Caption>{censorSubreddit ? "a subreddit" : subreddit}</Caption>
         </>
       )}
       {count !== 0 && (
         <>
-          <Caption>{"•"}</Caption>
+          <Dot />
           <Awards count={count} />
         </>
       )}
-    </Flex>
+    </div>
   );
 };

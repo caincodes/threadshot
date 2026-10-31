@@ -1,64 +1,39 @@
 {
   "name": "post-share-web",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "private": true,
+  "type": "module",
   "engines": {
     "node": "24.x"
   },
-  "dependencies": {
-    "@chakra-ui/icons": "^1.1.7",
-    "@chakra-ui/react": "^1.8.9",
-    "@chakra-ui/system": "^1.12.1",
-    "@emotion/react": "^11.4.0",
-    "@emotion/styled": "^11.3.0",
-    "axios": "^0.27.2",
-    "framer-motion": "^4.1.17",
-    "html-to-image": "^1.10.8",
-    "next": "^12.2.4",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-ga": "^3.3.0",
-    "react-query": "^3.34.16",
-    "uniqolor": "^1.0.1",
-    "url-params-parser": "^1.0.4",
-    "web-vitals": "^0.2.4"
-  },
   "scripts": {
-    "start": "next start",
-    "build": "next build",
-    "dev": "next dev",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
     "lint": "eslint src"
   },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "@astrojs/react": "^7.1.2",
+    "@astrojs/vercel": "^11.0.17",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tanstack/react-query": "^5.105.0",
+    "astro": "^7.4.4",
+    "html-to-image": "^1.11.13",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.3",
+    "uniqolor": "^1.1.1"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.17.0",
-    "@types/node": "^18.7.18",
-    "@types/react": "^18.0.17",
-    "@types/react-dom": "^16.9.13",
-    "@types/react-router-dom": "^5.1.7",
-    "@types/url-params-parser": "^1.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.25.0",
-    "@typescript-eslint/parser": "^5.25.0",
-    "eslint": "^8.21.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-config-react-app": "^7.0.1",
-    "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-react": "^7.30.0",
-    "eslint-plugin-react-hooks": "^4.5.0",
-    "typescript": "^4.8.3"
+    "@astrojs/check": "^0.9.12",
+    "@eslint/js": "^10.0.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "eslint": "^10.14.0",
+    "eslint-plugin-astro": "^3.2.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.1"
   }
 }

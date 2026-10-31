@@ -1,4 +1,4 @@
-import { RedditComment, RawComment } from "../../types/reddit";
+import type { RedditComment, RawComment } from "../../types/reddit";
 import { parseAwards } from "./parseAwards";
 import { parseComments } from "./parseComments";
 import { parseDate } from "./parseDate";

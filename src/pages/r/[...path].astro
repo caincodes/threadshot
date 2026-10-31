@@ -1,0 +1,50 @@
+---
+import Base from "../../layouts/Base.astro";
+import { resolveShareLink } from "../../server/resolveShare";
+
+// Handles reddit-style paths so a reddit URL works with the host swapped:
+//   /r/{sub}/comments/{postId}[/{title}[/{commentId}]]
+//   /r/{sub}/s/{code}  (share links)
+const [sub, kind, id, , commentId] = (Astro.params.path ?? "")
+  .split("/")
+  .filter(Boolean);
+
+const redirectToEditor = (post: {
+  sub: string;
+  postId: string;
+  commentId?: string | null;
+}) => {
+  const params = new URLSearchParams({ sub: post.sub, postId: post.postId });
+  if (post.commentId) {
+    params.set("commentId", post.commentId);
+  }
+  return Astro.redirect(`/generate?${params}`, 308);
+};
+
+let message = "Please enter a reddit submission or comment URL.";
+
+if (sub && kind === "comments" && id) {
+  return redirectToEditor({ sub, postId: id, commentId });
+}
+
+if (sub && kind === "s" && id) {
+  try {
+    const resolved = await resolveShareLink(sub, id);
+    if (resolved) {
+      return redirectToEditor(resolved);
+    }
+    message = "Could not resolve that reddit share link.";
+  } catch {
+    message = "Could not reach reddit to resolve that share link.";
+  }
+}
+
+Astro.response.status = 404;
+---
+
+<Base title="post-share-web">
+  <div class="flex flex-col items-center gap-4">
+    <p class="text-sm text-accent-red">{message}</p>
+    <a href="/" class="text-sm underline">Back to start</a>
+  </div>
+</Base>

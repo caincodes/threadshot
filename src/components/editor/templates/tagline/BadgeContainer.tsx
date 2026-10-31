@@ -1,20 +1,19 @@
-import { Flex, FlexProps } from "@chakra-ui/react";
-import React from "react";
+import type { ComponentProps } from "react";
 
-export const BadgeContainer: React.FC<FlexProps> = ({ children, ...props }) => {
-  return (
-    <Flex
-      alignItems="center"
-      borderRadius={8}
-      borderWidth={1}
-      gap={2}
-      justifyContent="center"
-      paddingX={1}
-      paddingY={0.5}
-      shrink={1}
-      {...props}
-    >
-      {children}
-    </Flex>
-  );
-};
+import { cx } from "../../../../lib/cx";
+
+export const BadgeContainer = ({
+  children,
+  className,
+  ...props
+}: ComponentProps<"div">) => (
+  <div
+    className={cx(
+      "flex shrink items-center justify-center gap-2 rounded-lg border border-gray-200 px-1 py-0.5",
+      className
+    )}
+    {...props}
+  >
+    {children}
+  </div>
+);

@@ -1,0 +1,37 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+}
+
+const { title = "post-share-web" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="The comprehensive reddit screenshot tool." />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Signika:wght@600&display=swap"
+    />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div
+      class="grid max-h-screen grid-rows-[96px_1fr] items-center pb-[18px] text-center"
+    >
+      <a href="/" class="font-logo text-5xl font-semibold">post-share-web</a>
+      <slot />
+    </div>
+  </body>
+</html>
