@@ -114,6 +114,11 @@
     @apply flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-ui transition-colors duration-150 hover:bg-line active:bg-line;
   }
 
+  /* Editor options sit close together, with more room to tap on touch screens. */
+  .option-row {
+    @apply flex min-h-9 items-center justify-between gap-3 pointer-coarse:min-h-11;
+  }
+
   .nav-link {
     @apply flex h-11 items-center px-2.5 text-sm font-semibold transition-colors duration-150 hover:text-accent active:text-accent-press;
   }
@@ -151,6 +156,10 @@
   .field {
     @apply h-11 rounded-ui border border-line bg-white px-3 text-base text-ink transition-colors duration-150;
     @apply hover:border-ink-2 focus-visible:border-ink focus-visible:outline-offset-0;
+  }
+
+  .option-control {
+    @apply h-6 pointer-coarse:h-8;
   }
 
   .link {

@@ -8,17 +8,17 @@
   let { label, options, value = $bindable() }: Props = $props();
 </script>
 
-<div class="flex min-h-12 items-center justify-between gap-3">
+<div class="option-row py-1">
   <span class="text-sm" id="seg-{label}">{label}</span>
   <div
-    class="flex overflow-hidden rounded-ui border border-line"
+    class="option-control flex overflow-hidden rounded-ui border border-line"
     aria-labelledby="seg-{label}"
     role="radiogroup"
   >
     {#each options as option (option.value)}
       <button
         class={[
-          "h-9 min-w-16 px-3 text-sm font-medium transition-colors duration-150",
+          "min-w-14 cursor-pointer px-2.5 text-sm font-medium transition-colors duration-150",
           value === option.value
             ? "bg-ink text-white"
             : "bg-white text-ink hover:bg-canvas",

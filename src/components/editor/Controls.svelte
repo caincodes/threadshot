@@ -7,6 +7,7 @@
   import { SORT_TYPES } from "../../types/reddit";
   import NumberField from "../ui/NumberField.svelte";
   import Segmented from "../ui/Segmented.svelte";
+  import Select from "../ui/Select.svelte";
   import Spinner from "../ui/Spinner.svelte";
   import Switch from "../ui/Switch.svelte";
   import ExportPreview from "./ExportPreview.svelte";
@@ -29,6 +30,11 @@
     { value: "light", text: "Light" },
     { value: "dark", text: "Dark" },
   ] as const;
+
+  const sortOptions = SORT_TYPES.map((value) => ({
+    value,
+    text: value.charAt(0).toUpperCase() + value.slice(1),
+  }));
 
   const bodyModes = [
     { value: "full", text: "Full" },
@@ -61,10 +67,10 @@
 </script>
 
 {#snippet heading(text: string)}
-  <h2 class="pt-3 text-sm font-semibold">{text}</h2>
+  <h2 class="option-row text-sm font-semibold">{text}</h2>
 {/snippet}
 
-<div class="flex flex-col border border-line bg-white p-4">
+<div class="flex flex-col border border-line bg-white px-4 lg:pt-4">
   <!-- On small screens the preview comes first, so the download button is
        pinned to the bottom of the screen instead of sitting below it. The white
        continues past the bar, where Safari's floating toolbar leaves a gap. -->
@@ -91,104 +97,102 @@
     </button>
   </div>
 
-  <div class="border-t border-line lg:mt-4">
-    {@render heading("Appearance")}
-    <Segmented label="Theme" options={themes} bind:value={editor.theme} />
-    <Switch label="Hide watermark" bind:checked={editor.hideWatermark} />
-    <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
-    <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
-  </div>
-
-  <div class="mt-3 border-t border-line">
-    {@render heading("Privacy")}
-    <Switch label="Redact usernames" bind:checked={editor.isCensorUsernames} />
-    <Switch label="Redact subreddit" bind:checked={editor.isCensorSubreddits} />
-  </div>
-
-  <!-- Only shown for posts these apply to. -->
-  {#if hasBody || isAlbum}
-    <div class="mt-3 border-t border-line">
-      {@render heading("Post")}
-      {#if hasBody}
-        <Segmented
-          label="Post body"
-          options={bodyModes}
-          bind:value={editor.postBody}
-        />
-        {#if editor.postBody === "snippet"}
-          <div class="flex flex-col gap-3 pb-2">
-            {#if editor.bodySnippet}
-              <button
-                class="btn btn-secondary"
-                onclick={() => (editor.bodySnippet = null)}
-                type="button"
-              >
-                Choose a different snippet
-              </button>
-            {:else}
-              <p class="text-sm text-ink-2">
-                Highlight text in the post, then use it as the snippet.
-              </p>
-              <button
-                class="btn btn-secondary"
-                disabled={!editor.bodySelection}
-                onclick={useSelection}
-                type="button"
-              >
-                Use highlighted text
-              </button>
-            {/if}
-          </div>
+  <div class="divide-y divide-line border-line lg:mt-4 lg:border-t">
+    <!-- Only shown for posts these apply to. -->
+    {#if hasBody || isAlbum}
+      <div class="py-2">
+        {@render heading("Post")}
+        {#if hasBody}
+          <Segmented
+            label="Post body"
+            options={bodyModes}
+            bind:value={editor.postBody}
+          />
+          {#if editor.postBody === "snippet"}
+            <div class="flex flex-col gap-3 pt-2 pb-2">
+              {#if editor.bodySnippet}
+                <button
+                  class="btn btn-secondary h-9 text-sm pointer-coarse:h-11"
+                  onclick={() => (editor.bodySnippet = null)}
+                  type="button"
+                >
+                  Choose a different snippet
+                </button>
+              {:else}
+                <p class="text-sm text-ink-2">
+                  Highlight text in the post, then use it as the snippet.
+                </p>
+                <button
+                  class="btn btn-secondary h-9 text-sm pointer-coarse:h-11"
+                  disabled={!editor.bodySelection}
+                  onclick={useSelection}
+                  type="button"
+                >
+                  Use highlighted text
+                </button>
+              {/if}
+            </div>
+          {/if}
         {/if}
-      {/if}
-      {#if isAlbum}
+        {#if isAlbum}
+          <NumberField
+            label="Album columns"
+            max={50}
+            min={1}
+            bind:value={editor.imageColumns}
+          />
+        {/if}
+      </div>
+    {/if}
+
+    <div class="py-2">
+      {@render heading("Comments")}
+      <Switch label="Show comments" bind:checked={editor.showComments} />
+      {#if editor.showComments}
+        <Select
+          class="w-30 pointer-coarse:w-36"
+          label="Sort"
+          options={sortOptions}
+          bind:value={editor.commentSort}
+        />
         <NumberField
-          label="Album columns"
+          label="Top-level comments"
           max={50}
-          min={1}
-          bind:value={editor.imageColumns}
+          min={0}
+          bind:value={editor.topLevelComments}
+        />
+        <NumberField
+          label="Replies per comment"
+          max={50}
+          min={0}
+          bind:value={editor.commentReplies}
+        />
+        <NumberField
+          label="Reply depth"
+          max={50}
+          min={0}
+          bind:value={editor.replyDepth}
+        />
+        <Switch
+          label={botCount ? `Hide bot comments (${botCount} found)` : "Hide bot comments (none found)"}
+          bind:checked={editor.hideBots}
         />
       {/if}
     </div>
-  {/if}
 
-  <div class="mt-3 border-t border-line">
-    {@render heading("Comments")}
-    <Switch label="Show comments" bind:checked={editor.showComments} />
-    {#if editor.showComments}
-      <Switch
-        label={botCount ? `Hide bot comments (${botCount} found)` : "Hide bot comments (none found)"}
-        bind:checked={editor.hideBots}
-      />
-      <NumberField
-        label="Top-level comments"
-        max={50}
-        min={0}
-        bind:value={editor.topLevelComments}
-      />
-      <NumberField
-        label="Reply depth"
-        max={50}
-        min={0}
-        bind:value={editor.replyDepth}
-      />
-      <NumberField
-        label="Replies per comment"
-        max={50}
-        min={0}
-        bind:value={editor.commentReplies}
-      />
-      <label class="flex min-h-12 items-center justify-between gap-3">
-        <span class="text-sm">Sort</span>
-        <select class="field w-36" bind:value={editor.commentSort}>
-          {#each SORT_TYPES as sortType (sortType)}
-            <option value={sortType}>
-              {sortType.charAt(0).toUpperCase() + sortType.slice(1)}
-            </option>
-          {/each}
-        </select>
-      </label>
-    {/if}
+    <div class="py-2">
+      {@render heading("Privacy")}
+      <Switch label="Redact usernames" bind:checked={editor.isCensorUsernames} />
+      <Switch label="Redact subreddit" bind:checked={editor.isCensorSubreddits} />
+    </div>
+
+    <div class="py-2">
+      {@render heading("Appearance")}
+      <Segmented label="Theme" options={themes} bind:value={editor.theme} />
+      <Switch label="Hide watermark" bind:checked={editor.hideWatermark} />
+      <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
+      <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
+    </div>
   </div>
 </div>
 
