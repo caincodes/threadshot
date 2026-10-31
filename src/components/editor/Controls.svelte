@@ -95,7 +95,8 @@
     {@render heading("Appearance")}
     <Segmented label="Theme" options={themes} bind:value={editor.theme} />
     <Switch label="Show watermark" bind:checked={editor.showAttribution} />
-    <Switch label="Hide tags" bind:checked={editor.hideTags} />
+    <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
+    <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
   </div>
 
   <div class="mt-3 border-t border-line">

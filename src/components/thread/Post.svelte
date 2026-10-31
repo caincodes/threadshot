@@ -37,11 +37,11 @@
   <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
     <span class="font-semibold text-ap-link">{community}</span>
     <span class="text-ap-muted"><Username name={submission.author} /></span>
-    {#if submission.userFlair && !editor.hideTags}
+    {#if submission.userFlair && !editor.hideUserFlair}
       <FlairBadge flair={submission.userFlair} />
     {/if}
   </div>
-  {#if submission.flair && !editor.hideTags}
+  {#if submission.flair && !editor.hidePostTags}
     <div class="mt-2"><FlairBadge flair={submission.flair} /></div>
   {/if}
 

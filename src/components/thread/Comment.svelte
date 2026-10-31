@@ -62,7 +62,7 @@
         {#if comment.stickied}
           <span class="inline-flex text-ap-up"><PushPin size={13} weight="fill" /></span>
         {/if}
-        {#if comment.flair && !editor.hideTags}
+        {#if comment.flair && !editor.hideUserFlair}
           <FlairBadge flair={comment.flair} />
         {/if}
         <span class="inline-flex items-center gap-0.5 font-medium text-ap-muted">

@@ -28,7 +28,8 @@ class EditorState {
   bodySelection = $state<string | null>(null);
   isCensorUsernames = $state(false);
   isCensorSubreddits = $state(false);
-  hideTags = $state(false);
+  hidePostTags = $state(false);
+  hideUserFlair = $state(false);
   hideBots = $state(true);
   showComments = $state(true);
   topLevelComments = $state(2);
