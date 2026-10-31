@@ -73,7 +73,7 @@
   }
 
   .link {
-    @apply font-medium text-accent underline underline-offset-2 hover:text-accent-hover;
+    @apply cursor-pointer font-medium text-accent underline underline-offset-2 hover:text-accent-hover;
   }
 
 }
