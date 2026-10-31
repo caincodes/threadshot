@@ -6,6 +6,7 @@
   import { editor } from "../../../lib/editor.svelte";
   import type { RedditSubmission } from "../../../types/reddit";
   import { proxiedImageSrc } from "./proxy";
+  import { isBlack, isVideoUrl, videoFrame } from "./videoFrame";
 
   let { submission }: { submission: RedditSubmission } = $props();
 
@@ -18,6 +19,25 @@
       : ""
   );
   const previewUrl = $derived(submission.preview?.images[0]?.source.url);
+  let videoThumbnail = $state<string | null>(null);
+
+  const videoUrl = $derived(submission.media?.reddit_video?.fallback_url);
+  const videoSrc = $derived(
+    videoThumbnail ?? (previewUrl && proxiedImageSrc(previewUrl))
+  );
+
+  const loadVideoFrame = async () => {
+    if (isVideoUrl(videoUrl)) {
+      videoThumbnail = await videoFrame(videoUrl);
+    }
+  };
+
+  $effect(() => {
+    if (submission.linkType === "video" && !previewUrl) {
+      loadVideoFrame();
+    }
+  });
+
   const host = $derived.by(() => {
     try {
       return submission.url ? new URL(submission.url).host : "";
@@ -59,9 +79,18 @@
       />
     {/each}
   </div>
-{:else if submission.linkType === "video" && previewUrl}
+{:else if submission.linkType === "video" && videoSrc}
   <div class="relative overflow-hidden rounded-[10px]">
-    {@render picture(previewUrl, "Video thumbnail")}
+    <img
+      class="max-h-[520px] w-full bg-ap-line object-contain"
+      alt="Video thumbnail"
+      onload={(event) => {
+        if (!videoThumbnail && isBlack(event.currentTarget)) {
+          loadVideoFrame();
+        }
+      }}
+      src={videoSrc}
+    />
     <span class="absolute inset-0 flex items-center justify-center bg-black/10">
       <span
         class="flex size-14 items-center justify-center rounded-full bg-black/60 text-white"
