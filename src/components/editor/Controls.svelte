@@ -108,14 +108,9 @@
   <h2 class="option-row text-sm font-semibold">{text}</h2>
 {/snippet}
 
-<div class="flex flex-col border border-line bg-white px-4 lg:pt-4">
-  <!-- On small screens the preview comes first, so the download button is
-       pinned to the bottom of the screen instead of sitting below it. The white
-       continues past the bar, where Safari's floating toolbar leaves a gap. -->
-  <div
-    data-download-bar
-    class="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] after:absolute after:inset-x-0 after:top-full after:h-screen after:bg-white lg:static lg:border-0 lg:p-0 lg:after:hidden"
-  >
+<div class="flex flex-col border border-line bg-white px-4 pt-4">
+  <!-- On small screens this sits between the preview and the options. -->
+  <div>
     <button
       class="btn btn-primary w-full"
       disabled={!canDownload || editor.isDownloading}

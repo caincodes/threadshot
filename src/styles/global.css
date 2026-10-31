@@ -48,13 +48,6 @@
     @apply bg-white font-body text-base text-ink antialiased;
   }
 
-  /* Room for the download bar pinned to the bottom on small screens. */
-  @media (width < 64rem) {
-    body:has([data-download-bar]) {
-      padding-bottom: 5rem;
-    }
-  }
-
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-accent;
   }
