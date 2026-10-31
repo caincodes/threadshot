@@ -1,4 +1,4 @@
-import { redditFetch } from "./redditAuth";
+import { redditFetch } from "./reddit";
 
 const POST = /\/r\/([\w-]+)\/comments\/(\w+)(?:\/[^/]*)?(?:\/(\w+))?/;
 
@@ -11,9 +11,11 @@ export interface ResolvedPost {
 // Resolves a reddit.com/r/{sub}/s/{code} share link to its sub/post/comment ids.
 export const resolveShareLink = async (
   sub: string,
-  code: string
+  code: string,
+  userAgent: string
 ): Promise<ResolvedPost | null> => {
   const upstream = await redditFetch(`/r/${sub}/s/${code}`, {
+    userAgent,
     redirect: "manual",
   });
   const location = upstream.headers.get("location");

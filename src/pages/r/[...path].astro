@@ -1,6 +1,11 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { MissingCredentialsError } from "../../server/redditAuth";
+import {
+  assertLocal,
+  NotLocalError,
+  RedditBlockedError,
+  userAgentOf,
+} from "../../server/reddit";
 import { resolveShareLink } from "../../server/resolveShare";
 
 // Handles reddit-style paths so a reddit URL works with the host swapped:
@@ -30,14 +35,15 @@ if (sub && kind === "comments" && id) {
 
 if (sub && kind === "s" && id) {
   try {
-    const resolved = await resolveShareLink(sub, id);
+    assertLocal(Astro.url, () => Astro.clientAddress);
+    const resolved = await resolveShareLink(sub, id, userAgentOf(Astro.request));
     if (resolved) {
       return redirectToEditor(resolved);
     }
     message = "Could not resolve that Reddit share link.";
   } catch (error) {
     message =
-      error instanceof MissingCredentialsError
+      error instanceof NotLocalError || error instanceof RedditBlockedError
         ? error.message
         : "Could not reach Reddit to resolve that share link.";
   }
