@@ -19,8 +19,14 @@ with Phosphor icons. Fonts are self-hosted so modern-screenshot can embed them i
 ## Local-only branch
 
 This branch needs no Reddit API keys. It runs on your own computer and reads
-Reddit's public pages from your own connection, so requests come from your IP
-and carry the user agent of the browser you are using.
+Reddit's public pages from your own connection, so requests come from your IP.
+
+It asks Reddit straight from your browser first, so the request carries your
+browser's own user agent, headers and connection. If the browser is not allowed
+to read the response (CORS) or Reddit refuses it, it falls back to the local
+server, which forwards your browser's user agent. If both fail, the error says
+what each attempt got. Share links (`/s/...`) are always resolved by the server,
+because a browser cannot follow Reddit's redirect across origins.
 
 ```sh
 git checkout local-only
