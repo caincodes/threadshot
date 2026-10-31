@@ -57,7 +57,24 @@
   const isConnected = $derived(credentials.value !== null);
   const bookmark = bookmarkletHref(window.location.origin);
 
-  const go = (event: SubmitEvent) => {
+  // iOS has no drag-to-bookmarks, so the bookmark's address is pasted in by
+  // hand. iPads identify as Macs, but Macs have no touch screen.
+  const isIOS =
+    /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 1);
+
+  let copyState = $state<"idle" | "copied" | "failed">("idle");
+
+  const copyBookmark = async () => {
+    try {
+      await navigator.clipboard.writeText(bookmark);
+      copyState = "copied";
+    } catch {
+      copyState = "failed";
+    }
+  };
+
+  const go =(event: SubmitEvent) => {
     event.preventDefault();
     error = "";
     const value = link.trim();
@@ -154,22 +171,62 @@
         bookmark reads a post from the Reddit page you are already viewing, then
         sends it here. It needs no key.
       </p>
-      <ol class="list-decimal space-y-1 pl-5">
-        <li>Drag the button below up to your bookmarks bar.</li>
-        <li>Open any Reddit post.</li>
-        <li>Click the bookmark.</li>
-      </ol>
-      <a
-        class="btn btn-primary self-start"
-        draggable="true"
-        href={bookmark}
-      >
-        <BookmarkSimple size={20} weight="bold" />
-        Send to threadshot.app
-      </a>
+      {#if isIOS}
+        <ol class="list-decimal space-y-1 pl-5">
+          <li>Copy the bookmark code with the button below.</li>
+          <li>Bookmark this page from Safari's share menu.</li>
+          <li>
+            Open your bookmarks, tap Edit, then tap the new bookmark. Name it
+            threadshot and replace its address with the code you copied.
+          </li>
+          <li>Open any Reddit post in Safari, not the Reddit app.</li>
+          <li>
+            Tap the address bar, type threadshot, and tap the bookmark in the
+            results.
+          </li>
+        </ol>
+        <button
+          class="btn btn-primary self-start"
+          onclick={copyBookmark}
+          type="button"
+        >
+          <BookmarkSimple size={20} weight="bold" />
+          {copyState === "copied" ? "Copied" : "Copy bookmark code"}
+        </button>
+        {#if copyState === "failed"}
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-accent">
+              Could not copy automatically. Select everything below and copy it.
+            </span>
+            <textarea
+              class="field h-24 py-2 font-mono text-sm"
+              onfocus={(event) => event.currentTarget.select()}
+              readonly
+              value={bookmark}
+            ></textarea>
+          </label>
+        {/if}
+      {:else}
+        <ol class="list-decimal space-y-1 pl-5">
+          <li>Drag the button below up to your bookmarks bar.</li>
+          <li>Open any Reddit post.</li>
+          <li>Click the bookmark.</li>
+        </ol>
+        <a
+          class="btn btn-primary self-start"
+          draggable="true"
+          href={bookmark}
+        >
+          <BookmarkSimple size={20} weight="bold" />
+          Send to threadshot.app
+        </a>
+      {/if}
       <p class="text-sm text-ink-2">
-        Can't see your bookmarks bar? Press Ctrl+Shift+B (Cmd+Shift+B on a Mac)
-        to show it. Have a key after all?
+        {#if !isIOS}
+          Can't see your bookmarks bar? Press Ctrl+Shift+B (Cmd+Shift+B on a
+          Mac) to show it.
+        {/if}
+        Have a key after all?
         <button class="link" onclick={() => choose("key")} type="button">
           Use it instead
         </button>.

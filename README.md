@@ -32,8 +32,10 @@ page, so threadshot.app has two ways in, and neither uses anyone else's key.
    An app with no secret uses Reddit's installed-client login; with a secret it
    uses the standard app login. Reddit may need to approve your app first.
 2. **The bookmark (no key).** The home page has a "Send to threadshot.app" button.
-   Drag it to your bookmarks bar, open any Reddit post, and click it. The
-   bookmark runs on reddit.com, so it reads the post's JSON as an ordinary
+   Drag it to your bookmarks bar, open any Reddit post, and click it. iPhones
+   and iPads can't drag bookmarks, so they get a button that copies the bookmark
+   code and steps for pasting it into a Safari bookmark. The bookmark runs on
+   reddit.com, so it reads the post's JSON as an ordinary
    same-origin load with your own session, IP and user agent, then hands it to
    this app in a new window with `postMessage`. Only pages on reddit.com can
    send data, only well-formed threads are accepted, and each click carries a

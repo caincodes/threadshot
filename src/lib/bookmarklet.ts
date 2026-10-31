@@ -28,7 +28,7 @@ export const bookmarkletHref = (appOrigin: string): string => {
   const nonce = Math.random().toString(36).slice(2);
   const target = window.open(origin + "/generate?from=reddit&n=" + nonce, "threadshot");
   if (!target) {
-    alert("Your browser blocked the pop-up. Allow pop-ups for reddit.com and try again.");
+    alert("Your browser blocked the pop-up. Allow pop-ups and try again. On an iPhone or iPad, turn off Block Pop-ups in Safari's settings.");
     return;
   }
   const path = location.pathname.replace(/\\/$/, "");
