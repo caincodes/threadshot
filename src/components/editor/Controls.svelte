@@ -27,7 +27,14 @@
 
   const isTouch = isTouchDevice();
 
+  // Where the defaults went is shown on the button for a moment after saving.
   let saveResult = $state<"saved" | "failed" | null>(null);
+  let saveTimer: ReturnType<typeof setTimeout> | undefined;
+  const saveDefaults = () => {
+    saveResult = editor.saveDefaults() ? "saved" : "failed";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => (saveResult = null), 2500);
+  };
 
   // Advanced settings keep working while Basic hides them, so the tab counts any
   // that have been changed.
@@ -290,21 +297,22 @@
     </div>
   </div>
 
-  <div class="flex flex-col items-start gap-1 border-t border-line py-3">
+  <div class="border-t border-line py-3">
     <button
-      class="link text-sm"
-      onclick={() => (saveResult = editor.saveDefaults() ? "saved" : "failed")}
+      class="btn btn-secondary h-9 w-full text-sm pointer-coarse:h-11"
+      onclick={saveDefaults}
       type="button"
     >
-      Save as default
+      <span aria-live="polite">
+        {#if saveResult === "saved"}
+          Saved to this browser's local storage
+        {:else if saveResult === "failed"}
+          Could not save: local storage is blocked
+        {:else}
+          Save as default
+        {/if}
+      </span>
     </button>
-    {#if saveResult}
-      <p class="text-sm text-ink-2" role="status">
-        {saveResult === "saved"
-          ? "Saved to this browser's local storage."
-          : "Could not save. This browser is blocking local storage."}
-      </p>
-    {/if}
   </div>
 </div>
 
