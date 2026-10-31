@@ -7,6 +7,7 @@
   import { formatCount } from "../../functions/util/format";
   import { editor } from "../../lib/editor.svelte";
   import type { RedditSubmission } from "../../types/reddit";
+  import Avatar from "./Avatar.svelte";
   import FlairBadge from "./FlairBadge.svelte";
   import PostMedia from "./media/PostMedia.svelte";
   import Redacted from "./Redacted.svelte";
@@ -32,6 +33,10 @@
   <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
     <!-- "r/" (or "u/" for a post on a profile) stays when the name is covered, and
          both go when it is hidden. -->
+    <!-- The icon would give the community away, so it goes when that is redacted. -->
+    {#if editor.showSubredditIcon && !editor.isCensorSubreddits}
+      <Avatar name={community.slice(2)} src={submission.subredditIcon} />
+    {/if}
     {#if !editor.isCensorSubreddits}
       <span class="font-semibold text-ap-link">{community}</span>
     {:else if editor.redactStyle !== "hide"}

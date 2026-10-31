@@ -10,11 +10,13 @@
   import {
     fetchRedditData,
     isRawThread,
+    isUserIcons,
     loadSampleData,
     parseThread,
     RedditRequestError,
     type RawThread,
     type RedditData,
+    type UserIcons,
   } from "../lib/redditData";
   import { decodeThread, THREAD_FRAGMENT } from "../lib/threadLink";
   import Connect from "./Connect.svelte";
@@ -50,6 +52,7 @@
   let errorMessage = $state("");
   let isCredentialError = $state(false);
   let received = $state<RawThread>();
+  let receivedIcons = $state<UserIcons>({});
 
   // A link can't prove where it came from, so unlike a window message this data
   // may be crafted by anyone. parseThread cleans its HTML before it is rendered.
@@ -83,6 +86,8 @@
       ) {
         return;
       }
+      // Older bookmarks send no pictures, which is fine.
+      receivedIcons = isUserIcons(event.data.users) ? event.data.users : {};
       received = event.data.data;
       event.source?.postMessage(BOOKMARK_ACK, { targetOrigin: event.origin });
     };
@@ -95,7 +100,7 @@
       return;
     }
     try {
-      data = parseThread(received, editor.commentSort);
+      data = parseThread(received, editor.commentSort, receivedIcons);
       errorMessage = "";
     } catch {
       errorMessage = "That page did not contain a Reddit thread this app can read.";

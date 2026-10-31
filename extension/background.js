@@ -23,13 +23,39 @@ browser.action.onClicked.addListener(async (tab) => {
           return;
         }
         const path = location.pathname.replace(/\/$/, "");
-        fetch(path + ".json?raw_json=1&context=10000&limit=500")
+        fetch(path + ".json?raw_json=1&context=10000&limit=500&sr_detail=1")
           .then((response) => {
             if (!response.ok) throw new Error("Reddit answered " + response.status);
             return response.json();
           })
           .then((data) => {
-            const send = () => target.postMessage({ type: "threadshot:thread", nonce, data }, origin);
+            // Profile pictures are optional, so a failed lookup still sends the thread.
+            const ids = new Set();
+            const walk = (node) => {
+              if (Array.isArray(node)) node.forEach(walk);
+              else if (node && typeof node === "object") {
+                if (typeof node.author_fullname === "string") ids.add(node.author_fullname);
+                Object.values(node).forEach(walk);
+              }
+            };
+            walk(data);
+            const list = [...ids].slice(0, 500);
+            const batches = [];
+            for (let i = 0; i < list.length; i += 100) batches.push(list.slice(i, i + 100));
+            return Promise.all(batches.map((batch) =>
+              fetch("/api/user_data_by_account_ids.json?ids=" + batch.join(","))
+                .then((response) => (response.ok ? response.json() : {}))
+                .catch(() => ({}))
+            )).then((parts) => {
+              const users = {};
+              parts.forEach((part) => Object.entries(part || {}).forEach(([id, user]) => {
+                if (user && typeof user.profile_img === "string") users[id] = user.profile_img.replaceAll("&amp;", "&");
+              }));
+              return { data, users };
+            });
+          })
+          .then(({ data, users }) => {
+            const send = () => target.postMessage({ type: "threadshot:thread", nonce, data, users }, origin);
             send();
             const timer = setInterval(send, 400);
             addEventListener("message", (event) => {

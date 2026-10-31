@@ -39,6 +39,8 @@ class EditorState {
   redactStyle = $state<RedactStyle>("box");
   hidePostTags = $state(false);
   hideUserFlair = $state(false);
+  showSubredditIcon = $state(false);
+  showProfileIcons = $state(false);
   hideBots = $state(true);
   showComments = $state(true);
   topLevelComments = $state(2);

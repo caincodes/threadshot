@@ -28,6 +28,7 @@ export interface RedditContent {
   upvote_ratio: number;
   score: number;
   author: string;
+  author_fullname?: string;
   permalink: string;
   spoiler: boolean;
   archived: boolean;
@@ -91,6 +92,8 @@ export interface RawSubmission extends RedditContent {
   is_gallery: boolean;
   media_metadata: { [key: string]: { s: { u: string } } };
   crosspost_parent?: string;
+  // Present when the thread is requested with sr_detail.
+  sr_detail?: { community_icon?: string; icon_img?: string };
 }
 
 export interface RawSubreddit {
@@ -216,6 +219,7 @@ export interface RedditSubmission extends RawSubmission {
   flair?: RedditFlair;
   userFlair?: RedditFlair;
   awardCount: number;
+  subredditIcon?: string;
 }
 
 export interface RedditComment extends RawComment {
@@ -226,6 +230,7 @@ export interface RedditComment extends RawComment {
   modhash: string;
   flair?: RedditFlair;
   awardCount: number;
+  authorIcon?: string;
 }
 
 export interface RedditUser extends RawUser {

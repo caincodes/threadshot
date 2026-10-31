@@ -286,6 +286,8 @@
       {@render heading("Appearance")}
       <Segmented label="Theme" options={themes} bind:value={editor.theme} />
       <Switch label="Hide watermark" bind:checked={editor.hideWatermark} />
+      <Switch label="Subreddit icon" bind:checked={editor.showSubredditIcon} />
+      <Switch label="Profile pictures" bind:checked={editor.showProfileIcons} />
       {#if isAdvanced}
         <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
         <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />

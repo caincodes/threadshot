@@ -42,8 +42,8 @@ export const POST: APIRoute = async ({ request, url }) => {
   try {
     const credentials = parseCredentials(body.credentials);
     const path = commentId
-      ? `/r/${sub}/comments/${postId}/title/${commentId}.json?context=10000&raw_json=1&sort=${sort}`
-      : `/r/${sub}/comments/${postId}/.json?raw_json=1&sort=${sort}`;
+      ? `/r/${sub}/comments/${postId}/title/${commentId}.json?context=10000&raw_json=1&sr_detail=1&sort=${sort}`
+      : `/r/${sub}/comments/${postId}/.json?raw_json=1&sr_detail=1&sort=${sort}`;
     const upstream = await redditFetch(path, credentials);
 
     if (!upstream.ok) {

@@ -8,6 +8,7 @@
   import { formatCount } from "../../functions/util/format";
   import { editor } from "../../lib/editor.svelte";
   import type { MoreChildren, RedditComment } from "../../types/reddit";
+  import Avatar from "./Avatar.svelte";
   import Comment from "./Comment.svelte";
   import FlairBadge from "./FlairBadge.svelte";
   import Username from "./Username.svelte";
@@ -60,6 +61,9 @@
   >
     <div class="flex items-baseline justify-between gap-3 text-[13px] leading-5">
       <span class="flex min-w-0 flex-wrap items-center gap-x-2">
+        {#if editor.showProfileIcons && !editor.isCensorUsernames}
+          <Avatar name={comment.author} src={comment.authorIcon} />
+        {/if}
         <span
           class={[
             "font-semibold",

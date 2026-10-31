@@ -50,23 +50,61 @@ const sortComments = (list: Comments, sort: CommentSort): Comments => {
     : sorted;
 };
 
-const sanitizeComments = (list: Comments): Comments =>
+// Profile pictures by account fullname (t2_...).
+export type UserIcons = Record<string, string>;
+
+const prepareComments = (list: Comments, icons: UserIcons): Comments =>
   list.map((item) =>
     item.type === "comment"
       ? {
           ...item,
           body_html: sanitizeHtml(item.body_html),
-          replyTree: sanitizeComments(item.replyTree),
+          authorIcon: iconFor(item.author_fullname, icons),
+          replyTree: prepareComments(item.replyTree, icons),
         }
       : item
   );
+
+const iconFor = (fullname: string | undefined, icons: UserIcons) =>
+  (fullname && icons[fullname]) || undefined;
+
+// Only https images; the image proxy narrows them further to Reddit's hosts.
+const isImageUrl = (value: unknown): value is string =>
+  typeof value === "string" && value.startsWith("https://");
+
+export const isUserIcons = (value: unknown): value is UserIcons =>
+  typeof value === "object" &&
+  value !== null &&
+  !Array.isArray(value) &&
+  Object.values(value).every(isImageUrl);
+
+const MAX_ICON_USERS = 500;
+
+// Every author in the thread, for looking up their profile pictures.
+export const authorIds = (thread: RawThread): string[] => {
+  const ids = new Set<string>();
+  const walk = (node: unknown) => {
+    if (Array.isArray(node)) {
+      node.forEach(walk);
+    } else if (node && typeof node === "object") {
+      const { author_fullname } = node as { author_fullname?: unknown };
+      if (typeof author_fullname === "string") {
+        ids.add(author_fullname);
+      }
+      Object.values(node).forEach(walk);
+    }
+  };
+  walk(thread);
+  return [...ids].slice(0, MAX_ICON_USERS);
+};
 
 // Parse a raw reddit thread (the sample, or data sent from Reddit) and apply the
 // chosen sort, since nothing server-side sorts it for us. Every thread the
 // browser receives passes through here, so this is where its HTML is cleaned.
 export const parseThread = (
   thread: RawThread,
-  sort: CommentSort = "best"
+  sort: CommentSort = "best",
+  icons: UserIcons = {}
 ): RedditData => {
   const [submissionListing, commentListing] = thread;
   const modhash = submissionListing.data.modhash ?? "";
@@ -74,14 +112,22 @@ export const parseThread = (
     submissionListing.data.children[0].data,
     modhash
   );
+  const community = submission.sr_detail;
+  const subredditIcon = [community?.community_icon, community?.icon_img].find(
+    isImageUrl
+  );
   return [
     {
       ...submission,
       selftext_html:
         submission.selftext_html && sanitizeHtml(submission.selftext_html),
+      subredditIcon,
     },
     sortComments(
-      sanitizeComments(parseComments(commentListing.data.children, modhash)),
+      prepareComments(
+        parseComments(commentListing.data.children, modhash),
+        icons
+      ),
       sort
     ),
   ];
@@ -219,5 +265,17 @@ export const fetchRedditData = async (
     credentials,
     signal
   );
-  return parseThread(thread, "best");
+  // Profile pictures are a nicety, so the thread still loads without them.
+  const icons = await post<UserIcons>(
+    "/api/users",
+    { ids: authorIds(thread) },
+    credentials,
+    signal
+  ).catch((error) => {
+    if (signal?.aborted) {
+      throw error;
+    }
+    return {};
+  });
+  return parseThread(thread, "best", isUserIcons(icons) ? icons : {});
 };
