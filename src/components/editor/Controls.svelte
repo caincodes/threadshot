@@ -94,7 +94,7 @@
   <div class="border-t border-line lg:mt-4">
     {@render heading("Appearance")}
     <Segmented label="Theme" options={themes} bind:value={editor.theme} />
-    <Switch label="Show watermark" bind:checked={editor.showAttribution} />
+    <Switch label="Hide watermark" bind:checked={editor.hideWatermark} />
     <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
     <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
   </div>

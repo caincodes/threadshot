@@ -20,7 +20,7 @@ const isCancelled = (error: unknown) =>
 // module-level instance is enough.
 class EditorState {
   theme = $state<ScreenshotTheme>("light");
-  showAttribution = $state(true);
+  hideWatermark = $state(false);
   imageColumns = $state(3);
   postBody = $state<PostBodyMode>("full");
   // The snippet shown in the image, and the text highlighted to become it.

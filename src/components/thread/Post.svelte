@@ -68,7 +68,7 @@
         {submission.awardCount}
       </span>
     {/if}
-    {#if isPostLast && editor.showAttribution}
+    {#if isPostLast && !editor.hideWatermark}
       <Watermark class="ml-auto font-normal" />
     {/if}
   </footer>
