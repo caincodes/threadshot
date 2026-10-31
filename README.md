@@ -3,6 +3,12 @@
 Turn a Reddit post or comment thread into a clean, shareable screenshot at
 [threadshot.app](https://threadshot.app).
 
+threadshot.app is a fork of [shareddit](https://github.com/logankuzyk/shareddit)
+by [Logan Kuzyk](https://github.com/logankuzyk), who created the project and
+built it through 2021 and 2022. This fork picks up where shareddit left off,
+bringing the idea back online with a new stack and a new name. See
+[Credits](#credits).
+
 Built with [Astro](https://astro.build) (server output, Vercel adapter),
 [Tailwind CSS](https://tailwindcss.com) and a [Svelte](https://svelte.dev) island for the editor.
 
@@ -70,3 +76,13 @@ to override that for a fork or a staging copy.
 - `POST /api/reddit` - fetches a post and its comments with the visitor's credentials
 - `POST /api/resolve` - turns a `/s/` share link into a post
 - `/api/img` - same-origin proxy for Reddit-hosted images
+
+## Credits
+
+threadshot.app would not exist without
+[shareddit](https://github.com/logankuzyk/shareddit). Logan Kuzyk came up with
+the idea and wrote the original app, and their commits are preserved in this
+repository's history. Thanks, Logan.
+
+This project is released under the MIT License. The original copyright notice
+is kept in [LICENSE](LICENSE).
