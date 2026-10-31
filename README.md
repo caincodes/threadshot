@@ -31,7 +31,11 @@ npm run dev
 | `REDDIT_CLIENT_ID`     | Reddit OAuth app client ID                      |
 | `REDDIT_CLIENT_SECRET` | Reddit OAuth app secret                         |
 
-Both are required to load real posts; without them the app shows an error.
+`SITE_URL` is optional: the exported image's watermark shows the site's host
+(e.g. `threadshot-for-reddit.vercel.app`). On Vercel it is filled in at build
+time from the project's production domain; elsewhere set `SITE_URL`.
+
+Both Reddit keys are required to load real posts; without them the app shows an error.
 The "Try a sample post" link on the home page (`/generate?sample=1`) works
 without credentials and shows a bundled sample thread.
 

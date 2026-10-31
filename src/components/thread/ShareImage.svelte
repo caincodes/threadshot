@@ -1,5 +1,6 @@
 <script lang="ts">
   import { editor } from "../../lib/editor.svelte";
+  import { siteHost } from "../../lib/siteHost";
   import type {
     MoreChildren,
     RedditComment,
@@ -32,8 +33,9 @@
   {/if}
 
   {#if editor.showAttribution}
-    <p class="px-4 py-3 text-center text-xs text-ap-muted">
-      Made with threadshot
-    </p>
+    <div class="px-4 py-3 text-center text-xs text-ap-muted">
+      <p>Made with threadshot</p>
+      {#if siteHost}<p class="mt-0.5 italic">{siteHost}</p>{/if}
+    </div>
   {/if}
 </div>
