@@ -5,6 +5,7 @@
 
   import { applyCensoring } from "../../functions/util/censorText";
   import { withoutBots } from "../../functions/util/isBot";
+  import { defaultAvatar } from "../../functions/util/defaultAvatar";
   import { formatCount } from "../../functions/util/format";
   import { editor } from "../../lib/editor.svelte";
   import type { MoreChildren, RedditComment } from "../../types/reddit";
@@ -62,7 +63,10 @@
     <div class="flex items-center justify-between gap-3 text-[13px] leading-5">
       <span class="flex min-w-0 flex-wrap items-center gap-x-2">
         {#if editor.showProfileIcons && !editor.isCensorUsernames}
-          <Avatar name={comment.author} src={comment.authorIcon} />
+          <Avatar
+            name={comment.author}
+            src={comment.authorIcon ?? defaultAvatar(comment.author)}
+          />
         {/if}
         <span
           class={[
