@@ -63,6 +63,7 @@ elsewhere set `SITE_URL`, or leave it unset to omit that line.
 ## Routes
 
 - `/` - paste a reddit URL
+- `/get-a-key` - how to create a Reddit app and copy its client ID
 - `/generate?sub=&postId=&commentId=` (or `sub=&share=`, or `sample=1`, or `from=reddit`) - the editor
 - `/r/{sub}/comments/{id}/...` and `/r/{sub}/s/{code}` - reddit URLs with the
   host swapped; redirect to the editor

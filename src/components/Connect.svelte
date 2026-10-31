@@ -5,6 +5,8 @@
   // Show the form even when a key is saved, e.g. after Reddit rejected it.
   let { editing = false }: { editing?: boolean } = $props();
 
+  const uid = $props.id();
+
   let clientId = $state("");
   let clientSecret = $state("");
   let error = $state("");
@@ -66,28 +68,33 @@
     </h2>
     <p class="text-sm text-ink-2">
       threadshot reads posts through Reddit's API using your own app, so nobody
-      else's key is involved. Create one at
-      <a
-        class="link"
-        href="https://www.reddit.com/prefs/apps"
-        rel="noopener noreferrer"
-        target="_blank">reddit.com/prefs/apps</a
-      >, choose "installed app", set any redirect URI such as
-      <code class="rounded-ui bg-canvas px-1">http://localhost</code>, and paste
-      its client ID below.
+      else's key is involved. Paste your app's client ID below.
     </p>
 
-    <label class="flex flex-col gap-1">
-      <span class="text-sm font-semibold">Client ID</span>
-      <input
-        class="field"
-        autocapitalize="off"
-        autocomplete="off"
-        bind:value={clientId}
-        spellcheck="false"
-        type="text"
-      />
-    </label>
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold" for="{uid}-client-id">
+        Client ID
+      </label>
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <input
+          id="{uid}-client-id"
+          class="field sm:flex-1"
+          autocapitalize="off"
+          autocomplete="off"
+          bind:value={clientId}
+          spellcheck="false"
+          type="text"
+        />
+        <a
+          class="btn btn-secondary sm:shrink-0"
+          href="/get-a-key"
+          rel="noopener"
+          target="_blank"
+        >
+          How to get a key
+        </a>
+      </div>
+    </div>
     <label class="flex flex-col gap-1">
       <span class="text-sm font-semibold">
         Client secret
