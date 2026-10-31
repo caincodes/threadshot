@@ -1,6 +1,7 @@
 <script lang="ts">
   import ArrowUp from "phosphor-svelte/lib/ArrowUp";
   import Medal from "phosphor-svelte/lib/Medal";
+  import PushPin from "phosphor-svelte/lib/PushPin";
 
   import { applyCensoring } from "../../functions/util/censorText";
   import { withoutBots } from "../../functions/util/isBot";
@@ -58,6 +59,9 @@
         >
           <Username name={comment.author} />
         </span>
+        {#if comment.stickied}
+          <span class="inline-flex text-ap-up"><PushPin size={13} weight="fill" /></span>
+        {/if}
         {#if comment.flair && !editor.hideTags}
           <FlairBadge flair={comment.flair} />
         {/if}
