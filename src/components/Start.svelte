@@ -1,10 +1,11 @@
 <script lang="ts">
-  import ArrowSquareOut from "phosphor-svelte/lib/ArrowSquareOut";
   import BookmarkSimple from "phosphor-svelte/lib/BookmarkSimple";
   import CaretDown from "phosphor-svelte/lib/CaretDown";
   import Check from "phosphor-svelte/lib/Check";
   import Copy from "phosphor-svelte/lib/Copy";
   import Export from "phosphor-svelte/lib/Export";
+
+  import type { Snippet } from "svelte";
 
   import { bookmarkletHref } from "../lib/bookmarklet";
   import { credentials } from "../lib/credentials.svelte";
@@ -19,49 +20,51 @@
   const INSTALL_GUIDE =
     "https://github.com/caincodes/threadshot/blob/main/extension/README.md";
 
-  const METHODS: Record<SendMethod, { title: string; description: string }> = {
-    shortcut: {
-      title: "iOS Shortcut",
-      description: "Send posts from Safari's Share button on iPhone or iPad.",
-    },
-    extension: {
-      title: "Safari extension",
-      description: "A toolbar button for Safari on a Mac.",
-    },
-    bookmark: {
-      title: "Bookmark",
-      description: "Works in Chrome, Edge and Firefox, including on Windows.",
-    },
+  const METHODS: Record<SendMethod, { tab: string; title: string }> = {
+    shortcut: { tab: "Shortcut", title: "iOS Shortcut" },
+    extension: { tab: "Extension", title: "Safari extension" },
+    bookmark: { tab: "Bookmark", title: "Browser bookmark" },
   };
-
-  type Mode = SendMethod | "key";
 
   const device = detectDevice();
   const methods = methodsFor(device);
 
   // Links to "/#no-key" (from the key form, the guide, error screens) open the
   // method that fits this device. A saved key means this visitor uses it.
-  const modeFromHash = (): Mode | null => {
+  let method = $state(methods[0]);
+  let isUsingKey = $state(credentials.value !== null);
+
+  // Panels are stacked, so the block takes its height from the open one.
+  let heights = $state<Partial<Record<SendMethod, number>>>({});
+
+  const readHash = () => {
     const hash = window.location.hash.slice(1);
-    if (hash === "no-key") return methods[0];
-    return hash === "key" || Object.hasOwn(METHODS, hash) ? (hash as Mode) : null;
+    if (hash === "key") {
+      isUsingKey = true;
+    } else if (hash === "no-key" || Object.hasOwn(METHODS, hash)) {
+      method = hash === "no-key" ? methods[0] : (hash as SendMethod);
+      isUsingKey = false;
+    }
+  };
+  readHash();
+
+  const clearHash = () =>
+    history.replaceState(null, "", window.location.pathname);
+
+  const chooseMethod = (next: SendMethod) => {
+    method = next;
+    isUsingKey = false;
+    clearHash();
   };
 
-  let mode = $state<Mode>(
-    modeFromHash() ?? (credentials.value ? "key" : methods[0])
-  );
-
-  const choose = (next: Mode) => {
-    mode = next;
-    history.replaceState(null, "", window.location.pathname);
+  const toggleKey = () => {
+    isUsingKey = !isUsingKey;
+    clearHash();
   };
 
   $effect(() => {
-    const onHashChange = () => {
-      mode = modeFromHash() ?? mode;
-    };
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
+    window.addEventListener("hashchange", readHash);
+    return () => window.removeEventListener("hashchange", readHash);
   });
 
   let link = $state("");
@@ -112,114 +115,120 @@
   };
 </script>
 
-{#snippet option(id: Mode, title: string, description: string, hint?: string)}
-  <button
-    class="flex min-h-11 w-full cursor-pointer items-start justify-between gap-3 p-4 text-left transition-colors duration-150 hover:bg-canvas"
-    aria-controls="{id}-panel"
-    aria-expanded={mode === id}
-    onclick={() => choose(id)}
-    type="button"
+<!-- Panels stay mounted so changing them can animate. Inert keeps a closed one
+     out of the tab order. -->
+{#snippet panel(id: string, isOpen: boolean, content: Snippet)}
+  <div
+    id="{id}-panel"
+    class="accordion-panel"
+    data-open={isOpen || undefined}
+    inert={!isOpen}
   >
-    <span class="flex flex-col gap-0.5">
-      <span class="flex flex-wrap items-baseline gap-x-2">
-        <span class="font-semibold">{title}</span>
-        {#if hint}
-          <span class="text-sm font-medium text-accent">{hint}</span>
-        {/if}
-      </span>
-      <span class="text-sm text-ink-2">{description}</span>
-    </span>
-    <span
-      class={[
-        "mt-0.5 shrink-0 transition-transform duration-150",
-        mode === id && "rotate-180",
-      ]}
-    >
-      <CaretDown size={20} weight="bold" />
-    </span>
-  </button>
+    <div class="accordion-clip">
+      {@render content()}
+    </div>
+  </div>
+{/snippet}
+
+{#snippet step(number: number, content: Snippet)}
+  <li class="flex items-baseline gap-3">
+    <span class="heading text-2xl leading-none tabular-nums">{number}</span>
+    <span>{@render content()}</span>
+  </li>
 {/snippet}
 
 {#snippet shortcutSteps()}
-  <ol class="steps">
-    <li>Add the Shortcut with the button below.</li>
-    <li>
-      In the Settings app, open Shortcuts, then Advanced, and turn on Allow
-      Running Scripts.
-    </li>
-    <li>
-      On a Reddit post or comment in Safari, tap Safari's Share button, not
-      Reddit's, and choose threadshot.
-    </li>
-    <li>
-      In the Reddit app, the same steps open the post in Safari. Share it again
-      from there.
-    </li>
-  </ol>
   {#if device === "ios"}
     <a class="btn btn-primary self-start" href="/threadshot.shortcut">
       <Export size={20} weight="bold" />
       Add the Shortcut
     </a>
   {:else}
-    <p class="text-sm text-ink-2">
-      Open threadshot.app on your iPhone or iPad to add it.
-    </p>
+    <p class="font-semibold">Open this page on your iPhone or iPad to add it.</p>
   {/if}
+  <ol class="flex flex-col gap-3">
+    {#snippet allowScripts()}
+      In Settings, go to Shortcuts, then Advanced, and turn on Allow Running
+      Scripts.
+    {/snippet}
+    {#snippet share()}
+      In Safari, tap Safari's Share button on a post and choose threadshot.
+    {/snippet}
+    {@render step(1, allowScripts)}
+    {@render step(2, share)}
+  </ol>
 {/snippet}
 
 {#snippet extensionSteps()}
-  <ol class="steps">
-    <li>
-      Give your terminal app Full Disk Access in System Settings, under Privacy
-      &amp; Security, then quit Safari.
-    </li>
-    <li>Run the command below in that terminal app.</li>
-    <li>Open Safari and turn on Threadshot in Settings, under Extensions.</li>
-    <li>On a Reddit post, click the Threadshot button in the toolbar.</li>
-  </ol>
-  <code
-    class="block rounded-ui bg-canvas p-3 font-mono text-sm [overflow-wrap:anywhere]"
-    >{INSTALL_COMMAND}</code
-  >
-  <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+  <div class="flex items-start gap-1 rounded-ui bg-canvas pl-3">
+    <code class="min-w-0 flex-1 py-3 font-mono text-sm [overflow-wrap:anywhere]">
+      {INSTALL_COMMAND}
+    </code>
     <button
-      class="btn btn-primary"
+      class="btn-icon"
+      aria-label={copied === "command" ? "Copied" : "Copy command"}
       onclick={() => copy("command", INSTALL_COMMAND)}
       type="button"
     >
       {#if copied === "command"}
-        <Check size={20} weight="bold" />
-        Copied
+        <Check size={18} weight="bold" />
       {:else}
-        <Copy size={20} weight="bold" />
-        Copy command
+        <Copy size={18} weight="bold" />
       {/if}
     </button>
-    <a class="link inline-flex items-center gap-1" href={INSTALL_GUIDE} rel="noopener">
-      Full install guide
-      <ArrowSquareOut size={16} weight="bold" />
-    </a>
   </div>
+  <ol class="flex flex-col gap-3">
+    {#snippet install()}
+      Quit Safari and run this in Terminal.
+    {/snippet}
+    {#snippet enable()}
+      Turn on Threadshot in Safari's Extensions settings.
+    {/snippet}
+    {@render step(1, install)}
+    {@render step(2, enable)}
+  </ol>
   <p class="text-sm text-ink-2">
-    Needs Safari 27 or later. Apple doesn't support installing extensions this
-    way, so a Safari update can stop it working.
+    Needs Safari 27 and Full Disk Access for Terminal.
+    <a class="link" href={INSTALL_GUIDE} rel="noopener">Install guide</a>
   </p>
+{/snippet}
+
+{#snippet keyForm()}
+  <Connect isEmbedded />
+
+  <!-- The link field appears once a key is saved, so the key form is the only
+       step until then. -->
+  {#if isConnected}
+    <form class="flex flex-col gap-3" onsubmit={go} novalidate>
+      <label class="font-semibold" for="url-input">
+        Reddit post or comment link
+      </label>
+      <input
+        id="url-input"
+        class="field"
+        aria-describedby="url-error"
+        autocapitalize="off"
+        autocomplete="off"
+        bind:value={link}
+        inputmode="url"
+        placeholder="https://www.reddit.com/r/woodworking/comments/..."
+        spellcheck="false"
+        type="text"
+      />
+      {#if error}
+        <p id="url-error" class="font-medium text-accent" role="alert">
+          {error}
+        </p>
+      {/if}
+      <button class="btn btn-primary self-start" type="submit">
+        Generate screenshot
+      </button>
+    </form>
+  {/if}
 {/snippet}
 
 {#snippet bookmarkSteps()}
   {#if device === "android"}
-    <ol class="steps">
-      <li>Bookmark any page, then copy the code with the button below.</li>
-      <li>
-        Edit that bookmark. Name it threadshot and replace its URL with the
-        code.
-      </li>
-      <li>
-        On a Reddit post, type threadshot in the address bar and tap the
-        bookmark.
-      </li>
-    </ol>
     <button
       class="btn btn-primary self-start"
       onclick={() => copy("bookmark", bookmark)}
@@ -233,12 +242,17 @@
         Copy bookmark code
       {/if}
     </button>
-  {:else}
-    <ol class="steps">
-      <li>Drag the button below up to your bookmarks bar.</li>
-      <li>Open any Reddit post.</li>
-      <li>Click the bookmark.</li>
+    <ol class="flex flex-col gap-3">
+      {#snippet paste()}
+        Save any page as a bookmark named threadshot, with this code as its URL.
+      {/snippet}
+      {#snippet open()}
+        On a Reddit post, type threadshot in the address bar and tap it.
+      {/snippet}
+      {@render step(1, paste)}
+      {@render step(2, open)}
     </ol>
+  {:else}
     <a
       class="btn btn-primary cursor-grab self-start active:cursor-grabbing"
       draggable="true"
@@ -247,103 +261,100 @@
       <BookmarkSimple size={20} weight="bold" />
       Send to threadshot.app
     </a>
+    <ol class="flex flex-col gap-3">
+      {#snippet drag()}
+        Drag this button to your bookmarks bar.
+      {/snippet}
+      {#snippet click()}
+        Click it on any Reddit post.
+      {/snippet}
+      {@render step(1, drag)}
+      {@render step(2, click)}
+    </ol>
     {#if device === "ios"}
-      <p class="text-sm text-ink-2">
-        Safari on iPhone and iPad won't run bookmarks, so use the Shortcut there.
-      </p>
-    {:else}
-      <p class="text-sm text-ink-2">
-        Can't see your bookmarks bar? Press Ctrl+Shift+B (Cmd+Shift+B on a Mac)
-        to show it.
-      </p>
+      <p class="text-sm text-ink-2">For computers. iOS Safari won't run bookmarks.</p>
     {/if}
   {/if}
 {/snippet}
 
-<div class="mt-8 flex flex-col gap-4">
-  <div class="divide-y divide-line border border-line">
-    {#each methods as id, index (id)}
-      <section>
-        <h2>
-          {@render option(
-            id,
-            METHODS[id].title,
-            METHODS[id].description,
-            index === 0 ? "Best for this device" : undefined
-          )}
-        </h2>
-        {#if mode === id}
-          <div id="{id}-panel" class="flex flex-col gap-4 px-4 pb-4">
-            {#if id === "shortcut"}
-              {@render shortcutSteps()}
-            {:else if id === "extension"}
-              {@render extensionSteps()}
-            {:else}
-              {@render bookmarkSteps()}
-            {/if}
-          </div>
-        {/if}
-      </section>
-    {/each}
+{#snippet methodPanel(id: SendMethod, index: number)}
+  <div class="flex flex-col gap-4 p-5">
+    <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+      <h2 class="heading text-2xl">{METHODS[id].title}</h2>
+      {#if index === 0}
+        <span class="text-sm text-ink-2">Best for this device</span>
+      {/if}
+    </div>
+    {#if id === "shortcut"}
+      {@render shortcutSteps()}
+    {:else if id === "extension"}
+      {@render extensionSteps()}
+    {:else}
+      {@render bookmarkSteps()}
+    {/if}
   </div>
+{/snippet}
 
-  {#if mode !== "key"}
+<div class="mt-8 flex flex-col gap-3">
+  <section class="border-2 border-ink">
+    <div class="grid grid-cols-3 divide-x-2 divide-ink border-b-2 border-ink">
+      {#each methods as id (id)}
+        <button
+          class="block-control h-12"
+          aria-controls="{id}-panel"
+          aria-expanded={!isUsingKey && method === id}
+          onclick={() => chooseMethod(id)}
+          type="button"
+        >
+          {METHODS[id].tab}
+        </button>
+      {/each}
+    </div>
+    <div
+      class="tab-stack"
+      style:height={isUsingKey ? "0px" : heights[method] && `${heights[method]}px`}
+    >
+      {#each methods as id, index (id)}
+        {@const isOpen = !isUsingKey && method === id}
+        <div
+          id="{id}-panel"
+          class="tab-panel"
+          bind:offsetHeight={heights[id]}
+          data-open={isOpen || undefined}
+          inert={!isOpen}
+        >
+          {@render methodPanel(id, index)}
+        </div>
+      {/each}
+    </div>
+  </section>
+
+  <section class="border border-line">
+    <button
+      class="block-control block-header flex min-h-12 w-full items-center justify-between gap-3 px-5 text-left"
+      aria-controls="key-panel"
+      aria-expanded={isUsingKey}
+      onclick={toggleKey}
+      type="button"
+    >
+      I have a Reddit key
+      <span class={["accordion-caret", isUsingKey && "rotate-180"]}>
+        <CaretDown size={18} weight="bold" />
+      </span>
+    </button>
+    {#snippet keyContent()}
+      <div class="flex flex-col gap-4 px-5 pb-5">
+        {@render keyForm()}
+      </div>
+    {/snippet}
+    {@render panel("key", isUsingKey, keyContent)}
+  </section>
+
+  {#snippet fasterLine()}
     <p class="text-sm text-ink-2">
       For a faster experience,
       <a class="link" href="/get-a-key">request a key from Reddit</a>.
     </p>
-  {/if}
-
-  <section class="border border-line">
-    <h2>
-      {@render option(
-        "key",
-        "I have a Reddit key",
-        "Paste your app's client ID, then load any post by its link."
-      )}
-    </h2>
-    {#if mode === "key"}
-      <div id="key-panel" class="flex flex-col gap-4 px-4 pb-4">
-        <Connect isEmbedded />
-
-        <!-- The link field appears once a key is saved, so the key form is the
-             only step until then. -->
-        {#if isConnected}
-          <form class="flex flex-col gap-3" onsubmit={go} novalidate>
-            <label class="text-sm font-semibold" for="url-input">
-              Reddit post or comment link
-            </label>
-            <input
-              id="url-input"
-              class="field"
-              aria-describedby="url-error"
-              autocapitalize="off"
-              autocomplete="off"
-              bind:value={link}
-              inputmode="url"
-              placeholder="https://www.reddit.com/r/woodworking/comments/..."
-              spellcheck="false"
-              type="text"
-            />
-            {#if error}
-              <p
-                id="url-error"
-                class="text-sm font-medium text-accent"
-                role="alert"
-              >
-                {error}
-              </p>
-            {/if}
-            <button class="btn btn-primary self-start" type="submit">
-              Generate screenshot
-            </button>
-          </form>
-        {/if}
-      </div>
-    {/if}
-  </section>
-
-  <p class="text-sm text-ink-2">
-    Just looking? <a class="link" href="/generate?sample=1">Try a sample post</a>
-  </p>
+  {/snippet}
+  {@render panel("faster", !isUsingKey, fasterLine)}
 </div>

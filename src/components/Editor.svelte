@@ -166,12 +166,13 @@
   <div class="mx-auto w-full max-w-[1280px] px-4 py-12 lg:px-8">
     <div class="max-w-xl">
       <h1 class="heading text-3xl">
-        Connect Reddit to load this post
+        Add a key to load this post
       </h1>
       <p class="mt-3 text-ink-2">
-        Add your own Reddit app and this post loads right after.
+        Links only load with your own Reddit key. No key?
+        <a class="link" href="/#no-key">Send the post from Reddit instead</a>.
       </p>
-      <div class="mt-6"><Connect /></div>
+      <div class="mt-6 border border-line p-5"><Connect isEmbedded /></div>
     </div>
   </div>
 {:else}

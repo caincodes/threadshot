@@ -48,14 +48,24 @@ const releasedAt = __BUILD_TIME__.slice(0, 16)
         >
           threadshot.app
         </a>
-        <a
-          class="-mr-2.5 flex size-11 items-center justify-center rounded-ui transition-colors duration-150 hover:bg-canvas active:bg-line"
-          aria-label="threadshot.app on GitHub"
-          href={REPOSITORY}
-          rel="noopener"
-        >
-          <Icon class="size-6" name="github" optimize={false} />
-        </a>
+        <nav class="-mr-2.5 flex items-center gap-1">
+          <a
+            class="nav-link"
+            href={`${REPOSITORY}/issues`}
+            rel="noopener"
+            title="Suggestions or issues"
+          >
+            Feedback
+          </a>
+          <a
+            class="nav-link"
+            aria-label="threadshot.app on GitHub"
+            href={REPOSITORY}
+            rel="noopener"
+          >
+            <Icon class="size-6" name="github" optimize={false} />
+          </a>
+        </nav>
       </div>
     </header>
     <main class="flex-1">
@@ -73,15 +83,9 @@ const releasedAt = __BUILD_TIME__.slice(0, 16)
           {
             __BUILD_COMMIT__ && (
               <span>
-                {__BUILD_VERSION__ && `v${__BUILD_VERSION__} `}(
-                <a
-                  class="link font-mono"
-                  href={`${REPOSITORY}/commit/${__BUILD_COMMIT__}`}
-                  rel="noopener"
-                >
-                  {__BUILD_COMMIT__.slice(0, 7)}
-                </a>
-                )
+                {__BUILD_VERSION__ && `v${__BUILD_VERSION__} `}(<span class="font-mono"
+                  >{__BUILD_COMMIT__.slice(0, 7)}</span
+                >)
               </span>
             )
           }
