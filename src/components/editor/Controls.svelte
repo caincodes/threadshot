@@ -136,7 +136,7 @@
   {/if}
 </button>
 
-<div class="mt-4 flex flex-col border border-line bg-white px-4">
+<div class="mt-6 flex flex-col border border-line bg-white px-4 lg:mt-4">
   <div
     class="grid grid-cols-2 border-b border-line"
     aria-label="Options"
