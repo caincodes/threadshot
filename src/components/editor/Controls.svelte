@@ -27,6 +27,8 @@
 
   const isTouch = isTouchDevice();
 
+  let saveResult = $state<"saved" | "failed" | null>(null);
+
   // Advanced settings keep working while Basic hides them, so the tab counts any
   // that have been changed.
   let optionsMode = $state<"basic" | "advanced">("basic");
@@ -288,6 +290,23 @@
         <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
       {/if}
     </div>
+  </div>
+
+  <div class="flex flex-col items-start gap-1 border-t border-line py-3">
+    <button
+      class="link text-sm"
+      onclick={() => (saveResult = editor.saveDefaults() ? "saved" : "failed")}
+      type="button"
+    >
+      Save as default
+    </button>
+    {#if saveResult}
+      <p class="text-sm text-ink-2" role="status">
+        {saveResult === "saved"
+          ? "Saved to this browser's local storage."
+          : "Could not save. This browser is blocking local storage."}
+      </p>
+    {/if}
   </div>
 </div>
 

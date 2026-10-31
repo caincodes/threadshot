@@ -15,6 +15,33 @@ export type PostBodyMode = "full" | "snippet" | "off";
 
 const FILE_NAME = "threadshot.png";
 
+// The options "Save as default" keeps in the browser's local storage.
+const DEFAULTS_KEY = "threadshot:defaults";
+const SAVED_OPTIONS = [
+  "theme",
+  "hideWatermark",
+  "imageColumns",
+  "postBody",
+  "isCensorUsernames",
+  "isCensorSubreddits",
+  "redactStyle",
+  "hidePostTags",
+  "hideUserFlair",
+  "showSubredditIcon",
+  "showProfileIcons",
+  "hideBots",
+  "showComments",
+  "topLevelComments",
+  "commentReplies",
+  "replyDepth",
+  "commentSort",
+  "showDate",
+  "dateFormat",
+  "timeDisplay",
+  "timeFormat",
+] as const;
+type SavedOption = (typeof SAVED_OPTIONS)[number];
+
 // Touch devices share the image, since a download lands in the Files app.
 export const isTouchDevice = () => matchMedia("(pointer: coarse)").matches;
 
@@ -54,6 +81,38 @@ class EditorState {
   isDownloading = $state(false);
   // The finished image, shown in full when the share sheet could not open.
   exported = $state<{ file: File; url: string } | null>(null);
+
+  constructor() {
+    this.loadDefaults();
+  }
+
+  // Storage can be missing or blocked (private browsing), so failures are quiet.
+  private loadDefaults() {
+    let saved: Record<string, unknown>;
+    try {
+      saved = JSON.parse(localStorage.getItem(DEFAULTS_KEY) ?? "{}");
+    } catch {
+      return;
+    }
+    const options = this as unknown as Record<SavedOption, unknown>;
+    for (const key of SAVED_OPTIONS) {
+      if (typeof saved[key] === typeof options[key]) {
+        options[key] = saved[key];
+      }
+    }
+  }
+
+  saveDefaults = () => {
+    const options = Object.fromEntries(
+      SAVED_OPTIONS.map((key) => [key, this[key]])
+    );
+    try {
+      localStorage.setItem(DEFAULTS_KEY, JSON.stringify(options));
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   // How many settings only shown in Advanced have been moved off their default.
   get changedAdvancedCount() {
