@@ -3,6 +3,7 @@ import { domToBlob } from "modern-screenshot";
 import type { CommentSort } from "../types/reddit";
 
 export type ScreenshotTheme = "light" | "dark";
+export type PostBodyMode = "full" | "snippet" | "off";
 
 const FILE_NAME = "threadshot.png";
 
@@ -21,6 +22,10 @@ class EditorState {
   theme = $state<ScreenshotTheme>("light");
   showAttribution = $state(true);
   imageColumns = $state(3);
+  postBody = $state<PostBodyMode>("full");
+  // The snippet shown in the image, and the text highlighted to become it.
+  bodySnippet = $state<string | null>(null);
+  bodySelection = $state<string | null>(null);
   isCensorUsernames = $state(false);
   isCensorSubreddits = $state(false);
   hideTags = $state(false);

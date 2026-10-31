@@ -45,7 +45,7 @@
     <div class="mt-2"><FlairBadge flair={submission.flair} /></div>
   {/if}
 
-  <div class="mt-3"><PostMedia {submission} /></div>
+  <div class="mt-3 not-has-[>*]:hidden"><PostMedia {submission} /></div>
 
   <footer
     class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] font-medium text-ap-muted"

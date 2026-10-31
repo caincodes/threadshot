@@ -2,6 +2,7 @@
   import DownloadSimple from "phosphor-svelte/lib/DownloadSimple";
   import Export from "phosphor-svelte/lib/Export";
 
+  import { snippetFromSelection } from "../../lib/bodySnippet";
   import { editor, isTouchDevice } from "../../lib/editor.svelte";
   import { SORT_TYPES } from "../../types/reddit";
   import NumberField from "../ui/NumberField.svelte";
@@ -12,9 +13,15 @@
 
   let {
     canDownload,
+    hasBody,
     isAlbum,
     botCount,
-  }: { canDownload: boolean; isAlbum: boolean; botCount: number } = $props();
+  }: {
+    canDownload: boolean;
+    hasBody: boolean;
+    isAlbum: boolean;
+    botCount: number;
+  } = $props();
 
   const isTouch = isTouchDevice();
 
@@ -22,6 +29,35 @@
     { value: "light", text: "Light" },
     { value: "dark", text: "Dark" },
   ] as const;
+
+  const bodyModes = [
+    { value: "full", text: "Full" },
+    { value: "snippet", text: "Snippet" },
+    { value: "off", text: "Off" },
+  ] as const;
+
+  // A tap on the button can clear the highlight on touch screens, so the last
+  // one is kept until it is used.
+  $effect(() => {
+    if (editor.postBody !== "snippet" || editor.bodySnippet) {
+      return;
+    }
+    const onSelectionChange = () => {
+      const snippet = snippetFromSelection(getSelection());
+      if (snippet) {
+        editor.bodySelection = snippet;
+      }
+    };
+    document.addEventListener("selectionchange", onSelectionChange);
+    return () =>
+      document.removeEventListener("selectionchange", onSelectionChange);
+  });
+
+  const useSelection = () => {
+    editor.bodySnippet = editor.bodySelection;
+    editor.bodySelection = null;
+    getSelection()?.removeAllRanges();
+  };
 </script>
 
 {#snippet heading(text: string)}
@@ -68,16 +104,50 @@
     <Switch label="Redact subreddit" bind:checked={editor.isCensorSubreddits} />
   </div>
 
-  <!-- Only meaningful for album posts, so only shown for them. -->
-  {#if isAlbum}
+  <!-- Only shown for posts these apply to. -->
+  {#if hasBody || isAlbum}
     <div class="mt-3 border-t border-line">
       {@render heading("Post")}
-      <NumberField
-        label="Album columns"
-        max={50}
-        min={1}
-        bind:value={editor.imageColumns}
-      />
+      {#if hasBody}
+        <Segmented
+          label="Post body"
+          options={bodyModes}
+          bind:value={editor.postBody}
+        />
+        {#if editor.postBody === "snippet"}
+          <div class="flex flex-col gap-3 pb-2">
+            {#if editor.bodySnippet}
+              <button
+                class="btn btn-secondary"
+                onclick={() => (editor.bodySnippet = null)}
+                type="button"
+              >
+                Choose a different snippet
+              </button>
+            {:else}
+              <p class="text-sm text-ink-2">
+                Highlight text in the post, then use it as the snippet.
+              </p>
+              <button
+                class="btn btn-secondary"
+                disabled={!editor.bodySelection}
+                onclick={useSelection}
+                type="button"
+              >
+                Use highlighted text
+              </button>
+            {/if}
+          </div>
+        {/if}
+      {/if}
+      {#if isAlbum}
+        <NumberField
+          label="Album columns"
+          max={50}
+          min={1}
+          bind:value={editor.imageColumns}
+        />
+      {/if}
     </div>
   {/if}
 

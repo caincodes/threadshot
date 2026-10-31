@@ -10,14 +10,21 @@
 
   let { submission }: { submission: RedditSubmission } = $props();
 
-  const selfText = $derived(
-    submission.selftext_html
-      ? applyCensoring(submission.selftext_html, {
+  // Anything but "full" leaves the whole body showing until a snippet is chosen.
+  const bodyHtml = $derived.by(() => {
+    if (editor.postBody === "off") {
+      return "";
+    }
+    const html =
+      (editor.postBody === "snippet" && editor.bodySnippet) ||
+      submission.selftext_html;
+    return html
+      ? applyCensoring(html, {
           subreddits: editor.isCensorSubreddits,
           usernames: editor.isCensorUsernames,
         })
-      : ""
-  );
+      : "";
+  });
   const previewUrl = $derived(submission.preview?.images[0]?.source.url);
   let videoThumbnail = $state<string | null>(null);
 
@@ -55,14 +62,7 @@
   />
 {/snippet}
 
-{#if submission.linkType === "self"}
-  {#if selfText}
-    <div class="md text-base leading-[22px]">
-      <!-- eslint-disable-next-line svelte/no-at-html-tags -- cleaned by parseThread -->
-      {@html selfText}
-    </div>
-  {/if}
-{:else if submission.linkType === "image" && submission.url}
+{#if submission.linkType === "image" && submission.url}
   <div class="overflow-hidden rounded-[10px]">
     {@render picture(submission.url, "Post image")}
   </div>
@@ -112,4 +112,14 @@
   </div>
 {:else if submission.linkType === "external" && host}
   <p class="text-sm font-semibold text-ap-link">{host}</p>
+{/if}
+
+{#if bodyHtml}
+  <div
+    class={["md text-base leading-[22px]", submission.linkType !== "self" && "mt-3"]}
+    data-post-body
+  >
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -- cleaned by parseThread and snippetFromSelection -->
+    {@html bodyHtml}
+  </div>
 {/if}
