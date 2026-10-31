@@ -73,23 +73,31 @@ const releasedAt = __BUILD_TIME__.slice(0, 16)
     </main>
     <footer class="border-t border-line">
       <div
-        class="mx-auto flex max-w-[1280px] flex-col gap-2 px-4 py-5 text-sm text-ink-2 lg:px-8"
+        class="mx-auto flex max-w-[1280px] flex-col gap-3 px-4 py-5 text-sm text-ink-2 sm:flex-row sm:justify-between sm:gap-8 lg:px-8"
       >
         <p>
-          threadshot.app is not affiliated with Reddit. Posts and comments belong
+          <strong class="font-semibold text-ink">threadshot.app</strong> is not
+          affiliated with Reddit. Posts and comments belong
           to their authors.
         </p>
-        <p class="flex flex-wrap gap-x-4 gap-y-1 tabular-nums">
+        <p
+          class="flex flex-col gap-y-1 tabular-nums sm:shrink-0 sm:items-end lg:flex-row lg:gap-x-4"
+        >
           {
             __BUILD_COMMIT__ && (
               <span>
-                {__BUILD_VERSION__ && `v${__BUILD_VERSION__} `}(<span class="font-mono"
-                  >{__BUILD_COMMIT__.slice(0, 7)}</span
-                >)
+                {__BUILD_VERSION__ && (
+                  <strong class="font-semibold text-ink">
+                    v{__BUILD_VERSION__}
+                  </strong>
+                )}{" "}
+                <span class="font-mono text-xs">
+                  ({__BUILD_COMMIT__.slice(0, 7)})
+                </span>
               </span>
             )
           }
-          <span>
+          <span class="lg:border-l lg:border-line lg:pl-4">
             Released <time datetime={__BUILD_TIME__}>{releasedAt} UTC</time>
           </span>
         </p>
