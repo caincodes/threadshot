@@ -136,6 +136,7 @@
 
 .ap .md a {
   color: var(--ap-link);
+  overflow-wrap: anywhere;
 }
 
 .ap .md ul {
