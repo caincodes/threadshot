@@ -1,6 +1,6 @@
 {
-  "short_name": "threadshot",
-  "name": "threadshot - the best way to screenshot reddit content",
+  "short_name": "threadshot.app",
+  "name": "threadshot.app: Reddit threads as clean images",
   "icons": [
     {
       "src": "favicon.ico",

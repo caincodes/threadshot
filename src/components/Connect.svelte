@@ -67,7 +67,7 @@
       Connect your Reddit app
     </h2>
     <p class="text-sm text-ink-2">
-      threadshot reads posts through Reddit's API using your own app, so nobody
+      threadshot.app reads posts through Reddit's API using your own app, so nobody
       else's key is involved. Paste your app's client ID below.
     </p>
 

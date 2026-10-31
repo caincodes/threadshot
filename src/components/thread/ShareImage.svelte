@@ -1,7 +1,6 @@
 <script lang="ts">
   import { withoutBots } from "../../functions/util/isBot";
   import { editor } from "../../lib/editor.svelte";
-  import { siteHost } from "../../lib/siteHost";
   import type {
     MoreChildren,
     RedditComment,
@@ -35,8 +34,7 @@
 
   {#if editor.showAttribution}
     <div class="px-4 py-3 text-center text-xs text-ap-muted">
-      <p>Made with threadshot</p>
-      {#if siteHost}<p class="mt-0.5 italic">{siteHost}</p>{/if}
+      <p>Made with threadshot.app</p>
     </div>
   {/if}
 </div>

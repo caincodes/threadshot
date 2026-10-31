@@ -1,4 +1,4 @@
-# threadshot
+# threadshot.app
 
 Turn a Reddit post or comment thread into a clean, shareable screenshot at
 [threadshot.app](https://threadshot.app).
@@ -20,7 +20,7 @@ with Phosphor icons. Fonts are self-hosted so modern-screenshot can embed them i
 ## Getting a post in
 
 Reddit refuses most requests that do not come from an approved app or a normal
-page, so threadshot has two ways in, and neither uses anyone else's key.
+page, so threadshot.app has two ways in, and neither uses anyone else's key.
 
 1. **Your own Reddit app.** On first visit the app asks for a client ID (and a
    client secret, only for script or web apps). Create an app at
@@ -31,7 +31,7 @@ page, so threadshot has two ways in, and neither uses anyone else's key.
    keeps only a short-lived token in memory and never stores or logs the key.
    An app with no secret uses Reddit's installed-client login; with a secret it
    uses the standard app login. Reddit may need to approve your app first.
-2. **The bookmark (no key).** The home page has a "Send to threadshot" button.
+2. **The bookmark (no key).** The home page has a "Send to threadshot.app" button.
    Drag it to your bookmarks bar, open any Reddit post, and click it. The
    bookmark runs on reddit.com, so it reads the post's JSON as an ordinary
    same-origin load with your own session, IP and user agent, then hands it to
@@ -51,9 +51,8 @@ npm ci
 npm run dev        # then open http://localhost:4321
 ```
 
-`SITE_URL` is optional. The site is threadshot.app, which the exported image's
-watermark and the canonical links use; set `SITE_URL` to override it for a fork
-or a staging copy.
+`SITE_URL` is optional. Canonical links point at threadshot.app; set `SITE_URL`
+to override that for a fork or a staging copy.
 
 ## Scripts
 

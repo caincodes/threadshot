@@ -20,7 +20,7 @@
       id: "bookmark",
       title: "I don't have a key",
       description:
-        "Use a bookmark that sends a post from Reddit to threadshot. No sign-up.",
+        "Use a bookmark that sends a post from Reddit to threadshot.app. No sign-up.",
     },
   ];
 
@@ -165,7 +165,7 @@
         href={bookmark}
       >
         <BookmarkSimple size={20} weight="bold" />
-        Send to threadshot
+        Send to threadshot.app
       </a>
       <p class="text-sm text-ink-2">
         Can't see your bookmarks bar? Press Ctrl+Shift+B (Cmd+Shift+B on a Mac)

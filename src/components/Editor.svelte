@@ -27,7 +27,7 @@
   const shareCode = params.get("share");
   const commentId = params.get("commentId");
   const isSample = params.get("sample") === "1";
-  // Opened by the "Send to threadshot" bookmark, which posts the thread over.
+  // Opened by the "Send to threadshot.app" bookmark, which posts the thread over.
   const isFromBookmark = params.get("from") === "reddit";
   const bookmarkNonce = params.get("n");
 

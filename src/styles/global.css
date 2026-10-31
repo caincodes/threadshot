@@ -8,7 +8,7 @@
 
 /*
  * Two separate systems live here.
- *  1. The threadshot app UI: ink on white, one vermilion accent, 6px radius,
+ *  1. The threadshot.app UI: ink on white, one vermilion accent, 6px radius,
  *     hairline borders, no shadows.
  *  2. The exported image (.ap): a phone-width share card with large type, a
  *     compact stats row and colour-coded reply bars, in iOS-style light and
