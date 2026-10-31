@@ -5,7 +5,6 @@
 
   import { applyCensoring } from "../../functions/util/censorText";
   import { withoutBots } from "../../functions/util/isBot";
-  import { defaultAvatar } from "../../functions/util/defaultAvatar";
   import { formatCount } from "../../functions/util/format";
   import { editor } from "../../lib/editor.svelte";
   import type { MoreChildren, RedditComment } from "../../types/reddit";
@@ -65,7 +64,7 @@
         {#if editor.showProfileIcons && !editor.isCensorUsernames}
           <Avatar
             name={comment.author}
-            src={comment.authorIcon ?? defaultAvatar(comment.author)}
+            src={comment.authorIcon}
           />
         {/if}
         <span

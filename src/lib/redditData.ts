@@ -133,25 +133,11 @@ export const parseThread = (
   ];
 };
 
-const withSampleIcons = (list: Comments): Comments =>
-  list.map((item) =>
-    item.type === "comment"
-      ? {
-          ...item,
-          authorIcon: `/sample/avatars/${item.author}.svg`,
-          replyTree: withSampleIcons(item.replyTree),
-        }
-      : item
-  );
-
-// The bundled sample thread, parsed exactly like a real response, with its own
-// pictures in place of the ones Reddit would supply.
+// The bundled sample thread, parsed exactly like a real response. Its people
+// get Reddit's default avatars; the subreddit icon is its own.
 export const loadSampleData = (sort: CommentSort = "best"): RedditData => {
   const [submission, comments] = parseThread(sampleRedditResponse(), sort);
-  return [
-    { ...submission, subredditIcon: "/sample/woodworking.svg" },
-    withSampleIcons(comments),
-  ];
+  return [{ ...submission, subredditIcon: "/sample/woodworking.svg" }, comments];
 };
 
 // Guards data that arrives from outside (a window message) before it is parsed.
