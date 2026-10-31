@@ -1,6 +1,6 @@
 // The site's public host for the image watermark, taken from Astro's `site`
 // (set at build time in astro.config.mjs). Shown without protocol, "www.",
-// slashes or any path, e.g. "threadshot-for-reddit.vercel.app".
+// slashes or any path, e.g. "threadshot.app".
 export const toDisplayHost = (value: string | undefined): string | undefined => {
   const raw = value?.trim();
   if (!raw) {

@@ -10,6 +10,10 @@ const {
   title = "threadshot: Reddit threads as clean images",
   description = "Paste a Reddit post or comment link and download a PNG that looks like Reddit.",
 } = Astro.props;
+
+// The old *.vercel.app address still serves the site (bookmarks made there
+// keep working), so every page names threadshot.app as the real address.
+const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
@@ -19,6 +23,7 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#ffffff" />
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="manifest" href="/manifest.json" />

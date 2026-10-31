@@ -1,6 +1,7 @@
 # threadshot
 
-Turn a Reddit post or comment thread into a clean, shareable screenshot.
+Turn a Reddit post or comment thread into a clean, shareable screenshot at
+[threadshot.app](https://threadshot.app).
 
 Built with [Astro](https://astro.build) (server output, Vercel adapter),
 [Tailwind CSS](https://tailwindcss.com) and a [Svelte](https://svelte.dev) island for the editor.
@@ -50,9 +51,9 @@ npm ci
 npm run dev        # then open http://localhost:4321
 ```
 
-`SITE_URL` is optional: the exported image's watermark can show a site host. On
-Vercel it is filled in at build time from the project's production domain;
-elsewhere set `SITE_URL`, or leave it unset to omit that line.
+`SITE_URL` is optional. The site is threadshot.app, which the exported image's
+watermark and the canonical links use; set `SITE_URL` to override it for a fork
+or a staging copy.
 
 ## Scripts
 
