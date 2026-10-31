@@ -1,4 +1,4 @@
-import react from "@astrojs/react";
+import svelte from "@astrojs/svelte";
 import vercel from "@astrojs/vercel";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, envField } from "astro/config";
@@ -6,7 +6,7 @@ import { defineConfig, envField } from "astro/config";
 export default defineConfig({
   output: "server",
   adapter: vercel(),
-  integrations: [react()],
+  integrations: [svelte()],
   vite: { plugins: [tailwindcss()] },
   env: {
     schema: {

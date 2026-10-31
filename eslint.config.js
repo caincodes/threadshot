@@ -1,7 +1,7 @@
 import js from "@eslint/js";
 import { defineConfig } from "eslint/config";
 import astro from "eslint-plugin-astro";
-import reactHooks from "eslint-plugin-react-hooks";
+import svelte from "eslint-plugin-svelte";
 import tseslint from "typescript-eslint";
 
 export default defineConfig(
@@ -9,9 +9,14 @@ export default defineConfig(
   js.configs.recommended,
   tseslint.configs.recommended,
   astro.configs.recommended,
-  reactHooks.configs.flat.recommended,
+  svelte.configs.recommended,
+  {
+    files: ["**/*.svelte", "**/*.svelte.ts"],
+    languageOptions: { parserOptions: { parser: tseslint.parser } },
+  },
   {
     rules: {
+      "no-undef": "off", // TypeScript already reports undefined names
       eqeqeq: ["error", "always", { null: "ignore" }],
       "id-length": [
         "error",

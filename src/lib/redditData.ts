@@ -1,7 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-
-import { parseComments } from "../../functions/util/parseComments";
-import { parseSubmission } from "../../functions/util/parseSubmission";
+import { parseComments } from "../functions/util/parseComments";
+import { parseSubmission } from "../functions/util/parseSubmission";
 import type {
   CommentSort,
   ListedRawComment,
@@ -10,22 +8,26 @@ import type {
   MoreChildren,
   RedditComment,
   RedditSubmission,
-} from "../../types/reddit";
+} from "../types/reddit";
 
-type RedditData = [RedditSubmission, Array<RedditComment | MoreChildren>];
+export type RedditData = [
+  RedditSubmission,
+  Array<RedditComment | MoreChildren>,
+];
 
-const fetchRedditData = async (
+export const fetchRedditData = async (
   subreddit: string,
   postId: string,
   commentId: string | null,
-  sort: CommentSort
+  sort: CommentSort,
+  signal?: AbortSignal
 ): Promise<RedditData> => {
   const params = new URLSearchParams({ sub: subreddit, postId, sort });
   if (commentId) {
     params.set("commentId", commentId);
   }
 
-  const res = await fetch(`/api/reddit?${params}`);
+  const res = await fetch(`/api/reddit?${params}`, { signal });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `Request failed (${res.status})`);
@@ -33,7 +35,7 @@ const fetchRedditData = async (
 
   const [submissionListing, commentListing] = (await res.json()) as [
     Listing<ListedRawSubmission>,
-    Listing<ListedRawComment>
+    Listing<ListedRawComment>,
   ];
   const modhash = submissionListing.data.modhash;
 
@@ -42,15 +44,3 @@ const fetchRedditData = async (
     parseComments(commentListing.data.children, modhash),
   ];
 };
-
-export const useRedditData = (
-  subreddit: string,
-  postId: string,
-  commentId: string | null,
-  sort: CommentSort
-) =>
-  useQuery({
-    queryKey: ["comments", subreddit, postId, commentId, sort],
-    queryFn: () => fetchRedditData(subreddit, postId, commentId, sort),
-    retry: false,
-  });

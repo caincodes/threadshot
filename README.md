@@ -3,7 +3,7 @@
 Turn a Reddit post or comment thread into a clean, shareable screenshot.
 
 Built with [Astro](https://astro.build) (server output, Vercel adapter),
-[Tailwind CSS](https://tailwindcss.com) and a React island for the editor.
+[Tailwind CSS](https://tailwindcss.com) and a [Svelte](https://svelte.dev) island for the editor.
 
 ## Develop
 
@@ -27,7 +27,7 @@ often blocks (especially from cloud hosts such as Vercel).
 ## Scripts
 
 - `npm run dev` / `npm run build` / `npm run preview`
-- `npm run check` - type-check Astro, TypeScript and TSX
+- `npm run check` - type-check Astro, TypeScript and Svelte
 - `npm run lint`
 
 ## Routes
