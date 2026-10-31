@@ -10,7 +10,7 @@ export const SharedditLogo: React.FC = () => {
         fontWeight: 600,
       }}
     >
-      shareddit
+      post-share-web
     </a>
   );
 };

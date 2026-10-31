@@ -57,9 +57,9 @@ export const HomeScreenView: React.FC<HomeScreenViewProps> = ({ onSubmit }) => {
         </form>
         <Caption color={lightTheme.accents[100]}>{error}</Caption>
         <Paragraph>
-          shareddit helps you capture the whole context of the reddit post with
+          post-share-web helps you capture the whole context of the reddit post with
           a single image. No more cropping, no more scribbling out usernames,
-          shareddit is the all-in-one tool to save or share your favorite reddit
+          post-share-web is the all-in-one tool to save or share your favorite reddit
           moments.
         </Paragraph>
       </Flex>

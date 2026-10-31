@@ -16,6 +16,11 @@ export default async function handler(
     return;
   }
 
+  if (process.env.REDDIT_MOCK === "1") {
+    res.status(200).json({ sub: "mocksub", postId: "mock01", commentId: null });
+    return;
+  }
+
   try {
     const token = await getRedditToken();
     const upstream = await fetch(

@@ -27,7 +27,7 @@ const App = ({ Component, pageProps }: AppProps) => {
 
           <link href="/manifest.json" rel="manifest" />
 
-          <title>shareddit</title>
+          <title>post-share-web</title>
         </head>
       </Head>
 

@@ -1,4 +1,4 @@
-const USER_AGENT = "web:shareddit:1.6.0 (screenshot tool)";
+const USER_AGENT = "web:post-share-web:1.6.0 (personal screenshot tool)";
 
 let cached: { token: string; expiresAt: number } | null = null;
 

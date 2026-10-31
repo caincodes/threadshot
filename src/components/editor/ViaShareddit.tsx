@@ -9,7 +9,7 @@ export const ViaShareddit: React.FC = () => {
 
   return (
     <Caption color={theme.contrast[100]} fontWeight={700} paddingX="18px">
-      Captured via shareddit.com on {today}
+      Captured via post-share-web on {today}
     </Caption>
   );
 };

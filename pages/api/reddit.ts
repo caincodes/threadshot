@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
+import { mockRedditResponse } from "../../src/server/mockReddit";
 import { getRedditToken, redditUserAgent } from "../../src/server/redditAuth";
 
 const SAFE = /^[\w-]+$/;
@@ -35,6 +36,11 @@ export default async function handler(
     !SORTS.has(sort)
   ) {
     res.status(400).json({ error: "Invalid parameters" });
+    return;
+  }
+
+  if (process.env.REDDIT_MOCK === "1") {
+    res.status(200).json(mockRedditResponse(commentId));
     return;
   }
 

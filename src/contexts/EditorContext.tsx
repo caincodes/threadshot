@@ -93,7 +93,7 @@ export class EditorContextProvider extends React.Component<
     });
     const a = document.createElement("a");
 
-    a.setAttribute("download", `shareddit.png`);
+    a.setAttribute("download", `post-share-web.png`);
     a.setAttribute("href", base64);
     a.setAttribute("target", "_blank");
     a.dispatchEvent(click);
