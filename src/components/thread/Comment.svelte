@@ -16,15 +16,20 @@
   // not reddit's absolute depth, so permalinks to deep comments still render.
   let {
     data,
+    postUtc,
     level = 0,
-  }: { data: RedditComment | MoreChildren; level?: number } = $props();
+  }: {
+    data: RedditComment | MoreChildren;
+    postUtc: number;
+    level?: number;
+  } = $props();
 
   // Anything that isn't a comment is a "more children" stub, out of scope.
   const comment = $derived(
     data.type === "comment" && level <= editor.replyDepth ? data : null
   );
   const timestamp = $derived(
-    comment ? editor.timestamp(comment.created_utc) : ""
+    comment ? editor.commentTimestamp(comment.created_utc, postUtc) : ""
   );
   const replies = $derived(
     comment
@@ -91,7 +96,7 @@
     </div>
 
     {#each replies as reply (reply.id)}
-      <Comment data={reply} level={level + 1} />
+      <Comment data={reply} {postUtc} level={level + 1} />
     {/each}
   </div>
 {/if}

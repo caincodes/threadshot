@@ -39,7 +39,7 @@
   <Post {submission} {isPostLast} />
 
   {#each shownComments as comment (comment.id)}
-    <Comment data={comment} />
+    <Comment data={comment} postUtc={submission.created_utc} />
   {/each}
 
   {#if !editor.hideWatermark && !isPostLast}

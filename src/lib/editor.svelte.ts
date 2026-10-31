@@ -2,6 +2,7 @@ import { domToBlob } from "modern-screenshot";
 
 import type { RedactStyle } from "../functions/util/censorText";
 import {
+  formatCommentTimestamp,
   formatTimestamp,
   type DateFormat,
   type TimeDisplay,
@@ -69,6 +70,8 @@ class EditorState {
   }
 
   timestamp = (createdUtc: number) => formatTimestamp(createdUtc, this);
+  commentTimestamp = (createdUtc: number, postUtc: number) =>
+    formatCommentTimestamp(createdUtc, postUtc, this);
 
   // iOS often refuses to share once rendering has used up the tap, so if this
   // fails the image is shown with its own Share button, which is a new tap.

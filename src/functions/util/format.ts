@@ -93,3 +93,26 @@ export const formatTimestamp = (
     .filter(Boolean)
     .join(", ");
 };
+
+// A comment's time alone, with a short "Oct 21" in front only when it was made
+// on a different day from the post.
+export const formatCommentTimestamp = (
+  createdUtc: number,
+  postUtc: number,
+  { showDate, dateFormat, timeDisplay, timeFormat }: TimestampOptions
+) => {
+  if (showDate && dateFormat === "ago") {
+    return formatAgo(createdUtc);
+  }
+  const date = new Date(createdUtc * 1000);
+  const isPostDay =
+    date.toDateString() === new Date(postUtc * 1000).toDateString();
+  return [
+    showDate &&
+      !isPostDay &&
+      date.toLocaleDateString("en-US", { day: "numeric", month: "short" }),
+    timeDisplay !== "off" && formatTime(date, timeFormat),
+  ]
+    .filter(Boolean)
+    .join(", ");
+};
