@@ -2,6 +2,7 @@
   import DownloadSimple from "phosphor-svelte/lib/DownloadSimple";
   import Export from "phosphor-svelte/lib/Export";
 
+  import { formatDate, type DateFormat } from "../../functions/util/format";
   import { snippetFromSelection } from "../../lib/bodySnippet";
   import { editor, isTouchDevice } from "../../lib/editor.svelte";
   import { SORT_TYPES } from "../../types/reddit";
@@ -35,6 +36,27 @@
     value,
     text: value.charAt(0).toUpperCase() + value.slice(1),
   }));
+
+  // Each format is shown as it would look, using today's date.
+  const today = new Date();
+  const dateFormats = (["short", "long", "us", "world", "iso"] as const).map(
+    (value): { value: DateFormat; text: string } => ({
+      value,
+      text: formatDate(today, value),
+    })
+  );
+  dateFormats.push({ value: "ago", text: "Time ago (9h)" });
+
+  const timeDisplays = [
+    { value: "today", text: "Today" },
+    { value: "always", text: "Always" },
+    { value: "off", text: "Off" },
+  ] as const;
+
+  const timeFormats = [
+    { value: "12h", text: "12-hour" },
+    { value: "24h", text: "24-hour" },
+  ] as const;
 
   const redactStyles = [
     { value: "box", text: "Box" },
@@ -183,6 +205,34 @@
           label={botCount ? `Hide bot comments (${botCount} found)` : "Hide bot comments (none found)"}
           bind:checked={editor.hideBots}
         />
+      {/if}
+    </div>
+
+    <div class="py-2">
+      {@render heading("Date and time")}
+      <Switch label="Show date" bind:checked={editor.showDate} />
+      {#if editor.showDate}
+        <Select
+          class="w-36 pointer-coarse:w-44"
+          label="Date format"
+          options={dateFormats}
+          bind:value={editor.dateFormat}
+        />
+      {/if}
+      <!-- "Time ago" already says how recent it is. -->
+      {#if !editor.showDate || editor.dateFormat !== "ago"}
+        <Segmented
+          label="Show time"
+          options={timeDisplays}
+          bind:value={editor.timeDisplay}
+        />
+        {#if editor.timeDisplay !== "off"}
+          <Segmented
+            label="Time format"
+            options={timeFormats}
+            bind:value={editor.timeFormat}
+          />
+        {/if}
       {/if}
     </div>
 

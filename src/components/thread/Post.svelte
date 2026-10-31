@@ -4,7 +4,7 @@
   import Clock from "phosphor-svelte/lib/Clock";
   import Medal from "phosphor-svelte/lib/Medal";
 
-  import { formatAgo, formatCount } from "../../functions/util/format";
+  import { formatCount } from "../../functions/util/format";
   import { editor } from "../../lib/editor.svelte";
   import type { RedditSubmission } from "../../types/reddit";
   import FlairBadge from "./FlairBadge.svelte";
@@ -18,6 +18,7 @@
     isPostLast = false,
   }: { submission: RedditSubmission; isPostLast?: boolean } = $props();
 
+  const timestamp = $derived(editor.timestamp(submission.created_utc));
   const community = $derived(
     submission.subreddit_name_prefixed ?? `r/${submission.subreddit}`
   );
@@ -60,10 +61,12 @@
       <ChatCircle size={15} weight="bold" />
       {formatCount(submission.num_comments ?? 0)}
     </span>
-    <span class="inline-flex items-center gap-1">
-      <Clock size={15} weight="bold" />
-      {formatAgo(submission.created_utc)}
-    </span>
+    {#if timestamp}
+      <span class="inline-flex items-center gap-1 whitespace-nowrap">
+        <Clock size={15} weight="bold" />
+        {timestamp}
+      </span>
+    {/if}
     {#if submission.awardCount}
       <span class="inline-flex items-center gap-1">
         <Medal size={15} weight="bold" />
