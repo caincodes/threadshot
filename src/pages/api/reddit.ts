@@ -1,41 +1,33 @@
 import type { APIRoute } from "astro";
 
 import {
-  assertLocal,
-  NotLocalError,
+  CredentialsError,
+  explainStatus,
+  isSameOrigin,
+  parseCredentials,
   redditFetch,
-  RedditBlockedError,
-  userAgentOf,
 } from "../../server/reddit";
 
 const SAFE = /^[\w-]+$/;
-const SORTS = new Set([
-  "best",
-  "confidence",
-  "top",
-  "new",
-  "controversial",
-  "old",
-  "qa",
-  "random",
-]);
+const SORTS = new Set(["best", "confidence", "top", "new", "controversial", "old", "qa", "random"]);
 
 const json = (body: unknown, status = 200) => Response.json(body, { status });
 
-export const GET: APIRoute = async (context) => {
-  const { url, request } = context;
-
-  try {
-    assertLocal(url, () => context.clientAddress);
-  } catch (error) {
-    return json({ error: (error as NotLocalError).message }, 403);
+// POST, not GET, so the visitor's credentials travel in the body and never end
+// up in a URL, an access log or the browser history.
+export const POST: APIRoute = async ({ request, url }) => {
+  if (!isSameOrigin(request, url)) {
+    return json({ error: "Cross-site requests are not allowed." }, 403);
   }
 
-  const sub = url.searchParams.get("sub");
-  const postId = url.searchParams.get("postId");
-  const commentId = url.searchParams.get("commentId");
-  const sort = url.searchParams.get("sort") || "confidence";
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Invalid request" }, 400);
+  }
 
+  const { sub, postId, commentId, sort = "confidence" } = body as Record<string, string | undefined>;
   if (
     !sub ||
     !postId ||
@@ -48,25 +40,22 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
+    const credentials = parseCredentials(body.credentials);
     const path = commentId
       ? `/r/${sub}/comments/${postId}/title/${commentId}.json?context=10000&raw_json=1&sort=${sort}`
       : `/r/${sub}/comments/${postId}/.json?raw_json=1&sort=${sort}`;
-    const upstream = await redditFetch(path, { userAgent: userAgentOf(request) });
+    const upstream = await redditFetch(path, credentials);
 
-    if (upstream.status === 403 || upstream.status === 429) {
-      throw new RedditBlockedError(upstream.status);
-    }
-    if (upstream.status === 404) {
-      return json({ error: "Reddit could not find that post." }, 404);
-    }
     if (!upstream.ok) {
-      return json({ error: `Reddit returned ${upstream.status}.` }, 502);
+      return json({ error: explainStatus(upstream.status) }, upstream.status === 404 ? 404 : 502);
     }
-
     return new Response(await upstream.text(), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
+    if (error instanceof CredentialsError) {
+      return json({ error: error.message, code: "credentials" }, 401);
+    }
     return json({ error: (error as Error).message }, 502);
   }
 };

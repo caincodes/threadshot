@@ -1,18 +1,21 @@
 <script lang="ts">
-  import { editor } from "../lib/editor.svelte";
   import {
     BOOKMARK_ACK,
     BOOKMARK_MESSAGE,
     REDDIT_ORIGINS,
   } from "../lib/bookmarklet";
+  import { credentials } from "../lib/credentials.svelte";
+  import { editor } from "../lib/editor.svelte";
   import {
     fetchRedditData,
     isRawThread,
     loadSampleData,
     parseThread,
+    RedditRequestError,
     type RawThread,
     type RedditData,
   } from "../lib/redditData";
+  import Connect from "./Connect.svelte";
   import Controls from "./editor/Controls.svelte";
   import ShareImage from "./thread/ShareImage.svelte";
   import Spinner from "./ui/Spinner.svelte";
@@ -20,11 +23,18 @@
   const params = new URLSearchParams(window.location.search);
   const subreddit = params.get("sub");
   const postId = params.get("postId");
+  const shareCode = params.get("share");
   const commentId = params.get("commentId");
   const isSample = params.get("sample") === "1";
   // Opened by the "Send to threadshot" bookmark, which posts the thread over.
   const isFromBookmark = params.get("from") === "reddit";
   const bookmarkNonce = params.get("n");
+
+  const hasTarget = Boolean(subreddit && (postId || shareCode));
+  // A post to load from Reddit needs the visitor's own credentials.
+  const needsCredentials = $derived(
+    hasTarget && !isSample && !isFromBookmark && credentials.value === null
+  );
 
   // The preview is a fixed 390px (phone) wide so exports are identical everywhere;
   // on narrow screens it is only scaled down for viewing.
@@ -35,6 +45,7 @@
   let data = $state<RedditData>();
   let isLoading = $state(true);
   let errorMessage = $state("");
+  let isCredentialError = $state(false);
   let received = $state<RawThread>();
 
   // Only pages on reddit.com may send data, and only a well-formed thread is used.
@@ -81,19 +92,21 @@
       isLoading = false;
       return;
     }
-    if (!subreddit || !postId) {
+
+    const ownCredentials = credentials.value;
+    if (!subreddit || !(postId || shareCode) || !ownCredentials) {
       return;
     }
 
     const controller = new AbortController();
     isLoading = true;
     errorMessage = "";
+    isCredentialError = false;
 
     fetchRedditData(
-      subreddit,
-      postId,
-      commentId,
+      { subreddit, postId, commentId, shareCode },
       editor.commentSort,
+      ownCredentials,
       controller.signal
     )
       .then((result) => {
@@ -103,6 +116,8 @@
       .catch((error: Error) => {
         if (!controller.signal.aborted) {
           errorMessage = error.message;
+          isCredentialError =
+            error instanceof RedditRequestError && error.code === "credentials";
           isLoading = false;
         }
       });
@@ -111,12 +126,22 @@
   });
 </script>
 
-{#if !isSample && !isFromBookmark && (!subreddit || !postId)}
+{#if !isSample && !isFromBookmark && !hasTarget}
   <div class="mx-auto max-w-[1280px] px-4 py-16 lg:px-8">
     <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
       No thread selected
     </h1>
     <p class="mt-4"><a class="link" href="/">Paste a Reddit link</a></p>
+  </div>
+{:else if needsCredentials}
+  <div class="mx-auto max-w-xl px-4 py-12 lg:px-8">
+    <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
+      Connect Reddit to load this post
+    </h1>
+    <p class="mt-3 text-ink-2">
+      Add your own Reddit app and this post loads right after.
+    </p>
+    <div class="mt-6"><Connect /></div>
   </div>
 {:else}
   <div
@@ -161,6 +186,9 @@
             Could not load this thread
           </h1>
           <p class="mt-3 text-ink-2">{errorMessage}</p>
+          {#if isCredentialError}
+            <div class="mt-6"><Connect editing /></div>
+          {/if}
           <p class="mt-4">
             <a class="link" href="/">Try another link</a>
             or <a class="link" href="/#bookmark">use the Reddit bookmark</a>

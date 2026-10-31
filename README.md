@@ -16,45 +16,43 @@ stats row and colour-coded reply bars. It is modelled on the share-as-image
 style of Apollo for Reddit, in iOS-style light and dark palettes, set in Inter
 with Phosphor icons. Fonts are self-hosted so modern-screenshot can embed them in the PNG.
 
-## Local-only branch
+## Getting a post in
 
-This branch needs no Reddit API keys. It runs on your own computer and reads
-Reddit's public pages from your own connection, so requests come from your IP.
+Reddit refuses most requests that do not come from an approved app or a normal
+page, so threadshot has two ways in, and neither uses anyone else's key.
 
-Reddit refuses most requests that come from tools, so there are two ways in:
-
-1. **The bookmark (reliable).** The home page has a "Send to threadshot" button.
+1. **Your own Reddit app.** On first visit the app asks for a client ID (and a
+   client secret, only for script or web apps). Create an app at
+   [reddit.com/prefs/apps](https://www.reddit.com/prefs/apps); an "installed
+   app" needs only the client ID. The key is kept in your browser's
+   `localStorage`. It is sent in the body of each request to this site's
+   server over HTTPS so the server can log in to Reddit for you; the server
+   keeps only a short-lived token in memory and never stores or logs the key.
+   An app with no secret uses Reddit's installed-client login; with a secret it
+   uses the standard app login. Reddit may need to approve your app first.
+2. **The bookmark (no key).** The home page has a "Send to threadshot" button.
    Drag it to your bookmarks bar, open any Reddit post, and click it. The
    bookmark runs on reddit.com, so it reads the post's JSON as an ordinary
    same-origin load with your own session, IP and user agent, then hands it to
-   this app in a new window with `postMessage`. Nothing is fetched by a server.
-   Only pages on reddit.com can send data, only well-formed threads are
-   accepted, and each click carries a one-time id so a window that is being
-   replaced cannot acknowledge it by mistake. Sorting then happens in the
-   browser.
-2. **Pasting a link.** The app asks Reddit from your browser, then from the
-   local server (forwarding your browser's user agent). This only works if
-   Reddit allows it; if both fail, the error says what each attempt got.
+   this app in a new window with `postMessage`. Only pages on reddit.com can
+   send data, only well-formed threads are accepted, and each click carries a
+   one-time id so a window that is being replaced cannot acknowledge it by
+   mistake. Sorting then happens in the browser.
+
+The "Try a sample post" link (`/generate?sample=1`) needs neither.
+
+## Develop
 
 Requires Node 22.23.4+ (24 recommended).
 
-Things to know:
+```sh
+npm ci
+npm run dev        # then open http://localhost:4321
+```
 
-- **It is a personal tool.** Reddit asks for approval before automated access,
-  and reading its public pages this way may go against its terms. Keep the
-  volume low, and do not run it as a service.
-- **Pasted links can be blocked.** Reddit may refuse unauthenticated requests
-  (the app shows the status it got). The bookmark avoids this.
-- **Re-make the bookmark if you change the port,** since it remembers the
-  address of the page it was dragged from.
-- **It refuses to run anywhere but localhost.** The API routes return 403 unless
-  the page is addressed as `localhost` and the connection comes from the same
-  machine, so a deployed copy cannot be used as an open Reddit proxy.
-- The "Try a sample post" link on the home page (`/generate?sample=1`) works
-  without any network access to Reddit.
-
-`SITE_URL` is optional: the exported image's watermark can show a site host.
-Leave it unset to omit that line.
+`SITE_URL` is optional: the exported image's watermark can show a site host. On
+Vercel it is filled in at build time from the project's production domain;
+elsewhere set `SITE_URL`, or leave it unset to omit that line.
 
 ## Scripts
 
@@ -65,8 +63,9 @@ Leave it unset to omit that line.
 ## Routes
 
 - `/` - paste a reddit URL
-- `/generate?sub=&postId=&commentId=` - the editor
+- `/generate?sub=&postId=&commentId=` (or `sub=&share=`, or `sample=1`, or `from=reddit`) - the editor
 - `/r/{sub}/comments/{id}/...` and `/r/{sub}/s/{code}` - reddit URLs with the
   host swapped; redirect to the editor
-- `/api/reddit` - fetches a post and its comments (localhost only)
+- `POST /api/reddit` - fetches a post and its comments with the visitor's credentials
+- `POST /api/resolve` - turns a `/s/` share link into a post
 - `/api/img` - same-origin proxy for Reddit-hosted images

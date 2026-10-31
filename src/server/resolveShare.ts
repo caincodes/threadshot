@@ -1,4 +1,4 @@
-import { redditFetch } from "./reddit";
+import { redditFetch, type RedditCredentials } from "./reddit";
 
 const POST = /\/r\/([\w-]+)\/comments\/(\w+)(?:\/[^/]*)?(?:\/(\w+))?/;
 
@@ -12,10 +12,9 @@ export interface ResolvedPost {
 export const resolveShareLink = async (
   sub: string,
   code: string,
-  userAgent: string
+  credentials: RedditCredentials
 ): Promise<ResolvedPost | null> => {
-  const upstream = await redditFetch(`/r/${sub}/s/${code}`, {
-    userAgent,
+  const upstream = await redditFetch(`/r/${sub}/s/${code}`, credentials, {
     redirect: "manual",
   });
   const location = upstream.headers.get("location");

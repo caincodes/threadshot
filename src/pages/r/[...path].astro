@@ -1,52 +1,25 @@
 ---
 import Base from "../../layouts/Base.astro";
-import {
-  assertLocal,
-  NotLocalError,
-  RedditBlockedError,
-  userAgentOf,
-} from "../../server/reddit";
-import { resolveShareLink } from "../../server/resolveShare";
 
 // Handles reddit-style paths so a reddit URL works with the host swapped:
 //   /r/{sub}/comments/{postId}[/{title}[/{commentId}]]
 //   /r/{sub}/s/{code}  (share links)
+// Share links need the visitor's credentials to resolve, which only the browser
+// has, so the editor resolves them.
 const [sub, kind, id, , commentId] = (Astro.params.path ?? "")
   .split("/")
   .filter(Boolean);
 
-const redirectToEditor = (post: {
-  sub: string;
-  postId: string;
-  commentId?: string | null;
-}) => {
-  const params = new URLSearchParams({ sub: post.sub, postId: post.postId });
-  if (post.commentId) {
-    params.set("commentId", post.commentId);
+if (sub && kind === "comments" && id) {
+  const params = new URLSearchParams({ sub, postId: id });
+  if (commentId) {
+    params.set("commentId", commentId);
   }
   return Astro.redirect(`/generate?${params}`, 308);
-};
-
-let message = "That does not look like a Reddit post or comment link.";
-
-if (sub && kind === "comments" && id) {
-  return redirectToEditor({ sub, postId: id, commentId });
 }
 
 if (sub && kind === "s" && id) {
-  try {
-    assertLocal(Astro.url, () => Astro.clientAddress);
-    const resolved = await resolveShareLink(sub, id, userAgentOf(Astro.request));
-    if (resolved) {
-      return redirectToEditor(resolved);
-    }
-    message = "Could not resolve that Reddit share link.";
-  } catch (error) {
-    message =
-      error instanceof NotLocalError || error instanceof RedditBlockedError
-        ? error.message
-        : "Could not reach Reddit to resolve that share link.";
-  }
+  return Astro.redirect(`/generate?${new URLSearchParams({ sub, share: id })}`, 308);
 }
 
 Astro.response.status = 404;
@@ -55,7 +28,7 @@ Astro.response.status = 404;
 <Base title="Link not found | threadshot">
   <div class="mx-auto max-w-[1280px] px-4 py-16 lg:px-8">
     <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
-      {message}
+      That does not look like a Reddit post or comment link.
     </h1>
     <p class="mt-4">
       <a href="/" class="link">Try another link</a>

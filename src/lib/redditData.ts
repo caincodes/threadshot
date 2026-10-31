@@ -9,6 +9,7 @@ import type {
   RedditComment,
   RedditSubmission,
 } from "../types/reddit";
+import type { Credentials } from "./credentials.svelte";
 import { sampleRedditResponse } from "./sampleThread";
 
 export type RedditData = [
@@ -87,6 +88,25 @@ export type RawThread = [
   Listing<ListedRawComment>,
 ];
 
+// A failure that came with an explanation from our own server. `code` is
+// "credentials" when the visitor's Reddit credentials were the problem.
+export class RedditRequestError extends Error {
+  constructor(
+    message: string,
+    readonly code?: string
+  ) {
+    super(message);
+  }
+}
+
+// What to load: a post by id, or a share link that has to be resolved first.
+export interface ThreadTarget {
+  subreddit: string;
+  postId: string | null;
+  commentId: string | null;
+  shareCode: string | null;
+}
+
 const SORT_PARAM: Record<CommentSort, string> = {
   best: "confidence",
   top: "top",
@@ -94,73 +114,84 @@ const SORT_PARAM: Record<CommentSort, string> = {
   old: "old",
 };
 
-// Reddit's public JSON for a post, or for one comment in context.
-const redditPath = (
-  subreddit: string,
-  postId: string,
-  commentId: string | null,
-  sort: CommentSort
-) =>
-  commentId
-    ? `/r/${subreddit}/comments/${postId}/title/${commentId}.json?context=10000&raw_json=1&sort=${SORT_PARAM[sort]}`
-    : `/r/${subreddit}/comments/${postId}/.json?raw_json=1&sort=${SORT_PARAM[sort]}`;
-
-// Local-only mode tries Reddit straight from the browser first: that request
-// carries the browser's own user agent, headers and connection, which Reddit is
-// far less likely to refuse than a request made by the server. If the browser
-// is not allowed to read the response (CORS) or Reddit refuses it, fall back
-// to the local server, and report what each attempt got if both fail.
-const fetchFromBrowser = async (
-  path: string,
+// POST so the credentials stay out of URLs, logs and history.
+const post = async <T>(
+  endpoint: string,
+  body: Record<string, unknown>,
+  credentials: Credentials,
   signal?: AbortSignal
-): Promise<{ thread?: RawThread; note?: string }> => {
-  try {
-    const res = await fetch(`https://www.reddit.com${path}`, { signal });
-    if (res.ok) {
-      return { thread: (await res.json()) as RawThread };
-    }
-    return { note: `Reddit answered your browser with ${res.status}` };
-  } catch (error) {
-    if (signal?.aborted) {
-      throw error;
-    }
-    return { note: "your browser was not allowed to read Reddit's response (CORS)" };
+): Promise<T> => {
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...body, credentials }),
+    signal,
+  });
+  if (!res.ok) {
+    const failure = await res.json().catch(() => null);
+    throw new RedditRequestError(
+      failure?.error ?? `Request failed (${res.status})`,
+      failure?.code
+    );
   }
+  return res.json() as Promise<T>;
+};
+
+const resolvedShares = new Map<string, { postId: string; commentId: string | null }>();
+
+const resolveShare = async (
+  subreddit: string,
+  shareCode: string,
+  credentials: Credentials,
+  signal?: AbortSignal
+) => {
+  const key = `${subreddit}/${shareCode}`;
+  const cached = resolvedShares.get(key);
+  if (cached) {
+    return cached;
+  }
+  const resolved = await post<{ postId: string; commentId: string | null }>(
+    "/api/resolve",
+    { sub: subreddit, code: shareCode },
+    credentials,
+    signal
+  );
+  resolvedShares.set(key, resolved);
+  return resolved;
 };
 
 export const fetchRedditData = async (
-  subreddit: string,
-  postId: string,
-  commentId: string | null,
+  target: ThreadTarget,
   sort: CommentSort,
+  credentials: Credentials,
   signal?: AbortSignal
 ): Promise<RedditData> => {
-  const direct = await fetchFromBrowser(
-    redditPath(subreddit, postId, commentId, sort),
-    signal
-  );
-  let thread = direct.thread;
+  let { postId, commentId } = target;
 
-  if (!thread) {
-    const params = new URLSearchParams({ sub: subreddit, postId, sort });
-    if (commentId) {
-      params.set("commentId", commentId);
-    }
-
-    const res = await fetch(`/api/reddit?${params}`, { signal });
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      const message = body?.error ?? `Request failed (${res.status})`;
-      throw new Error(`${message} Tried your browser first: ${direct.note}.`);
-    }
-    thread = (await res.json()) as RawThread;
+  if (!postId && target.shareCode) {
+    const resolved = await resolveShare(
+      target.subreddit,
+      target.shareCode,
+      credentials,
+      signal
+    );
+    postId = resolved.postId;
+    commentId = resolved.commentId;
+  }
+  if (!postId) {
+    throw new RedditRequestError("That link does not point to a Reddit post.");
   }
 
-  const [submissionListing, commentListing] = thread;
-  const modhash = submissionListing.data.modhash;
-
-  return [
-    parseSubmission(submissionListing.data.children[0].data, modhash),
-    parseComments(commentListing.data.children, modhash),
-  ];
+  const thread = await post<RawThread>(
+    "/api/reddit",
+    {
+      sub: target.subreddit,
+      postId,
+      commentId: commentId ?? undefined,
+      sort: SORT_PARAM[sort],
+    },
+    credentials,
+    signal
+  );
+  return parseThread(thread, "best");
 };

@@ -63,6 +63,10 @@
     @apply bg-accent text-white hover:bg-accent-hover active:bg-accent-press;
   }
 
+  .btn-secondary {
+    @apply border border-ink bg-white text-ink hover:bg-canvas active:bg-line;
+  }
+
   .field {
     @apply h-11 rounded-ui border border-line bg-white px-3 text-base text-ink transition-colors duration-150;
     @apply hover:border-ink-2 focus-visible:border-ink focus-visible:outline-offset-0;

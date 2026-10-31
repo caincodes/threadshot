@@ -1,22 +1,11 @@
 import type { APIRoute } from "astro";
 
-import {
-  assertLocal,
-  NotLocalError,
-  userAgentOf,
-} from "../../server/reddit";
+import { USER_AGENT } from "../../server/reddit";
 
 // Same-origin proxy so modern-screenshot can read Reddit-hosted images (CORS).
 const ALLOWED_HOST = /(^|\.)(redd\.it|redditmedia\.com|redditstatic\.com)$/;
 
-export const GET: APIRoute = async (context) => {
-  const { url, request } = context;
-  try {
-    assertLocal(url, () => context.clientAddress);
-  } catch (error) {
-    return new Response((error as NotLocalError).message, { status: 403 });
-  }
-
+export const GET: APIRoute = async ({ url }) => {
   let target: URL;
   try {
     target = new URL(url.searchParams.get("u") ?? "");
@@ -29,7 +18,7 @@ export const GET: APIRoute = async (context) => {
 
   const upstream = await fetch(target, {
     redirect: "error",
-    headers: { "User-Agent": userAgentOf(request) },
+    headers: { "User-Agent": USER_AGENT },
   }).catch(() => null);
   const type = upstream?.headers.get("content-type") ?? "";
   if (!upstream?.ok || !type.startsWith("image/")) {

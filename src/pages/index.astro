@@ -1,5 +1,6 @@
 ---
 import ShareImage from "../components/thread/ShareImage.svelte";
+import Start from "../components/Start.svelte";
 import { parseComments } from "../functions/util/parseComments";
 import { parseSubmission } from "../functions/util/parseSubmission";
 import { sampleRedditResponse } from "../lib/sampleThread";
@@ -28,67 +29,7 @@ const sample = {
         optimized for mobile.
       </p>
 
-      <form id="url-form" class="mt-8 flex flex-col gap-3" novalidate>
-        <label for="url-input" class="text-sm font-semibold">
-          Reddit post or comment link
-        </label>
-        <input
-          id="url-input"
-          type="text"
-          inputmode="url"
-          placeholder="https://www.reddit.com/r/woodworking/comments/..."
-          autocomplete="off"
-          autocapitalize="off"
-          spellcheck="false"
-          aria-describedby="url-error"
-          class="field"
-        />
-        <p class="text-sm text-ink-2">
-          No link handy? <a href="/generate?sample=1" class="link">Try a sample post</a>
-        </p>
-        <p
-          id="url-error"
-          role="alert"
-          class="min-h-5 text-sm font-medium text-accent"
-        >
-        </p>
-        <button type="submit" class="btn btn-primary self-start">
-          Generate screenshot
-        </button>
-      </form>
-
-      <p class="mt-6 text-sm text-ink-2">
-        Pasted links only work when Reddit allows the request. If one fails, use
-        the bookmark below.
-      </p>
-
-      <section id="bookmark" class="mt-8 border-t border-line pt-6">
-        <h2 class="font-display text-xl font-extrabold tracking-[-0.02em]">
-          Link not loading?
-        </h2>
-        <p class="mt-2 text-ink-2">
-          Reddit often refuses requests that don't come from a normal page. This
-          bookmark reads the post from the page you are already viewing, then
-          sends it here.
-        </p>
-        <ol class="mt-3 list-decimal space-y-1 pl-5 text-ink-2">
-          <li>Drag the button below to your bookmarks bar.</li>
-          <li>Open any Reddit post.</li>
-          <li>Click the bookmark.</li>
-        </ol>
-        <a
-          id="bookmarklet"
-          href="#bookmark"
-          class="btn mt-4 border border-ink bg-white text-ink hover:bg-canvas"
-          draggable="true"
-        >
-          Send to threadshot
-        </a>
-        <p class="mt-3 text-sm text-ink-2">
-          The bookmark remembers this address, so make a new one if you change
-          the port.
-        </p>
-      </section>
+      <Start client:only="svelte" />
     </section>
 
     <div
@@ -107,36 +48,3 @@ const sample = {
   </div>
 </Base>
 
-<script>
-  import { bookmarkletHref } from "../lib/bookmarklet";
-
-  document
-    .querySelector<HTMLAnchorElement>("#bookmarklet")!
-    .setAttribute("href", bookmarkletHref(window.location.origin));
-
-  const form = document.querySelector<HTMLFormElement>("#url-form")!;
-  const input = document.querySelector<HTMLInputElement>("#url-input")!;
-  const error = document.querySelector<HTMLElement>("#url-error")!;
-
-  const POST_PATH = /^\/r\/[\w-]+\/(comments\/\w+|s\/[\w-]+)(\/|$)/;
-
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    error.textContent = "";
-    const value = input.value.trim();
-    if (!value) {
-      error.textContent = "Paste a Reddit link first.";
-      return;
-    }
-    try {
-      const { pathname } = new URL(value);
-      if (!POST_PATH.test(pathname)) {
-        throw new Error();
-      }
-      window.location.href = pathname;
-    } catch {
-      error.textContent =
-        "That does not look like a Reddit post or comment link.";
-    }
-  });
-</script>
