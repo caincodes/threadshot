@@ -20,11 +20,6 @@ export default defineConfig({
         access: "secret",
         optional: true,
       }),
-      REDDIT_MOCK: envField.string({
-        context: "server",
-        access: "secret",
-        optional: true,
-      }),
     },
   },
 });

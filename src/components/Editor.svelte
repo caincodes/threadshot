@@ -1,6 +1,10 @@
 <script lang="ts">
   import { editor } from "../lib/editor.svelte";
-  import { fetchRedditData, type RedditData } from "../lib/redditData";
+  import {
+    fetchRedditData,
+    loadSampleData,
+    type RedditData,
+  } from "../lib/redditData";
   import Controls from "./editor/Controls.svelte";
   import ShareImage from "./thread/ShareImage.svelte";
   import Spinner from "./ui/Spinner.svelte";
@@ -9,6 +13,7 @@
   const subreddit = params.get("sub");
   const postId = params.get("postId");
   const commentId = params.get("commentId");
+  const isSample = params.get("sample") === "1";
 
   // The preview is a fixed 390px (phone) wide so exports are identical everywhere;
   // on narrow screens it is only scaled down for viewing.
@@ -21,6 +26,11 @@
   let errorMessage = $state("");
 
   $effect(() => {
+    if (isSample) {
+      data = loadSampleData();
+      isLoading = false;
+      return;
+    }
     if (!subreddit || !postId) {
       return;
     }
@@ -51,7 +61,7 @@
   });
 </script>
 
-{#if !subreddit || !postId}
+{#if !isSample && (!subreddit || !postId)}
   <div class="mx-auto max-w-[1280px] px-4 py-16 lg:px-8">
     <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
       No thread selected

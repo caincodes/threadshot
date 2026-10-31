@@ -2,11 +2,11 @@
 import ShareImage from "../components/thread/ShareImage.svelte";
 import { parseComments } from "../functions/util/parseComments";
 import { parseSubmission } from "../functions/util/parseSubmission";
+import { sampleRedditResponse } from "../lib/sampleThread";
 import Base from "../layouts/Base.astro";
-import { mockRedditResponse } from "../server/mockReddit";
 
 // The hero shows the real renderer on a sample thread, not a mockup.
-const [submissionListing, commentListing] = mockRedditResponse();
+const [submissionListing, commentListing] = sampleRedditResponse();
 const sample = {
   submission: parseSubmission(submissionListing.data.children[0].data, ""),
   comments: parseComments(commentListing.data.children, ""),
@@ -44,6 +44,9 @@ const sample = {
           aria-describedby="url-error"
           class="field"
         />
+        <p class="text-sm text-ink-2">
+          No link handy? <a href="/generate?sample=1" class="link">Try a sample post</a>
+        </p>
         <p
           id="url-error"
           role="alert"

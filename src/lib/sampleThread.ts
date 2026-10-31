@@ -4,7 +4,8 @@ import type {
   Listing,
 } from "../types/reddit";
 
-// Sample Reddit payloads for local testing without API credentials (REDDIT_MOCK=1).
+// A bundled sample thread, shown by the "Try a sample post" link. It has the
+// same shape as reddit's API response so it goes through the normal parsers.
 const NOW = Math.floor(Date.now() / 1000);
 
 const base = (id: string, author: string, score: number, age: number) => ({
@@ -24,7 +25,7 @@ const base = (id: string, author: string, score: number, age: number) => ({
   upvote_ratio: 0.97,
   score,
   author,
-  permalink: `/r/mocksub/comments/mock01/sample_post/${id}/`,
+  permalink: `/r/woodworking/comments/sample01/sample_post/${id}/`,
   spoiler: false,
   archived: false,
   stickied: false,
@@ -41,7 +42,7 @@ const comment = (
   kind: "t1",
   data: {
     ...base(id, author, score, 3600 - depth * 600),
-    parent_id: depth === 0 ? "t3_mock01" : "t1_parent",
+    parent_id: depth === 0 ? "t3_sample01" : "t1_parent",
     is_submitter: author === "plane_and_simple",
     body_html: html,
     depth,
@@ -57,10 +58,10 @@ const comment = (
 const html = (...paragraphs: string[]) =>
   `<div class="md">${paragraphs.map((text) => `<p>${text}</p>`).join("")}</div>`;
 
-export const mockRedditResponse = (
-  commentId?: string
-): [Listing<ListedRawSubmission>, Listing<ListedRawComment>] =>
-  [
+export const sampleRedditResponse = (): [
+  Listing<ListedRawSubmission>,
+  Listing<ListedRawComment>,
+] => [
   {
     kind: "Listing",
     data: {
@@ -69,7 +70,7 @@ export const mockRedditResponse = (
         {
           kind: "t3",
           data: {
-            ...base("mock01", "plane_and_simple", 2431, 9 * 3600),
+            ...base("sample01", "plane_and_simple", 2431, 9 * 3600),
             subreddit_name_prefixed: "r/woodworking",
             num_comments: 187,
             title: "Finished my first dovetailed drawer after three failed attempts",
@@ -101,24 +102,23 @@ export const mockRedditResponse = (
       modhash: "",
       children: [
         comment(
-          "mockc1",
+          "samplec1",
           "chiselgoblin",
           html(
-            "That gap on the left is the tell that you cut the tails first and traced them. Try pins first next time, and mark with a knife, not a pencil." +
-              (commentId ? ` (permalink: ${commentId})` : "")
+            "That gap on the left is the tell that you cut the tails first and traced them. Try pins first next time, and mark with a knife, not a pencil."
           ),
           1204,
           0,
           [
             comment(
-              "mockc2",
+              "samplec2",
               "plane_and_simple",
               html("Pencil was the whole problem. Marking knife arrives Thursday."),
               311,
               1,
               [
                 comment(
-                  "mockc3",
+                  "samplec3",
                   "thumbwheel_tom",
                   html(
                     "A cheap wheel gauge and a sharp chisel fixed it for me. Three drawers in and the gaps are gone."
@@ -131,14 +131,14 @@ export const mockRedditResponse = (
           ]
         ),
         comment(
-          "mockc4",
+          "samplec4",
           "sawdust_and_coffee",
           html("The glue-up looks clean. Nobody sees the inside of a drawer."),
           642,
           0,
           [
             comment(
-              "mockc5",
+              "samplec5",
               "chiselgoblin",
               html("I do. Every single time I open one."),
               58,
@@ -147,7 +147,7 @@ export const mockRedditResponse = (
           ]
         ),
         comment(
-          "mockc6",
+          "samplec6",
           "borrowed_bandsaw",
           html("What is the finish? The cherry color is great."),
           215,

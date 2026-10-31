@@ -9,11 +9,21 @@ import type {
   RedditComment,
   RedditSubmission,
 } from "../types/reddit";
+import { sampleRedditResponse } from "./sampleThread";
 
 export type RedditData = [
   RedditSubmission,
   Array<RedditComment | MoreChildren>,
 ];
+
+// The bundled sample thread, parsed exactly like a real response.
+export const loadSampleData = (): RedditData => {
+  const [submissionListing, commentListing] = sampleRedditResponse();
+  return [
+    parseSubmission(submissionListing.data.children[0].data, ""),
+    parseComments(commentListing.data.children, ""),
+  ];
+};
 
 export const fetchRedditData = async (
   subreddit: string,

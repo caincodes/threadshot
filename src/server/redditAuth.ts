@@ -1,20 +1,22 @@
-import {
-  REDDIT_CLIENT_ID,
-  REDDIT_CLIENT_SECRET,
-  REDDIT_MOCK,
-} from "astro:env/server";
+import { REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET } from "astro:env/server";
 
 export const USER_AGENT =
   "web:threadshot:2.0.0 (personal screenshot tool)";
 
-export const isMockMode = REDDIT_MOCK === "1";
+export class MissingCredentialsError extends Error {
+  constructor() {
+    super(
+      "Reddit API credentials are not configured. Set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET."
+    );
+  }
+}
 
 let cached: { token: string; expiresAt: number } | null = null;
 
-export const hasRedditCredentials = () =>
-  Boolean(REDDIT_CLIENT_ID && REDDIT_CLIENT_SECRET);
-
 const getRedditToken = async (): Promise<string> => {
+  if (!REDDIT_CLIENT_ID || !REDDIT_CLIENT_SECRET) {
+    throw new MissingCredentialsError();
+  }
   if (cached && cached.expiresAt > Date.now() + 60_000) {
     return cached.token;
   }
@@ -42,21 +44,13 @@ const getRedditToken = async (): Promise<string> => {
   return cached.token;
 };
 
-// Uses the OAuth API when credentials are configured, otherwise falls back to
-// Reddit's public JSON pages. The fallback is best-effort: Reddit may block it.
 export const redditFetch = async (
   path: string,
   init: { redirect?: "manual" } = {}
 ): Promise<Response> => {
-  if (hasRedditCredentials()) {
-    const token = await getRedditToken();
-    return fetch(`https://oauth.reddit.com${path}`, {
-      ...init,
-      headers: { Authorization: `Bearer ${token}`, "User-Agent": USER_AGENT },
-    });
-  }
-  return fetch(`https://www.reddit.com${path}`, {
+  const token = await getRedditToken();
+  return fetch(`https://oauth.reddit.com${path}`, {
     ...init,
-    headers: { "User-Agent": USER_AGENT },
+    headers: { Authorization: `Bearer ${token}`, "User-Agent": USER_AGENT },
   });
 };

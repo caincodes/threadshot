@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
+import { MissingCredentialsError } from "../../server/redditAuth";
 import { resolveShareLink } from "../../server/resolveShare";
 
 // Handles reddit-style paths so a reddit URL works with the host swapped:
@@ -34,8 +35,11 @@ if (sub && kind === "s" && id) {
       return redirectToEditor(resolved);
     }
     message = "Could not resolve that Reddit share link.";
-  } catch {
-    message = "Could not reach Reddit to resolve that share link.";
+  } catch (error) {
+    message =
+      error instanceof MissingCredentialsError
+        ? error.message
+        : "Could not reach Reddit to resolve that share link.";
   }
 }
 

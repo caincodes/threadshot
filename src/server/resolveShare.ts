@@ -1,4 +1,4 @@
-import { isMockMode, redditFetch } from "./redditAuth";
+import { redditFetch } from "./redditAuth";
 
 const POST = /\/r\/([\w-]+)\/comments\/(\w+)(?:\/[^/]*)?(?:\/(\w+))?/;
 
@@ -13,10 +13,6 @@ export const resolveShareLink = async (
   sub: string,
   code: string
 ): Promise<ResolvedPost | null> => {
-  if (isMockMode) {
-    return { sub: "mocksub", postId: "mock01", commentId: null };
-  }
-
   const upstream = await redditFetch(`/r/${sub}/s/${code}`, {
     redirect: "manual",
   });

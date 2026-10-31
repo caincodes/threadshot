@@ -28,12 +28,12 @@ npm run dev
 
 | Variable               | Purpose                                         |
 | ---------------------- | ----------------------------------------------- |
-| `REDDIT_CLIENT_ID`     | Reddit OAuth app client ID (optional)           |
-| `REDDIT_CLIENT_SECRET` | Reddit OAuth app secret (optional)              |
-| `REDDIT_MOCK`          | `1` serves sample data, no Reddit access needed |
+| `REDDIT_CLIENT_ID`     | Reddit OAuth app client ID                      |
+| `REDDIT_CLIENT_SECRET` | Reddit OAuth app secret                         |
 
-Without credentials the server tries Reddit's public JSON pages, which Reddit
-often blocks (especially from cloud hosts such as Vercel).
+Both are required to load real posts; without them the app shows an error.
+The "Try a sample post" link on the home page (`/generate?sample=1`) works
+without credentials and shows a bundled sample thread.
 
 ## Scripts
 
