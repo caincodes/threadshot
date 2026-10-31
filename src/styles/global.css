@@ -123,6 +123,14 @@
     @apply flex h-11 items-center px-2.5 text-sm font-semibold transition-colors duration-150 hover:text-accent active:text-accent-press;
   }
 
+  .options-tab {
+    @apply -mb-px h-10 cursor-pointer border-b-2 border-transparent text-sm font-medium text-ink-2 tabular-nums transition-colors duration-150 hover:text-ink;
+  }
+
+  .options-tab[aria-pressed="true"] {
+    @apply border-ink font-semibold text-ink;
+  }
+
   /* Tabs and block headers share one hover and press. */
   .block-control {
     @apply cursor-pointer font-semibold transition-colors duration-150 hover:bg-canvas active:bg-line;

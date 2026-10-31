@@ -52,6 +52,22 @@ class EditorState {
   // The finished image, shown in full when the share sheet could not open.
   exported = $state<{ file: File; url: string } | null>(null);
 
+  // How many settings only shown in Advanced have been moved off their default.
+  get changedAdvancedCount() {
+    return [
+      this.commentSort !== "best",
+      this.commentReplies !== 1,
+      this.replyDepth !== 3,
+      !this.hideBots,
+      this.dateFormat !== "short",
+      this.timeDisplay !== "today",
+      this.timeFormat !== "12h",
+      this.redactStyle !== "box",
+      this.hidePostTags,
+      this.hideUserFlair,
+    ].filter(Boolean).length;
+  }
+
   timestamp = (createdUtc: number) => formatTimestamp(createdUtc, this);
 
   // iOS often refuses to share once rendering has used up the tap, so if this

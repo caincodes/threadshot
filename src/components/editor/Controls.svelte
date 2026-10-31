@@ -27,6 +27,16 @@
 
   const isTouch = isTouchDevice();
 
+  // Advanced settings keep working while Basic hides them, so the tab counts any
+  // that have been changed.
+  let optionsMode = $state<"basic" | "advanced">("basic");
+  const isAdvanced = $derived(optionsMode === "advanced");
+
+  const optionsModes = [
+    { value: "basic", text: "Basic" },
+    { value: "advanced", text: "Advanced" },
+  ] as const;
+
   const themes = [
     { value: "light", text: "Light" },
     { value: "dark", text: "Dark" },
@@ -125,7 +135,24 @@
     </button>
   </div>
 
-  <div class="divide-y divide-line border-line lg:mt-4 lg:border-t">
+  <div
+    class="mt-5 grid grid-cols-2 border-b border-line"
+    aria-label="Options"
+    role="group"
+  >
+    {#each optionsModes as mode (mode.value)}
+      <button
+        class="options-tab"
+        aria-pressed={optionsMode === mode.value}
+        onclick={() => (optionsMode = mode.value)}
+        type="button"
+      >
+        {mode.text}{#if mode.value === "advanced" && !isAdvanced && editor.changedAdvancedCount}{` (${editor.changedAdvancedCount})`}{/if}
+      </button>
+    {/each}
+  </div>
+
+  <div class="divide-y divide-line pt-2">
     <!-- Only shown for posts these apply to. -->
     {#if hasBody || isAlbum}
       <div class="py-2">
@@ -177,61 +204,67 @@
       {@render heading("Comments")}
       <Switch label="Show comments" bind:checked={editor.showComments} />
       {#if editor.showComments}
-        <Select
-          class="w-30 pointer-coarse:w-36"
-          label="Sort"
-          options={sortOptions}
-          bind:value={editor.commentSort}
-        />
+        {#if isAdvanced}
+          <Select
+            class="w-30 pointer-coarse:w-36"
+            label="Sort"
+            options={sortOptions}
+            bind:value={editor.commentSort}
+          />
+        {/if}
         <NumberField
           label="Top-level comments"
           max={50}
           min={0}
           bind:value={editor.topLevelComments}
         />
-        <NumberField
-          label="Replies per comment"
-          max={50}
-          min={0}
-          bind:value={editor.commentReplies}
-        />
-        <NumberField
-          label="Reply depth"
-          max={50}
-          min={0}
-          bind:value={editor.replyDepth}
-        />
-        <Switch
-          label={botCount ? `Hide bot comments (${botCount} found)` : "Hide bot comments (none found)"}
-          bind:checked={editor.hideBots}
-        />
+        {#if isAdvanced}
+          <NumberField
+            label="Replies per comment"
+            max={50}
+            min={0}
+            bind:value={editor.commentReplies}
+          />
+          <NumberField
+            label="Reply depth"
+            max={50}
+            min={0}
+            bind:value={editor.replyDepth}
+          />
+          <Switch
+            label={botCount ? `Hide bot comments (${botCount} found)` : "Hide bot comments (none found)"}
+            bind:checked={editor.hideBots}
+          />
+        {/if}
       {/if}
     </div>
 
     <div class="py-2">
       {@render heading("Date and time")}
       <Switch label="Show date" bind:checked={editor.showDate} />
-      {#if editor.showDate}
-        <Select
-          class="w-36 pointer-coarse:w-44"
-          label="Date format"
-          options={dateFormats}
-          bind:value={editor.dateFormat}
-        />
-      {/if}
-      <!-- "Time ago" already says how recent it is. -->
-      {#if !editor.showDate || editor.dateFormat !== "ago"}
-        <Segmented
-          label="Show time"
-          options={timeDisplays}
-          bind:value={editor.timeDisplay}
-        />
-        {#if editor.timeDisplay !== "off"}
-          <Segmented
-            label="Time format"
-            options={timeFormats}
-            bind:value={editor.timeFormat}
+      {#if isAdvanced}
+        {#if editor.showDate}
+          <Select
+            class="w-36 pointer-coarse:w-44"
+            label="Date format"
+            options={dateFormats}
+            bind:value={editor.dateFormat}
           />
+        {/if}
+        <!-- "Time ago" already says how recent it is. -->
+        {#if !editor.showDate || editor.dateFormat !== "ago"}
+          <Segmented
+            label="Show time"
+            options={timeDisplays}
+            bind:value={editor.timeDisplay}
+          />
+          {#if editor.timeDisplay !== "off"}
+            <Segmented
+              label="Time format"
+              options={timeFormats}
+              bind:value={editor.timeFormat}
+            />
+          {/if}
         {/if}
       {/if}
     </div>
@@ -240,7 +273,7 @@
       {@render heading("Privacy")}
       <Switch label="Redact usernames" bind:checked={editor.isCensorUsernames} />
       <Switch label="Redact subreddit" bind:checked={editor.isCensorSubreddits} />
-      {#if editor.isCensorUsernames || editor.isCensorSubreddits}
+      {#if isAdvanced && (editor.isCensorUsernames || editor.isCensorSubreddits)}
         <Segmented
           label="Redact with"
           options={redactStyles}
@@ -253,8 +286,10 @@
       {@render heading("Appearance")}
       <Segmented label="Theme" options={themes} bind:value={editor.theme} />
       <Switch label="Hide watermark" bind:checked={editor.hideWatermark} />
-      <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
-      <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
+      {#if isAdvanced}
+        <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
+        <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
+      {/if}
     </div>
   </div>
 </div>
