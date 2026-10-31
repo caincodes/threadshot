@@ -9,9 +9,9 @@ import type {
 //
 // The shape is chosen so every editor option visibly does something when you
 // move it away from its default:
-//  - 10 top-level comments (default shows 5)
-//  - a reply chain 6 levels deep (default depth shows 3)
-//  - one comment with 8 direct replies (default shows 5)
+//  - 10 top-level comments (default shows 2)
+//  - a reply chain 6 levels deep (default depth is 3)
+//  - comments with up to 8 direct replies (default shows 1 per comment)
 //  - scores, ages and controversy that make each sort order different
 // Fixture order is the "best" order; other sorts are applied in redditData.ts.
 const NOW = Math.floor(Date.now() / 1000);

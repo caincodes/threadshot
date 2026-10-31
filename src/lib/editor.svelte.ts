@@ -13,8 +13,8 @@ class EditorState {
   isCensorUsernames = $state(false);
   isCensorSubreddits = $state(false);
   showComments = $state(true);
-  topLevelComments = $state(5);
-  commentReplies = $state(5);
+  topLevelComments = $state(2);
+  commentReplies = $state(1);
   replyDepth = $state(3);
   commentSort = $state<CommentSort>("best");
   isDownloading = $state(false);
