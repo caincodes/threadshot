@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { defaultAvatarHue } from "../../functions/util/defaultAvatar";
+  import { defaultAvatarColors } from "../../functions/util/defaultAvatar";
   import DefaultAvatar from "./DefaultAvatar.svelte";
   import { proxiedImageSrc } from "./media/proxy";
 
@@ -29,5 +29,5 @@
     width={size}
   />
 {:else if hasFallback}
-  <DefaultAvatar hue={defaultAvatarHue(name)} {size} />
+  <DefaultAvatar colors={defaultAvatarColors(name)} {size} />
 {/if}

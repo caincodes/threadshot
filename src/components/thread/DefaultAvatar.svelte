@@ -1,11 +1,12 @@
 <script lang="ts">
-  // Reddit's default avatar, the Snoo seen from behind, in one of its colours.
-  // Drawn inline so it needs no request and stays sharp at any size.
-  let { hue, size = 20 }: { hue: number; size?: number } = $props();
+  import type { AvatarColors } from "../../functions/util/defaultAvatar";
 
-  const background = $derived(`hsl(${hue} 100% 48%)`);
-  const fill = $derived(`hsl(${hue} 100% 34%)`);
-  const line = $derived(`hsl(${hue} 100% 21%)`);
+  // Reddit's default avatar, the Snoo seen from behind, in the given colours.
+  // Drawn inline so it needs no request and stays sharp at any size.
+  let { colors, size = 20 }: { colors: AvatarColors; size?: number } =
+    $props();
+
+  const { background, fill, line } = $derived(colors);
 </script>
 
 <svg
