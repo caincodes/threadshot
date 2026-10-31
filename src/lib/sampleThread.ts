@@ -365,6 +365,7 @@ export const sampleRedditResponse = (): [
               link_flair_text_color: "dark",
               selftext_html: html(
                 "Cherry sides, maple bottom, finished with a single coat of hardwax oil. The first two drawers had gaps you could post a letter through.",
+                "The third one took a whole weekend. I cut the tails first, clamped the board to the bench, and pared each socket until the joint closed with a few light taps from a mallet. No glue in the dry fit, and it held together on its own.",
                 "Still not perfect, but it slides like it should. Next up: the other five drawers in the chest."
               ),
               is_original_content: true,

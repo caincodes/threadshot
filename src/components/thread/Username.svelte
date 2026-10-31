@@ -1,9 +1,13 @@
 <script lang="ts">
-  import { REDACTED } from "../../functions/util/censorText";
-  import { editor } from "../../lib/editor.svelte";
+    import { editor } from "../../lib/editor.svelte";
+  import Redacted from "./Redacted.svelte";
 
   let { name }: { name: string } = $props();
 </script>
 
-<!-- The "u/" is always shown; only the name is replaced when redacting. -->
-<span>u/{editor.isCensorUsernames ? REDACTED : name}</span>
+<!-- The "u/" stays when the name is covered, and both go when it is hidden. -->
+{#if !editor.isCensorUsernames}
+  <span>u/{name}</span>
+{:else if editor.redactStyle !== "hide"}
+  <span>u/<Redacted {name} /></span>
+{/if}

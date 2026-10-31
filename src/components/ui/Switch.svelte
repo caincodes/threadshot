@@ -7,7 +7,7 @@
   let { checked = $bindable(), label }: Props = $props();
 </script>
 
-<label class="flex min-h-12 cursor-pointer items-center justify-between gap-3">
+<label class="option-row cursor-pointer">
   <span class="text-sm">{label}</span>
   <input class="peer sr-only" role="switch" type="checkbox" bind:checked />
   <span

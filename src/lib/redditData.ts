@@ -21,7 +21,7 @@ export type RedditData = [
 type Comments = Array<RedditComment | MoreChildren>;
 
 // reddit sorts server-side for real posts; the sample sorts itself the same
-// way. "best" keeps the fixture's order.
+// way. "best" keeps the fixture's order. Pinned comments stay first in any sort.
 const comparators: Record<
   CommentSort,
   ((a: RedditComment, b: RedditComment) => number) | null
@@ -43,7 +43,9 @@ const sortComments = (list: Comments, sort: CommentSort): Comments => {
   );
   return compare
     ? sorted.sort((a, b) =>
-        a.type === "comment" && b.type === "comment" ? compare(a, b) : 0
+        a.type === "comment" && b.type === "comment"
+          ? Number(b.stickied) - Number(a.stickied) || compare(a, b)
+          : 0
       )
     : sorted;
 };

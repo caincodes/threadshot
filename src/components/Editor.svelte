@@ -183,6 +183,7 @@
       <Controls
         canDownload={Boolean(data) && !errorMessage}
         botCount={data ? countBotComments(data[1]) : 0}
+        hasBody={Boolean(data?.[0].selftext_html)}
         isAlbum={data?.[0].linkType === "album"}
       />
     </aside>

@@ -27,3 +27,69 @@ export const formatAgo = (createdUtc: number, now = Date.now()) => {
   }
   return "now";
 };
+
+export type DateFormat = "ago" | "short" | "long" | "us" | "world" | "iso";
+export type TimeDisplay = "today" | "always" | "off";
+export type TimeFormat = "12h" | "24h";
+
+export interface TimestampOptions {
+  showDate: boolean;
+  dateFormat: DateFormat;
+  timeDisplay: TimeDisplay;
+  timeFormat: TimeFormat;
+}
+
+const twoDigits = (value: number) => String(value).padStart(2, "0");
+
+export const formatDate = (date: Date, format: DateFormat) => {
+  const year = date.getFullYear();
+  const month = twoDigits(date.getMonth() + 1);
+  const day = twoDigits(date.getDate());
+  switch (format) {
+    case "ago":
+      return formatAgo(date.getTime() / 1000);
+    case "long":
+    case "short":
+      return date.toLocaleDateString("en-US", {
+        day: "numeric",
+        month: format,
+        year: "numeric",
+      });
+    case "us":
+      return `${month}/${day}/${year}`;
+    case "world":
+      return `${day}/${month}/${year}`;
+    case "iso":
+      return `${year}-${month}-${day}`;
+  }
+};
+
+const formatTime = (date: Date, format: TimeFormat) => {
+  const hours = date.getHours();
+  const minutes = twoDigits(date.getMinutes());
+  return format === "24h"
+    ? `${twoDigits(hours)}:${minutes}`
+    : `${hours % 12 || 12}:${minutes} ${hours < 12 ? "AM" : "PM"}`;
+};
+
+// A post's date, with the time too if asked for. Dates are in the viewer's own
+// time zone, so "today" means their today. Empty when everything is switched off.
+export const formatTimestamp = (
+  createdUtc: number,
+  { showDate, dateFormat, timeDisplay, timeFormat }: TimestampOptions,
+  now = new Date()
+) => {
+  const date = new Date(createdUtc * 1000);
+  if (showDate && dateFormat === "ago") {
+    return formatAgo(createdUtc, now.getTime());
+  }
+  const showTime =
+    timeDisplay === "always" ||
+    (timeDisplay === "today" && date.toDateString() === now.toDateString());
+  return [
+    showDate && formatDate(date, dateFormat),
+    showTime && formatTime(date, timeFormat),
+  ]
+    .filter(Boolean)
+    .join(", ");
+};

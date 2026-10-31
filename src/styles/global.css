@@ -114,8 +114,21 @@
     @apply flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-ui transition-colors duration-150 hover:bg-line active:bg-line;
   }
 
+  /* Editor options sit close together, with more room to tap on touch screens. */
+  .option-row {
+    @apply flex min-h-9 items-center justify-between gap-3 pointer-coarse:min-h-11;
+  }
+
   .nav-link {
     @apply flex h-11 items-center px-2.5 text-sm font-semibold transition-colors duration-150 hover:text-accent active:text-accent-press;
+  }
+
+  .options-tab {
+    @apply -mb-px h-10 cursor-pointer border-b-2 border-transparent text-sm font-medium text-ink-2 tabular-nums transition-colors duration-150 hover:text-ink;
+  }
+
+  .options-tab[aria-pressed="true"] {
+    @apply border-ink font-semibold text-ink;
   }
 
   /* Tabs and block headers share one hover and press. */
@@ -153,6 +166,10 @@
     @apply hover:border-ink-2 focus-visible:border-ink focus-visible:outline-offset-0;
   }
 
+  .option-control {
+    @apply h-6 pointer-coarse:h-8;
+  }
+
   .link {
     @apply cursor-pointer font-medium text-accent underline underline-offset-2 hover:text-accent-hover active:text-accent-press;
   }
@@ -188,6 +205,39 @@
   --ap-t4: #ff9f0a;
   --ap-t5: #ff453a;
   --ap-t6: #bf5af2;
+}
+
+/* A redacted name: masked text covered by a box or scribble in the text colour. */
+.ap .redacted {
+  background: var(--ap-text);
+  border-radius: 4px;
+  color: transparent;
+  display: inline-block;
+  /* Sized by line height, since the export resets explicit heights. */
+  line-height: 0.95;
+  margin: 0.04em 0.08em;
+  vertical-align: -0.08em;
+}
+
+.ap .redacted[data-style="scribble"] {
+  background: none;
+  color: inherit;
+  margin-inline: 0.42em;
+  position: relative;
+}
+
+.ap .redacted svg {
+  fill: none;
+  height: calc(100% + 0.7em);
+  left: -0.25em;
+  overflow: visible;
+  position: absolute;
+  stroke: var(--ap-text);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3.2;
+  top: -0.35em;
+  width: calc(100% + 0.5em);
 }
 
 /* Reddit's rendered markdown (body_html) */

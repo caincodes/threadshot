@@ -1,8 +1,16 @@
 import { domToBlob } from "modern-screenshot";
 
+import type { RedactStyle } from "../functions/util/censorText";
+import {
+  formatTimestamp,
+  type DateFormat,
+  type TimeDisplay,
+  type TimeFormat,
+} from "../functions/util/format";
 import type { CommentSort } from "../types/reddit";
 
 export type ScreenshotTheme = "light" | "dark";
+export type PostBodyMode = "full" | "snippet" | "off";
 
 const FILE_NAME = "threadshot.png";
 
@@ -19,20 +27,48 @@ const isCancelled = (error: unknown) =>
 // module-level instance is enough.
 class EditorState {
   theme = $state<ScreenshotTheme>("light");
-  showAttribution = $state(true);
+  hideWatermark = $state(false);
   imageColumns = $state(3);
+  postBody = $state<PostBodyMode>("full");
+  // The snippet shown in the image, and the text highlighted to become it.
+  bodySnippet = $state<string | null>(null);
+  bodySelection = $state<string | null>(null);
   isCensorUsernames = $state(false);
   isCensorSubreddits = $state(false);
-  hideTags = $state(false);
+  redactStyle = $state<RedactStyle>("box");
+  hidePostTags = $state(false);
+  hideUserFlair = $state(false);
   hideBots = $state(true);
   showComments = $state(true);
   topLevelComments = $state(2);
   commentReplies = $state(1);
   replyDepth = $state(3);
   commentSort = $state<CommentSort>("best");
+  showDate = $state(true);
+  dateFormat = $state<DateFormat>("short");
+  timeDisplay = $state<TimeDisplay>("today");
+  timeFormat = $state<TimeFormat>("12h");
   isDownloading = $state(false);
   // The finished image, shown in full when the share sheet could not open.
   exported = $state<{ file: File; url: string } | null>(null);
+
+  // How many settings only shown in Advanced have been moved off their default.
+  get changedAdvancedCount() {
+    return [
+      this.commentSort !== "best",
+      this.commentReplies !== 1,
+      this.replyDepth !== 3,
+      !this.hideBots,
+      this.dateFormat !== "short",
+      this.timeDisplay !== "today",
+      this.timeFormat !== "12h",
+      this.redactStyle !== "box",
+      this.hidePostTags,
+      this.hideUserFlair,
+    ].filter(Boolean).length;
+  }
+
+  timestamp = (createdUtc: number) => formatTimestamp(createdUtc, this);
 
   // iOS often refuses to share once rendering has used up the tap, so if this
   // fails the image is shown with its own Share button, which is a new tap.

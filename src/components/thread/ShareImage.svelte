@@ -42,7 +42,7 @@
     <Comment data={comment} />
   {/each}
 
-  {#if editor.showAttribution && !isPostLast}
+  {#if !editor.hideWatermark && !isPostLast}
     <Watermark class="px-4 py-3 text-right" />
   {/if}
 </div>

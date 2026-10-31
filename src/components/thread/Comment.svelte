@@ -1,10 +1,11 @@
 <script lang="ts">
   import ArrowUp from "phosphor-svelte/lib/ArrowUp";
   import Medal from "phosphor-svelte/lib/Medal";
+  import PushPin from "phosphor-svelte/lib/PushPin";
 
   import { applyCensoring } from "../../functions/util/censorText";
   import { withoutBots } from "../../functions/util/isBot";
-  import { formatAgo, formatCount } from "../../functions/util/format";
+  import { formatCount } from "../../functions/util/format";
   import { editor } from "../../lib/editor.svelte";
   import type { MoreChildren, RedditComment } from "../../types/reddit";
   import Comment from "./Comment.svelte";
@@ -22,6 +23,9 @@
   const comment = $derived(
     data.type === "comment" && level <= editor.replyDepth ? data : null
   );
+  const timestamp = $derived(
+    comment ? editor.timestamp(comment.created_utc) : ""
+  );
   const replies = $derived(
     comment
       ? withoutBots(comment.replyTree, editor.hideBots)
@@ -34,6 +38,7 @@
       ? applyCensoring(comment.body_html, {
           subreddits: editor.isCensorSubreddits,
           usernames: editor.isCensorUsernames,
+          style: editor.redactStyle,
         })
       : ""
   );
@@ -58,7 +63,10 @@
         >
           <Username name={comment.author} />
         </span>
-        {#if comment.flair && !editor.hideTags}
+        {#if comment.stickied}
+          <span class="inline-flex text-ap-up"><PushPin size={13} weight="fill" /></span>
+        {/if}
+        {#if comment.flair && !editor.hideUserFlair}
           <FlairBadge flair={comment.flair} />
         {/if}
         <span class="inline-flex items-center gap-0.5 font-medium text-ap-muted">
@@ -72,7 +80,9 @@
           </span>
         {/if}
       </span>
-      <span class="shrink-0 text-ap-muted">{formatAgo(comment.created_utc)}</span>
+      {#if timestamp}
+        <span class="shrink-0 whitespace-nowrap text-ap-muted">{timestamp}</span>
+      {/if}
     </div>
 
     <div class="md mt-1 text-base leading-[22px]">
