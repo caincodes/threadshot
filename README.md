@@ -8,10 +8,13 @@ Built with [Astro](https://astro.build) (server output, Vercel adapter),
 ## Design
 
 The app UI is deliberately plain: ink on white, one vermilion accent, 6px
-radius, hairline borders, Archivo and IBM Plex Sans. The exported screenshot
-is a separate system (`.rd` in `src/styles/global.css`) that follows Reddit's
-own light and dark palettes in Reddit Sans, with Phosphor icons. All fonts are
-self-hosted so html-to-image can embed them in the PNG.
+radius, hairline borders, Archivo and IBM Plex Sans.
+
+The exported image is a separate system (`.ap` in `src/styles/global.css`):
+a 390px phone-width share card, exported at 3x, with large type, a compact
+stats row and colour-coded reply bars. It is modelled on the share-as-image
+style of Apollo for Reddit, in iOS-style light and dark palettes, set in Inter
+with Phosphor icons. Fonts are self-hosted so modern-screenshot can embed them in the PNG.
 
 ## Develop
 

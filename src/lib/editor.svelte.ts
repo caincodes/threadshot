@@ -1,4 +1,4 @@
-import * as htmlToImage from "html-to-image";
+import { domToPng } from "modern-screenshot";
 
 import type { CommentSort } from "../types/reddit";
 
@@ -29,11 +29,23 @@ class EditorState {
         );
       }
 
-      const dataUrl = await htmlToImage.toPng(node, {
-        pixelRatio: 2,
-        width: node.clientWidth,
-        height: node.scrollHeight,
-        includeQueryParams: true,
+      // The export re-lays text out slightly differently from the live page,
+      // so a title that wraps on screen can take one line fewer in the image.
+      // Let every cloned box size to its own content instead of inheriting the
+      // live heights, which would leave a blank gap. Fixed-size boxes opt out
+      // with data-keep-size.
+      const dataUrl = await domToPng(node, {
+        scale: 3,
+        backgroundColor: getComputedStyle(node).backgroundColor,
+        onCloneEachNode: (cloned) => {
+          if (
+            cloned instanceof HTMLElement &&
+            !(cloned instanceof HTMLImageElement) &&
+            !cloned.hasAttribute("data-keep-size")
+          ) {
+            cloned.style.height = "auto";
+          }
+        },
       });
 
       const link = document.createElement("a");

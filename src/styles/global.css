@@ -3,19 +3,20 @@
 @import "@fontsource/ibm-plex-sans/400.css";
 @import "@fontsource/ibm-plex-sans/500.css";
 @import "@fontsource/ibm-plex-sans/600.css";
-@import "@fontsource-variable/reddit-sans";
+@import "@fontsource-variable/inter";
 
 /*
  * Two separate systems live here.
  *  1. The threadshot app UI: ink on white, one vermilion accent, 6px radius,
  *     hairline borders, no shadows.
- *  2. The screenshot (.rd): a faithful take on reddit's own light and dark
- *     palettes, set in Reddit Sans, so exports look like the real thing.
+ *  2. The exported image (.ap): a phone-width share card with large type, a
+ *     compact stats row and colour-coded reply bars, in iOS-style light and
+ *     dark palettes. It is an image, not a screenshot of a web page.
  */
 @theme {
   --font-display: "Archivo Variable", "Archivo", sans-serif;
   --font-body: "IBM Plex Sans", system-ui, sans-serif;
-  --font-reddit: "Reddit Sans Variable", "Reddit Sans", system-ui, sans-serif;
+  --font-export: "Inter Variable", "Inter", system-ui, sans-serif;
 
   --color-ink: #0f1419;
   --color-ink-2: #3a444d;
@@ -29,12 +30,12 @@
 }
 
 @theme inline {
-  --color-rd-bg: var(--rd-bg);
-  --color-rd-text: var(--rd-text);
-  --color-rd-muted: var(--rd-muted);
-  --color-rd-line: var(--rd-line);
-  --color-rd-pill: var(--rd-pill);
-  --color-rd-link: var(--rd-link);
+  --color-ap-bg: var(--ap-bg);
+  --color-ap-text: var(--ap-text);
+  --color-ap-muted: var(--ap-muted);
+  --color-ap-line: var(--ap-line);
+  --color-ap-link: var(--ap-link);
+  --color-ap-up: var(--ap-up);
 }
 
 @layer base {
@@ -70,103 +71,112 @@
     @apply font-medium text-accent underline underline-offset-2 hover:text-accent-hover;
   }
 
-  .rd-pill {
-    @apply inline-flex h-8 items-center gap-1.5 rounded-full bg-rd-pill px-3 text-xs font-semibold text-rd-text;
-  }
 }
 
-/* Reddit screenshot palettes */
-.rd {
-  --rd-bg: #ffffff;
-  --rd-text: #0f1a1c;
-  --rd-muted: #576f76;
-  --rd-line: #e5ebee;
-  --rd-pill: #eaedef;
-  --rd-link: #0045ac;
+/* Export palettes. Reply bars cycle through t1..t6 by depth. */
+.ap {
+  --ap-bg: #ffffff;
+  --ap-text: #0a0a0a;
+  --ap-muted: #6c6c70;
+  --ap-line: #e5e5ea;
+  --ap-link: #0062cc;
+  --ap-up: #f26a21;
+  --ap-t1: #007aff;
+  --ap-t2: #34c759;
+  --ap-t3: #ffcc00;
+  --ap-t4: #ff9500;
+  --ap-t5: #ff3b30;
+  --ap-t6: #af52de;
 }
 
-.rd[data-theme="dark"] {
-  --rd-bg: #0e1113;
-  --rd-text: #eef1f3;
-  --rd-muted: #8ba2ad;
-  --rd-line: #2a3236;
-  --rd-pill: #1f2a30;
-  --rd-link: #6c9bff;
+.ap[data-theme="dark"] {
+  --ap-bg: #1c1c1e;
+  --ap-text: #f2f2f7;
+  --ap-muted: #98989f;
+  --ap-line: #38383a;
+  --ap-link: #4da3ff;
+  --ap-up: #ff8a3d;
+  --ap-t1: #0a84ff;
+  --ap-t2: #30d158;
+  --ap-t3: #ffd60a;
+  --ap-t4: #ff9f0a;
+  --ap-t5: #ff453a;
+  --ap-t6: #bf5af2;
 }
 
 /* Reddit's rendered markdown (body_html) */
-.rd .md > :first-child {
+.ap .md > :first-child {
   margin-top: 0;
 }
 
-.rd .md p + p,
-.rd .md * + ul,
-.rd .md * + ol,
-.rd .md * + blockquote,
-.rd .md * + pre,
-.rd .md * + table,
-.rd .md * + h1,
-.rd .md * + h2,
-.rd .md * + h3,
-.rd .md * + h4 {
+.ap .md p + p,
+.ap .md * + ul,
+.ap .md * + ol,
+.ap .md * + blockquote,
+.ap .md * + pre,
+.ap .md * + table,
+.ap .md * + h1,
+.ap .md * + h2,
+.ap .md * + h3,
+.ap .md * + h4 {
   margin-top: 0.5rem;
 }
 
-.rd .md a {
-  color: var(--rd-link);
+.ap .md a {
+  color: var(--ap-link);
 }
 
-.rd .md ul {
+.ap .md ul {
   list-style: disc;
   padding-left: 1.5rem;
 }
 
-.rd .md ol {
+.ap .md ol {
   list-style: decimal;
   padding-left: 1.5rem;
 }
 
-.rd .md blockquote {
-  border-left: 4px solid var(--rd-line);
+.ap .md blockquote {
+  border-left: 4px solid var(--ap-line);
   padding-left: 0.75rem;
-  color: var(--rd-muted);
+  color: var(--ap-muted);
 }
 
-.rd .md code {
-  background: var(--rd-pill);
+.ap .md code {
+  background: var(--ap-pill);
   border-radius: 4px;
   padding: 0 0.25rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.875em;
 }
 
-.rd .md pre {
-  background: var(--rd-pill);
+.ap .md pre {
+  background: var(--ap-pill);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
   overflow-x: auto;
 }
 
-.rd .md pre code {
+.ap .md pre code {
   background: none;
   padding: 0;
 }
 
-.rd .md h1,
-.rd .md h2,
-.rd .md h3,
-.rd .md h4 {
+.ap .md h1,
+.ap .md h2,
+.ap .md h3,
+.ap .md h4 {
   font-weight: 600;
 }
 
-.rd .md hr {
-  border-color: var(--rd-line);
+.ap .md hr {
+  border-color: var(--ap-line);
   margin: 0.75rem 0;
 }
 
-.rd .md th,
-.rd .md td {
-  border: 1px solid var(--rd-line);
+.ap .md th,
+.ap .md td {
+  border: 1px solid var(--ap-line);
   padding: 0.25rem 0.5rem;
 }
 

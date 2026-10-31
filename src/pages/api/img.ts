@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 
 import { USER_AGENT } from "../../server/redditAuth";
 
-// Same-origin proxy so html-to-image can read Reddit-hosted images (CORS).
+// Same-origin proxy so modern-screenshot can read Reddit-hosted images (CORS).
 const ALLOWED_HOST = /(^|\.)(redd\.it|redditmedia\.com|redditstatic\.com)$/;
 
 export const GET: APIRoute = async ({ url }) => {

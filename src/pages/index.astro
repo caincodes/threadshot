@@ -1,5 +1,5 @@
 ---
-import RedditThread from "../components/thread/RedditThread.svelte";
+import ShareImage from "../components/thread/ShareImage.svelte";
 import { parseComments } from "../functions/util/parseComments";
 import { parseSubmission } from "../functions/util/parseSubmission";
 import Base from "../layouts/Base.astro";
@@ -25,8 +25,8 @@ const sample = {
       </h1>
       <p class="mt-5 text-lg leading-relaxed text-ink-2">
         Paste a post or comment link. Choose how many comments to keep, hide
-        usernames if you need to, and download a PNG that looks like Reddit,
-        in light or dark.
+        usernames if you need to, and download a phone-sized image with large
+        type and colour-coded replies, in light or dark.
       </p>
 
       <form id="url-form" class="mt-8 flex flex-col gap-3" novalidate>
@@ -62,12 +62,12 @@ const sample = {
 
     <div
       aria-hidden="true"
-      class="h-[440px] overflow-hidden border border-line bg-canvas p-3 sm:h-[600px] sm:p-6 md:h-auto md:max-h-[640px]"
+      class="h-[480px] overflow-hidden border border-line bg-canvas p-3 sm:h-[640px] sm:p-6 md:h-auto md:max-h-[680px]"
     >
       <div
-        class="w-fit [zoom:0.46] sm:[zoom:0.8] md:[zoom:0.48] lg:[zoom:0.62] xl:[zoom:0.78]"
+        class="mx-auto w-fit [zoom:0.72] sm:[zoom:1] md:[zoom:0.75] lg:[zoom:1]"
       >
-        <RedditThread
+        <ShareImage
           comments={sample.comments}
           submission={sample.submission}
         />

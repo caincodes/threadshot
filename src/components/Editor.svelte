@@ -2,7 +2,7 @@
   import { editor } from "../lib/editor.svelte";
   import { fetchRedditData, type RedditData } from "../lib/redditData";
   import Controls from "./editor/Controls.svelte";
-  import RedditThread from "./thread/RedditThread.svelte";
+  import ShareImage from "./thread/ShareImage.svelte";
   import Spinner from "./ui/Spinner.svelte";
 
   const params = new URLSearchParams(window.location.search);
@@ -10,9 +10,9 @@
   const postId = params.get("postId");
   const commentId = params.get("commentId");
 
-  // The preview is a fixed 640px wide so exports are identical everywhere;
+  // The preview is a fixed 390px (phone) wide so exports are identical everywhere;
   // on narrow screens it is only scaled down for viewing.
-  const PREVIEW_WIDTH = 640;
+  const PREVIEW_WIDTH = 390;
   let frameWidth = $state(PREVIEW_WIDTH);
   const zoom = $derived(Math.min(1, frameWidth / PREVIEW_WIDTH));
 
@@ -76,7 +76,7 @@
             class:opacity-60={isLoading}
             style:zoom={zoom}
           >
-            <RedditThread
+            <ShareImage
               id="reddit-preview"
               comments={data[1]}
               submission={data[0]}

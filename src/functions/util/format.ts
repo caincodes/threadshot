@@ -9,22 +9,21 @@ export const formatCount = (count: number) => {
   return String(count);
 };
 
-// Relative age in reddit's wording: "5 min. ago", "3 hr. ago", "2 days ago"
+// Compact relative age: "now", "5m", "3h", "2d", "4mo", "1y"
 export const formatAgo = (createdUtc: number, now = Date.now()) => {
   const seconds = Math.max(0, Math.floor(now / 1000 - createdUtc));
   const units: Array<[number, string]> = [
-    [31_536_000, "yr."],
-    [2_592_000, "mo."],
-    [86_400, "days"],
-    [3600, "hr."],
-    [60, "min."],
+    [31_536_000, "y"],
+    [2_592_000, "mo"],
+    [86_400, "d"],
+    [3600, "h"],
+    [60, "m"],
   ];
 
   for (const [size, label] of units) {
     if (seconds >= size) {
-      const value = Math.floor(seconds / size);
-      return `${value} ${label === "days" && value === 1 ? "day" : label} ago`;
+      return `${Math.floor(seconds / size)}${label}`;
     }
   }
-  return "just now";
+  return "now";
 };

@@ -8,7 +8,8 @@
 
 {#if editor.isCensorUsernames}
   <span
-    class="inline-block h-3 w-14 rounded-sm align-middle"
+    class="inline-block h-3 w-16 rounded-sm align-middle"
+    data-keep-size
     style:background-color={uniqolor(name).color}
   ></span>
 {:else}
