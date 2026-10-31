@@ -15,10 +15,17 @@ already used Describe an Extension.
 1. Give your terminal app Full Disk Access in System Settings > Privacy &
    Security, then restart it.
 2. Quit Safari.
-3. Run this from the repository root:
+3. Run either of these. The curl version runs
+   [this script](../public/extension.sh).
 
    ```sh
-   extension/install.sh
+   # curl: fetches only this folder, and needs no git
+   curl -fsSL https://threadshot.app/extension.sh | sh
+   ```
+
+   ```sh
+   # git clone
+   git clone https://github.com/caincodes/threadshot && threadshot/extension/install.sh
    ```
 
 4. Open Safari and turn on Threadshot in Settings > Extensions.
@@ -35,7 +42,7 @@ blocks the pop-up, allow pop-ups for reddit.com.
 ## Keeping it working
 
 Do not ask Safari to edit this extension, because that can replace the script.
-If the button stops working, run `extension/install.sh` again.
+If the button stops working, run the install script again.
 
 ## Changing it
 
