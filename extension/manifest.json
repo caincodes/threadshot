@@ -1,0 +1,37 @@
+{
+  "action" : {
+    "default_title" : "Threadshot",
+    "icon_variants" : [
+      {
+        "any" : "symbol:camera.fill"
+      }
+    ]
+  },
+  "background" : {
+    "preferred_environment" : [
+      "document"
+    ],
+    "scripts" : [
+      "background.js"
+    ],
+    "type" : "module"
+  },
+  "browser_specific_settings" : {
+    "safari" : {
+      "prompt" : "make extension with toolbar button named \"threadshot\" (icon should be a camera of some sort)"
+    }
+  },
+  "description" : "Sends the Reddit post you are reading to threadshot.app.",
+  "icon_variants" : [
+    {
+      "any" : "symbol:camera.fill"
+    }
+  ],
+  "manifest_version" : 3,
+  "name" : "Threadshot",
+  "permissions" : [
+    "activeTab",
+    "scripting"
+  ],
+  "version" : "1.0"
+}
