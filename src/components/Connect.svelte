@@ -112,9 +112,11 @@
       />
     </label>
 
-    <p class="min-h-5 text-sm font-medium text-accent" role="alert">{error}</p>
+    {#if error}
+      <p class="text-sm font-medium text-accent" role="alert">{error}</p>
+    {/if}
 
-    <div class="flex flex-wrap items-center gap-3">
+    <div class="mt-1 flex flex-wrap items-center gap-3">
       <button class="btn btn-primary" type="submit">Save and continue</button>
       {#if isChanging}
         <button

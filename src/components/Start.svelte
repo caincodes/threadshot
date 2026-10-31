@@ -118,46 +118,35 @@
   {#if mode === "key"}
     <Connect />
 
-    <form class="flex flex-col gap-3" onsubmit={go} novalidate>
-      <label class="text-sm font-semibold" for="url-input">
-        Reddit post or comment link
-      </label>
-      <input
-        id="url-input"
-        class="field disabled:cursor-not-allowed disabled:bg-canvas"
-        aria-describedby="url-error"
-        autocapitalize="off"
-        autocomplete="off"
-        bind:value={link}
-        disabled={!isConnected}
-        inputmode="url"
-        placeholder="https://www.reddit.com/r/woodworking/comments/..."
-        spellcheck="false"
-        type="text"
-      />
-      {#if !isConnected}
-        <p class="text-sm text-ink-2">
-          Connect your Reddit app first, or
-          <button class="link" onclick={() => choose("bookmark")} type="button">
-            use the bookmark instead
-          </button>.
-        </p>
-      {/if}
-      <p
-        id="url-error"
-        class="min-h-5 text-sm font-medium text-accent"
-        role="alert"
-      >
-        {error}
-      </p>
-      <button
-        class="btn btn-primary self-start"
-        disabled={!isConnected}
-        type="submit"
-      >
-        Generate screenshot
-      </button>
-    </form>
+    <!-- The link field appears once a key is saved, so the key form is the
+         only step until then. -->
+    {#if isConnected}
+      <form class="flex flex-col gap-3" onsubmit={go} novalidate>
+        <label class="text-sm font-semibold" for="url-input">
+          Reddit post or comment link
+        </label>
+        <input
+          id="url-input"
+          class="field"
+          aria-describedby="url-error"
+          autocapitalize="off"
+          autocomplete="off"
+          bind:value={link}
+          inputmode="url"
+          placeholder="https://www.reddit.com/r/woodworking/comments/..."
+          spellcheck="false"
+          type="text"
+        />
+        {#if error}
+          <p id="url-error" class="text-sm font-medium text-accent" role="alert">
+            {error}
+          </p>
+        {/if}
+        <button class="btn btn-primary self-start" type="submit">
+          Generate screenshot
+        </button>
+      </form>
+    {/if}
   {:else}
     <section class="flex flex-col gap-4 border border-line p-4">
       <p class="text-ink-2">

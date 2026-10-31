@@ -128,21 +128,32 @@
 </script>
 
 {#if !isSample && !isFromBookmark && !hasTarget}
-  <div class="mx-auto max-w-[1280px] px-4 py-16 lg:px-8">
-    <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
-      No thread selected
-    </h1>
-    <p class="mt-4"><a class="link" href="/">Paste a Reddit link</a></p>
+  <div class="mx-auto w-full max-w-[1280px] px-4 py-16 lg:px-8">
+    <div class="max-w-xl">
+      <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
+        No thread selected
+      </h1>
+      <p class="mt-3 text-ink-2">
+        Paste a Reddit link on the home page, or send a post here with the
+        bookmark.
+      </p>
+      <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+        <a class="btn btn-primary" href="/">Paste a Reddit link</a>
+        <a class="link" href="/generate?sample=1">Try a sample post</a>
+      </div>
+    </div>
   </div>
 {:else if needsCredentials}
-  <div class="mx-auto max-w-xl px-4 py-12 lg:px-8">
-    <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
-      Connect Reddit to load this post
-    </h1>
-    <p class="mt-3 text-ink-2">
-      Add your own Reddit app and this post loads right after.
-    </p>
-    <div class="mt-6"><Connect /></div>
+  <div class="mx-auto w-full max-w-[1280px] px-4 py-12 lg:px-8">
+    <div class="max-w-xl">
+      <h1 class="font-display text-3xl font-extrabold tracking-[-0.02em]">
+        Connect Reddit to load this post
+      </h1>
+      <p class="mt-3 text-ink-2">
+        Add your own Reddit app and this post loads right after.
+      </p>
+      <div class="mt-6"><Connect /></div>
+    </div>
   </div>
 {:else}
   <div

@@ -25,22 +25,29 @@
 {/snippet}
 
 <div class="flex flex-col border border-line bg-white p-4">
-  <button
-    class="btn btn-primary w-full"
-    disabled={!canDownload || editor.isDownloading}
-    onclick={editor.download}
-    type="button"
+  <!-- On small screens the preview comes first, so the download button is
+       pinned to the bottom of the screen instead of sitting below it. -->
+  <div
+    data-download-bar
+    class="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:static lg:border-0 lg:p-0"
   >
-    {#if editor.isDownloading}
-      <Spinner />
-      Rendering
-    {:else}
-      <DownloadSimple size={20} weight="bold" />
-      Download PNG
-    {/if}
-  </button>
+    <button
+      class="btn btn-primary w-full"
+      disabled={!canDownload || editor.isDownloading}
+      onclick={editor.download}
+      type="button"
+    >
+      {#if editor.isDownloading}
+        <Spinner />
+        Rendering
+      {:else}
+        <DownloadSimple size={20} weight="bold" />
+        Download PNG
+      {/if}
+    </button>
+  </div>
 
-  <div class="mt-4 border-t border-line">
+  <div class="border-t border-line lg:mt-4">
     {@render heading("Appearance")}
     <Segmented label="Theme" options={themes} bind:value={editor.theme} />
     <Switch label="Show watermark" bind:checked={editor.showAttribution} />
