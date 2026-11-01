@@ -65,7 +65,7 @@ The "Try a sample post" link (`/generate?sample=1`) needs neither.
 
 ## Develop
 
-Requires Node 22.23.4+ (24 recommended).
+Requires Node 22.23.4+ (26 recommended).
 
 ```sh
 npm ci
