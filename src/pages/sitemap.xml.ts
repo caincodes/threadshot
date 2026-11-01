@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 
 // The editor and its redirects have no content of their own, so only the
 // pages worth finding are listed.
-const PAGES = ["/", "/get-a-key"];
+const PAGES = ["/", "/get-a-key", "/install-extension"];
 
 export const GET: APIRoute = ({ site }) =>
   new Response(

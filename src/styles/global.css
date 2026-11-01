@@ -167,6 +167,65 @@
     @apply cursor-pointer font-medium text-accent underline underline-offset-2 hover:text-accent-hover active:text-accent-press;
   }
 
+  /* Shared look for Markdown guide pages (install extension, get a key). */
+  .guide {
+    @apply mx-auto max-w-2xl px-4 py-10 md:py-16 lg:px-8;
+  }
+
+  .guide :where(h1) {
+    @apply font-display text-4xl leading-[1.02] font-extrabold tracking-[-0.02em] text-pretty sm:text-5xl;
+  }
+
+  .guide :where(h1 + p) {
+    @apply mt-5 text-lg leading-relaxed text-ink-2;
+  }
+
+  .guide :where(h2) {
+    @apply mt-12 font-display text-2xl font-extrabold tracking-[-0.02em] text-pretty;
+  }
+
+  .guide :where(h2 + p),
+  .guide :where(h2 + ul),
+  .guide :where(h2 + ol) {
+    @apply mt-3;
+  }
+
+  .guide :where(ol) {
+    @apply mt-8 list-decimal space-y-2 pl-5 marker:font-semibold marker:tabular-nums;
+  }
+
+  .guide :where(h2 + ol) {
+    @apply mt-3;
+  }
+
+  .guide :where(ul) {
+    @apply list-disc space-y-2 pl-5;
+  }
+
+  .guide :where(a) {
+    @apply cursor-pointer font-medium text-accent underline underline-offset-2 hover:text-accent-hover active:text-accent-press;
+  }
+
+  .guide :where(:not(pre) > code) {
+    @apply rounded-ui bg-canvas px-1;
+  }
+
+  .guide :where(pre) {
+    @apply mt-3 overflow-x-auto rounded-ui border border-line p-3 text-sm;
+  }
+
+  .guide :where(li > pre) {
+    @apply mt-2;
+  }
+
+  .guide :where(strong) {
+    @apply font-semibold;
+  }
+
+  .guide :where(p + p) {
+    @apply mt-3;
+  }
+
 }
 
 /* Export palettes. Reply bars cycle through t1..t6 by depth. */

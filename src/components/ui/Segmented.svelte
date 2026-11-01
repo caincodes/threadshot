@@ -3,12 +3,18 @@
     label: string;
     options: readonly { value: T; text: string }[];
     value: T;
+    class?: string;
   }
 
-  let { label, options, value = $bindable() }: Props = $props();
+  let {
+    label,
+    options,
+    value = $bindable(),
+    class: className = "",
+  }: Props = $props();
 </script>
 
-<div class="option-row py-1">
+<div class={["option-row py-1", className]}>
   <span class="text-sm" id="seg-{label}">{label}</span>
   <div
     class="option-control flex overflow-hidden rounded-ui border border-line"

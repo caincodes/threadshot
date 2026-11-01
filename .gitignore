@@ -35,4 +35,6 @@ dist
 
 # Editors and tools
 .claude/
+.cursor/
 .vscode/
+AGENTS.md

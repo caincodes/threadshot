@@ -24,8 +24,7 @@
     { value: "curl", text: "curl" },
     { value: "git", text: "git clone" },
   ] as const;
-  const INSTALL_GUIDE =
-    "https://github.com/caincodes/threadshot/blob/main/extension/README.md";
+  const INSTALL_GUIDE = "/install-extension";
 
   const METHODS: Record<SendMethod, { tab: string; title: string }> = {
     shortcut: { tab: "Shortcut", title: "iOS Shortcut" },
@@ -153,7 +152,14 @@
       Add the Shortcut
     </a>
   {:else}
-    <p class="font-semibold">Open this page on your iPhone or iPad to add it.</p>
+    <div class="flex flex-col gap-1">
+      <p class="font-semibold">Open this page on your iPhone or iPad to add it.</p>
+      <p class="text-sm text-ink-2">
+        Or
+        <a class="link" href="/threadshot.shortcut" download>download the Shortcut</a>
+        anyway.
+      </p>
+    </div>
   {/if}
   <ol class="flex flex-col gap-3">
     {#snippet allowScripts()}
@@ -170,6 +176,7 @@
 
 {#snippet extensionSteps()}
   <Segmented
+    class="w-fit"
     label="Install with"
     options={INSTALL_TOOLS}
     bind:value={installTool}
@@ -203,7 +210,7 @@
   </ol>
   <p class="text-sm text-ink-2">
     Needs Safari 27 and Full Disk Access for Terminal.
-    <a class="link" href={INSTALL_GUIDE} rel="noopener">Install guide</a>
+    <a class="link" href={INSTALL_GUIDE}>Install guide</a>
   </p>
 {/snippet}
 
@@ -293,10 +300,14 @@
 
 {#snippet methodPanel(id: SendMethod, index: number)}
   <div class="flex flex-col gap-4 p-5">
-    <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
       <h2 class="heading text-2xl">{METHODS[id].title}</h2>
       {#if index === 0}
-        <span class="text-sm text-ink-2">Best for this device</span>
+        <span
+          class="rounded-ui bg-accent px-2.5 py-1 text-xs font-semibold tracking-wide text-white uppercase"
+        >
+          Best for this device
+        </span>
       {/if}
     </div>
     {#if id === "shortcut"}

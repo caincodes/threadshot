@@ -30,6 +30,12 @@ export default defineConfig({
   devToolbar: { enabled: false },
   adapter: vercel(),
   integrations: [svelte()],
+  markdown: {
+    shikiConfig: {
+      // Matches the dark blocks that Shiki used by default before.
+      theme: "github-dark",
+    },
+  },
   vite: {
     plugins: [tailwindcss()],
     // Compiled in here because pages render per request in server output, where

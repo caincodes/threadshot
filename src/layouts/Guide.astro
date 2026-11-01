@@ -1,0 +1,21 @@
+---
+import Base from "./Base.astro";
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
+const pageTitle = /\|/.test(frontmatter.title)
+  ? frontmatter.title
+  : `${frontmatter.title} | Threadshot for Reddit`;
+---
+
+<Base title={pageTitle} description={frontmatter.description}>
+  <article class="guide">
+    <slot />
+  </article>
+</Base>

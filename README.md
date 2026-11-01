@@ -39,7 +39,8 @@ user agent.
    before it is shown. Rebuild `public/threadshot.shortcut` with
    `node scripts/build-shortcut.mjs` on a Mac.
 2. **The Safari extension.** A toolbar button for Safari on a Mac, installed
-   with a script. See [extension/README.md](extension/README.md).
+   with a script. See [threadshot.app/install-extension](https://threadshot.app/install-extension)
+   (source in [extension/](extension/)).
 3. **The bookmark.** For every other desktop browser, including on Windows. Drag
    the "Send to threadshot.app" button to your bookmarks bar, open any Reddit
    post, and click it.
@@ -98,6 +99,7 @@ shows the commit without a version.
 - `/` - choose how to send a post; `/#no-key`, `/#shortcut`, `/#extension`,
   `/#bookmark` and `/#key` open an option
 - `/get-a-key` - how to create a Reddit app and copy its client ID
+- `/install-extension` - how to install the Safari extension
 - `/generate?sub=&postId=&commentId=` (or `sub=&share=`, or `sample=1`, or `from=reddit`) - the editor
 - `/r/{sub}/comments/{id}/...` and `/r/{sub}/s/{code}` - reddit URLs with the
   host swapped; redirect to the editor
