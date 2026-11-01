@@ -14,7 +14,19 @@ const sample = {
 };
 ---
 
-<Base>
+<Base
+  jsonLd={{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: "threadshot.app",
+    url: new URL("/", Astro.site).href,
+    description:
+      "Turn any Reddit post or comment into a clean, phone-sized image.",
+    applicationCategory: "MultimediaApplication",
+    operatingSystem: "Any",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  }}
+>
   <div
     class="mx-auto grid max-w-[1280px] gap-10 px-4 py-10 md:grid-cols-2 md:gap-12 md:py-16 lg:px-8"
   >

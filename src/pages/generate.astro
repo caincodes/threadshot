@@ -3,6 +3,10 @@ import Editor from "../components/Editor.svelte";
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="Edit screenshot | threadshot.app">
+<Base
+  title="Edit screenshot | threadshot.app"
+  description="Choose what appears in your Reddit screenshot, then download or share it."
+  noindex
+>
   <Editor client:only="svelte" />
 </Base>

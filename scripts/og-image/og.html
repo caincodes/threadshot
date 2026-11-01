@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  @font-face {
+    font-family: "Archivo";
+    font-weight: 100 900;
+    src: url("../../node_modules/@fontsource-variable/archivo/files/archivo-latin-wght-normal.woff2") format("woff2");
+  }
+  @font-face {
+    font-family: "IBM Plex Sans";
+    font-weight: 500;
+    src: url("../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2");
+  }
+  @font-face {
+    font-family: "IBM Plex Sans";
+    font-weight: 600;
+    src: url("../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; background: #fff; color: #0f1419; }
+  .stage { position: relative; width: 1200px; height: 630px; }
+  .panel {
+    position: absolute; top: 0; right: 0; bottom: 0; width: 520px;
+    background: #e9edf0; border-left: 1px solid #d3d9df;
+  }
+  .card {
+    position: absolute; left: 720px; top: 52px; width: 440px;
+    border: 1px solid #d3d9df; background: #fff;
+  }
+  .card img { display: block; width: 440px; height: auto; }
+  .copy { position: absolute; left: 72px; top: 0; bottom: 0; width: 560px; display: flex; flex-direction: column; justify-content: center; }
+  .brand { position: absolute; left: 72px; top: 56px; font: 800 30px/1 "Archivo"; letter-spacing: -0.02em; }
+  h1 { font: 800 76px/1.02 "Archivo"; letter-spacing: -0.025em; text-wrap: pretty; }
+  h1 em { font-style: normal; color: #bf3b0f; }
+  p { margin-top: 28px; font: 500 28px/1.4 "IBM Plex Sans"; color: #3a444d; max-width: 500px; }
+  .tag { position: absolute; left: 72px; bottom: 52px; display: flex; gap: 12px; font: 600 21px/1 "IBM Plex Sans"; }
+  .tag span { border: 1px solid #0f1419; border-radius: 6px; padding: 11px 16px; }
+  .tag span.accent { background: #bf3b0f; border-color: #bf3b0f; color: #fff; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="panel"></div>
+  <div class="card"><img src="sample.png" alt="" /></div>
+  <div class="brand">threadshot.app</div>
+  <div class="copy">
+    <h1>Turn a Reddit thread into a <em>clean image</em></h1>
+    <p>Download any post or comment as a phone-sized PNG.</p>
+  </div>
+  <div class="tag"><span class="accent">Free</span><span>No account</span><span>Hide usernames</span></div>
+</div>
+</body>
+</html>
