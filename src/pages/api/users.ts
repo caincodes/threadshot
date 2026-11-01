@@ -54,11 +54,12 @@ export const POST: APIRoute = async ({ request, url }) => {
         }
         const users = (await upstream.json()) as Record<
           string,
-          { profile_img?: string }
+          { profile_img?: string; icon_img?: string }
         >;
         for (const [id, user] of Object.entries(users ?? {})) {
-          if (user?.profile_img?.startsWith("https://")) {
-            icons[id] = user.profile_img.replaceAll("&amp;", "&");
+          const picture = user?.profile_img || user?.icon_img;
+          if (picture?.startsWith("https://")) {
+            icons[id] = picture.replaceAll("&amp;", "&");
           }
         }
       })

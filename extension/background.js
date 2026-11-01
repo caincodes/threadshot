@@ -49,7 +49,8 @@ browser.action.onClicked.addListener(async (tab) => {
             )).then((parts) => {
               const users = {};
               parts.forEach((part) => Object.entries(part || {}).forEach(([id, user]) => {
-                if (user && typeof user.profile_img === "string") users[id] = user.profile_img.replaceAll("&amp;", "&");
+                const picture = user && (user.profile_img || user.icon_img);
+                if (typeof picture === "string") users[id] = picture.replaceAll("&amp;", "&");
               }));
               return { data, users };
             });

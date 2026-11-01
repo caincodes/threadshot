@@ -67,14 +67,12 @@
             src={comment.authorIcon}
           />
         {/if}
-        <span
-          class={[
-            "font-semibold",
-            comment.is_submitter ? "text-ap-link" : "text-ap-muted",
-          ]}
-        >
+        <span class="font-semibold text-ap-muted">
           <Username name={comment.author} />
         </span>
+        {#if comment.is_submitter}
+          <span class="rounded-[3px] bg-ap-line px-1 text-[11px] leading-4 font-semibold text-ap-text">OP</span>
+        {/if}
         {#if comment.stickied}
           <span class="inline-flex text-ap-up"><PushPin size={13} weight="fill" /></span>
         {/if}
