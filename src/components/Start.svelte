@@ -286,7 +286,7 @@
       {@render step(2, click)}
     </ol>
     {#if device === "ios"}
-      <p class="text-sm text-ink-2">For computers. iOS Safari won't run bookmarks.</p>
+      <p class="text-sm text-ink-2">For computers. Not compatible with mobile.</p>
     {/if}
   {/if}
 {/snippet}
