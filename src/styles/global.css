@@ -215,7 +215,7 @@
 .ap .redacted[data-style="scribble"] {
   background: none;
   color: inherit;
-  margin-inline: 0.42em;
+  margin-inline: 0.28em 0.42em;
   position: relative;
 }
 

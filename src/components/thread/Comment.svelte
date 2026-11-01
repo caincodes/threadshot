@@ -68,7 +68,7 @@
           />
         {/if}
         <span class="font-semibold text-ap-muted">
-          <Username name={comment.author} />
+          <Username name={comment.author} hasPrefix={false} />
         </span>
         {#if comment.is_submitter}
           <span class="rounded-[3px] bg-ap-line px-1 text-[11px] leading-4 font-semibold text-ap-text">OP</span>

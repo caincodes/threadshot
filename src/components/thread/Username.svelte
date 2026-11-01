@@ -2,12 +2,14 @@
     import { editor } from "../../lib/editor.svelte";
   import Redacted from "./Redacted.svelte";
 
-  let { name }: { name: string } = $props();
+  // Comments show the bare name; the post's author keeps its "u/".
+  let { name, hasPrefix = true }: { name: string; hasPrefix?: boolean } =
+    $props();
 </script>
 
 <!-- The "u/" stays when the name is covered, and both go when it is hidden. -->
 {#if !editor.isCensorUsernames}
-  <span>u/{name}</span>
+  <span>{hasPrefix ? "u/" : ""}{name}</span>
 {:else if editor.redactStyle !== "hide"}
-  <span>u/<Redacted {name} /></span>
+  <span>{hasPrefix ? "u/" : ""}<Redacted {name} /></span>
 {/if}
