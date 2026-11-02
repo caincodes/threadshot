@@ -119,7 +119,7 @@
 
   // Where a pasted link opens in the editor, or an error to show.
   const editorUrlFor = (value: string): { url: string } | { error: string } => {
-    const target = editorTargetInText(value);
+    const target = editorTargetInText(value, window.location.host);
     return target ? { url: target.path } : { error: NOT_A_LINK };
   };
 
@@ -144,7 +144,7 @@
   let xError = $state("");
 
   const xPathIn = (text: string) => {
-    const target = editorTargetInText(text);
+    const target = editorTargetInText(text, window.location.host);
     return target?.platform === "x" ? target.path : null;
   };
 

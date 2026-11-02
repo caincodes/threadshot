@@ -7,11 +7,11 @@ const SYNDICATION_URL = "https://cdn.syndication.twimg.com/tweet-result";
 export const X_POST_ID = /^\d{1,25}$/;
 
 export class XApiError extends Error {
-  constructor(
-    readonly status: number,
-    message: string
-  ) {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
     super(message);
+    this.status = status;
   }
 }
 
@@ -117,7 +117,8 @@ const postHtml = (post: RawPost, cardUrl?: string) => {
       text: `@${mention.screen_name}`,
     })),
     ...(entities.urls ?? []).flatMap((link) => {
-      if (cardUrl && link.url === cardUrl && link.indices[1] >= end) {
+      const isLast = chars.slice(link.indices[1], end).join("").trim() === "";
+      if (cardUrl && link.url === cardUrl && isLast) {
         end = Math.min(end, link.indices[0]);
         return [];
       }

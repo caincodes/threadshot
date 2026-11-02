@@ -10,7 +10,7 @@ const params = Astro.url.searchParams;
 const shared = ["url", "text", "title"]
   .map((name) => params.get(name) ?? "")
   .join(" ");
-const target = editorTargetInText(shared);
+const target = editorTargetInText(shared, Astro.url.host);
 
 if (target) {
   return Astro.redirect(target.path, 303);
