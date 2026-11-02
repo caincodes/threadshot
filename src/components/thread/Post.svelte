@@ -83,7 +83,7 @@
       </span>
     {/if}
     {#if isPostLast && !editor.hideWatermark}
-      <Watermark class="ml-auto font-normal" />
+      <Watermark class="ml-auto" />
     {/if}
   </footer>
 </article>
