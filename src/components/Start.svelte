@@ -1,6 +1,7 @@
 <script lang="ts">
   import BookmarkSimple from "phosphor-svelte/lib/BookmarkSimple";
   import CaretDown from "phosphor-svelte/lib/CaretDown";
+  import ClipboardText from "phosphor-svelte/lib/ClipboardText";
   import Check from "phosphor-svelte/lib/Check";
   import Copy from "phosphor-svelte/lib/Copy";
   import Export from "phosphor-svelte/lib/Export";
@@ -10,12 +11,10 @@
   import { bookmarkletHref } from "../lib/bookmarklet";
   import { credentials } from "../lib/credentials.svelte";
   import { detectDevice, methodsFor, type SendMethod } from "../lib/device";
-  import { xPostIdFrom } from "../lib/xData";
+  import { editorTargetInText } from "../lib/links";
   import Connect from "./Connect.svelte";
   import Segmented from "./ui/Segmented.svelte";
 
-  const POST_PATH = /^\/r\/([\w-]+)\/comments\/(\w+)(?:\/[^/]*)?(?:\/(\w+))?/;
-  const SHARE_PATH = /^\/r\/([\w-]+)\/s\/([\w-]+)/;
 
   const INSTALL_COMMANDS = {
     curl: "curl -fsSL https://threadshot.app/extension.sh | sh",
@@ -49,6 +48,9 @@
   ];
   // X comes first, unless a saved Reddit key says this visitor uses Reddit.
   let platform = $state<Platform>(credentials.value ? "reddit" : "x");
+  const site = $derived(platform === "x" ? "X" : "Reddit");
+  // The key form closes the methods on the Reddit side only.
+  const showMethods = $derived(platform === "x" || !isUsingKey);
 
   $effect(() => {
     document.body.dataset.platform = platform;
@@ -117,32 +119,8 @@
 
   // Where a pasted link opens in the editor, or an error to show.
   const editorUrlFor = (value: string): { url: string } | { error: string } => {
-    let parsed: URL;
-    try {
-      parsed = new URL(value);
-    } catch {
-      return { error: NOT_A_LINK };
-    }
-
-    const xPostId = xPostIdFrom(parsed);
-    if (xPostId) {
-      return { url: `/generate?${new URLSearchParams({ x: xPostId })}` };
-    }
-
-    const post = POST_PATH.exec(parsed.pathname);
-    const share = SHARE_PATH.exec(parsed.pathname);
-    const params = new URLSearchParams();
-    if (post) {
-      params.set("sub", post[1]);
-      params.set("postId", post[2]);
-      if (post[3]) params.set("commentId", post[3]);
-    } else if (share) {
-      params.set("sub", share[1]);
-      params.set("share", share[2]);
-    } else {
-      return { error: NOT_A_LINK };
-    }
-    return { url: `/generate?${params}` };
+    const target = editorTargetInText(value);
+    return target ? { url: target.path } : { error: NOT_A_LINK };
   };
 
   const go = (event: SubmitEvent) => {
@@ -165,23 +143,50 @@
   let xLink = $state("");
   let xError = $state("");
 
+  const xPathIn = (text: string) => {
+    const target = editorTargetInText(text);
+    return target?.platform === "x" ? target.path : null;
+  };
+
   const goToX = (event: SubmitEvent) => {
     event.preventDefault();
     xError = "";
-    let parsed: URL | null = null;
-    try {
-      parsed = new URL(xLink.trim());
-    } catch {
-      // Handled below.
-    }
-    const xPostId = parsed && xPostIdFrom(parsed);
-    if (!xPostId) {
+    const path = xPathIn(xLink);
+    if (!path) {
       xError = xLink.trim()
         ? "That does not look like a link to a post on X."
         : "Paste a link to a post on X first.";
       return;
     }
-    window.location.href = `/generate?${new URLSearchParams({ x: xPostId })}`;
+    window.location.href = path;
+  };
+
+  // Pasting a link is enough; there is nothing else to fill in.
+  const goOnPaste = (event: ClipboardEvent) => {
+    const path = xPathIn(event.clipboardData?.getData("text") ?? "");
+    if (path) {
+      event.preventDefault();
+      window.location.href = path;
+    }
+  };
+
+  // One tap where the browser allows reading the clipboard.
+  const canReadClipboard = Boolean(navigator.clipboard?.readText);
+  const pasteFromClipboard = async () => {
+    xError = "";
+    let text: string;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      xError = "Your browser did not allow reading the clipboard. Paste the link into the field instead.";
+      return;
+    }
+    const path = xPathIn(text);
+    if (path) {
+      window.location.href = path;
+    } else {
+      xError = "The clipboard does not hold a link to a post on X. Copy one first.";
+    }
   };
 </script>
 
@@ -223,17 +228,31 @@
       </p>
     </div>
   {/if}
-  <ol class="flex flex-col gap-3">
-    {#snippet allowScripts()}
-      In Settings, go to Shortcuts, then Advanced, and turn on Allow Running
-      Scripts.
-    {/snippet}
-    {#snippet share()}
-      In Safari, tap Safari's Share button on a post and choose threadshot.
-    {/snippet}
-    {@render step(1, allowScripts)}
-    {@render step(2, share)}
-  </ol>
+  {#if platform === "x"}
+    <ol class="flex flex-col gap-3">
+      {#snippet shareFromX()}
+        In the X app, tap Share on a post and choose threadshot.
+      {/snippet}
+      {#snippet runWithCopiedLink()}
+        Or copy a post's link and run threadshot from your Home Screen, a
+        widget, Siri or the Action button. No Share sheet needed.
+      {/snippet}
+      {@render step(1, shareFromX)}
+      {@render step(2, runWithCopiedLink)}
+    </ol>
+  {:else}
+    <ol class="flex flex-col gap-3">
+      {#snippet allowScripts()}
+        In Settings, go to Shortcuts, then Advanced, and turn on Allow Running
+        Scripts.
+      {/snippet}
+      {#snippet share()}
+        In Safari, tap Safari's Share button on a post and choose threadshot.
+      {/snippet}
+      {@render step(1, allowScripts)}
+      {@render step(2, share)}
+    </ol>
+  {/if}
 {/snippet}
 
 {#snippet extensionSteps()}
@@ -265,7 +284,8 @@
       Quit Safari and run this in Terminal.
     {/snippet}
     {#snippet enable()}
-      Turn on Threadshot in Safari's Extensions settings.
+      Turn on Threadshot in Safari's Extensions settings, then click it on any
+      {site} post.
     {/snippet}
     {@render step(1, install)}
     {@render step(2, enable)}
@@ -330,11 +350,17 @@
         Save any page as a bookmark named threadshot, with this code as its URL.
       {/snippet}
       {#snippet open()}
-        On a Reddit post, type threadshot in the address bar and tap it.
+        On a {site} post, type threadshot in the address bar and tap it.
       {/snippet}
       {@render step(1, paste)}
       {@render step(2, open)}
     </ol>
+    {#if platform === "x"}
+      <p class="text-sm text-ink-2">
+        Using the X app? Add threadshot.app to your Home screen from your
+        browser's menu, then share posts to it from the X app.
+      </p>
+    {/if}
   {:else}
     <a
       class="btn btn-primary cursor-grab self-start active:cursor-grabbing"
@@ -349,7 +375,7 @@
         Drag this button to your bookmarks bar.
       {/snippet}
       {#snippet click()}
-        Click it on any Reddit post.
+        Click it on any {site} post.
       {/snippet}
       {@render step(1, drag)}
       {@render step(2, click)}
@@ -382,6 +408,86 @@
   </div>
 {/snippet}
 
+{#snippet xLinkSection()}
+  <section class="border-2 border-ink p-5">
+    <form class="flex flex-col gap-3" onsubmit={goToX} novalidate>
+      <label class="heading text-2xl" for="x-url-input">Paste a link from X</label>
+      <p class="-mt-1 text-sm text-ink-2">
+        Any public post works, with no key or account. Pasting a link opens it.
+      </p>
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <input
+          id="x-url-input"
+          onpaste={goOnPaste}
+          class="field min-w-0 sm:flex-1"
+          aria-describedby="x-url-error"
+          autocapitalize="off"
+          autocomplete="off"
+          bind:value={xLink}
+          inputmode="url"
+          placeholder="https://x.com/username/status/..."
+          spellcheck="false"
+          type="text"
+        />
+        <button class="btn btn-primary" type="submit">Generate</button>
+        {#if canReadClipboard}
+          <button
+            class="btn btn-secondary"
+            onclick={pasteFromClipboard}
+            type="button"
+          >
+            <ClipboardText size={20} weight="bold" />
+            Paste
+          </button>
+        {/if}
+      </div>
+      {#if xError}
+        <p id="x-url-error" class="font-medium text-accent" role="alert">
+          {xError}
+        </p>
+      {/if}
+    </form>
+    <p class="mt-4 text-sm text-ink-2">
+      Or <a class="link" href="/generate?sample=x">try a sample post from X</a>.
+    </p>
+  </section>
+{/snippet}
+
+{#snippet methodsSection()}
+  <section class="border-2 border-ink">
+    <div class="grid grid-cols-3 divide-x-2 divide-ink border-b-2 border-ink">
+      {#each methods as id (id)}
+        <button
+          class="block-control h-12"
+          aria-controls="{id}-panel"
+          aria-expanded={showMethods && method === id}
+          onclick={() => chooseMethod(id)}
+          type="button"
+        >
+          {METHODS[id].tab}
+        </button>
+      {/each}
+    </div>
+    <div
+      class="tab-stack"
+      style:height={showMethods ? heights[method] && `${heights[method]}px` : "0px"}
+    >
+      {#each methods as id, index (id)}
+        {@const isOpen = showMethods && method === id}
+        <div
+          id="{id}-panel"
+          class="tab-panel"
+          bind:offsetHeight={heights[id]}
+          data-open={isOpen || undefined}
+          inert={!isOpen}
+        >
+          {@render methodPanel(id, index)}
+        </div>
+      {/each}
+    </div>
+  </section>
+{/snippet}
+
 <div class="mt-8 flex flex-col gap-3">
   <div class="grid grid-cols-2 gap-3" aria-label="Send from" role="group">
     {#each PLATFORMS as option (option.value)}
@@ -398,70 +504,11 @@
   </div>
 
   {#if platform === "x"}
-    <section class="border-2 border-ink p-5">
-      <form class="flex flex-col gap-3" onsubmit={goToX} novalidate>
-        <label class="heading text-2xl" for="x-url-input">Paste a link from X</label>
-        <p class="-mt-1 text-sm text-ink-2">
-          Any public post works. No key, extension or account needed.
-        </p>
-        <div class="flex flex-col gap-3 sm:flex-row">
-          <input
-            id="x-url-input"
-            class="field min-w-0 sm:flex-1"
-            aria-describedby="x-url-error"
-            autocapitalize="off"
-            autocomplete="off"
-            bind:value={xLink}
-            inputmode="url"
-            placeholder="https://x.com/username/status/..."
-            spellcheck="false"
-            type="text"
-          />
-          <button class="btn btn-primary" type="submit">Generate</button>
-        </div>
-        {#if xError}
-          <p id="x-url-error" class="font-medium text-accent" role="alert">
-            {xError}
-          </p>
-        {/if}
-      </form>
-      <p class="mt-4 text-sm text-ink-2">
-        Or <a class="link" href="/generate?sample=x">try a sample post from X</a>.
-      </p>
-    </section>
+    {@render xLinkSection()}
+    <p class="mt-2 font-semibold">Or send posts from X in one tap</p>
+    {@render methodsSection()}
   {:else}
-    <section class="border-2 border-ink">
-      <div class="grid grid-cols-3 divide-x-2 divide-ink border-b-2 border-ink">
-        {#each methods as id (id)}
-          <button
-            class="block-control h-12"
-            aria-controls="{id}-panel"
-            aria-expanded={!isUsingKey && method === id}
-            onclick={() => chooseMethod(id)}
-            type="button"
-          >
-            {METHODS[id].tab}
-          </button>
-        {/each}
-      </div>
-      <div
-        class="tab-stack"
-        style:height={isUsingKey ? "0px" : heights[method] && `${heights[method]}px`}
-      >
-        {#each methods as id, index (id)}
-          {@const isOpen = !isUsingKey && method === id}
-          <div
-            id="{id}-panel"
-            class="tab-panel"
-            bind:offsetHeight={heights[id]}
-            data-open={isOpen || undefined}
-            inert={!isOpen}
-          >
-            {@render methodPanel(id, index)}
-          </div>
-        {/each}
-      </div>
-    </section>
+    {@render methodsSection()}
 
     <section class="border border-line">
       <button

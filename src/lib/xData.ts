@@ -1,14 +1,6 @@
 import type { XPost } from "../types/x";
 import { sanitizeHtml } from "./sanitizeHtml";
 
-const X_HOSTS =
-  /^(?:www\.|mobile\.)?(?:x|twitter|fxtwitter|vxtwitter|fixupx|fixvx)\.com$/i;
-const STATUS_PATH = /^\/(?:[\w]+|i(?:\/web)?)\/status(?:es)?\/(\d{1,25})(?:\/|$)/;
-
-// The post id in an x.com or twitter.com link, or null for anything else.
-export const xPostIdFrom = (url: URL): string | null =>
-  X_HOSTS.test(url.hostname) ? (STATUS_PATH.exec(url.pathname)?.[1] ?? null) : null;
-
 const isHttpsUrl = (value: unknown) =>
   value === undefined || (typeof value === "string" && value.startsWith("https://"));
 

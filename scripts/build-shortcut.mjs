@@ -1,14 +1,21 @@
 // Builds and signs public/threadshot.shortcut, the iOS way to send a post here.
-// iOS Safari refuses javascript: bookmarks, but a shortcut may run a script on
-// the page it was shared from, with the visitor's own Reddit session. Signing
-// needs macOS and an iCloud account:
+// Signing needs macOS and an iCloud account:
 //
 //   node scripts/build-shortcut.mjs [origin] [output path]
 //
+// X: posts load on this app's server, so a link is all it needs. It takes the
+// link from the Share sheet (the X app, Safari or anywhere else) or, when run
+// with no input (Home Screen, widget, Siri, the Action button), from the
+// clipboard, and opens the editor. No script runs, so this works without
+// "Allow Running Scripts".
+//
+// Reddit: iOS Safari refuses javascript: bookmarks, but a shortcut may run a
+// script on the page it was shared from, with the visitor's own Reddit session.
 // Shared from Safari, it reads the post and opens the editor in the same tab,
-// because window.open is blocked there. Shared from the Reddit app, or from the
-// Share buttons on Reddit's own pages, it has only a URL: Reddit blocks downloads
-// made by the shortcut itself, so it opens the post in Safari to be shared again.
+// because window.open is blocked there. With only a link (the Reddit app, the
+// Share buttons on Reddit's own pages, or the clipboard), Reddit blocks
+// downloads made by the shortcut itself, so it opens the post in Safari to be
+// shared again.
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -36,7 +43,7 @@ const compress = async (bytes) => {
 };
 const read = async () => {
   if (!/^\\/r\\/[\\w-]+\\/comments\\/\\w+/.test(location.pathname)) {
-    return "Open a Reddit post first, then run this shortcut again.";
+    return "Open a post on X or Reddit first, then run this shortcut again.";
   }
   const path = location.pathname.replace(/\\/$/, "");
   const response = await fetch(path + ".json?raw_json=1&context=10000&limit=500");
@@ -89,12 +96,51 @@ const END_IF = 2;
 const CONTAINS = 99;
 const HAS_ANY_VALUE = 100;
 
+// Any X post link becomes this site's /i/status/{id}, which opens the editor.
+// A link that does not match is left as it was.
+const X_LINK =
+  "^https?://(?:www\\.|mobile\\.)?(?:x|twitter|fxtwitter|vxtwitter|fixupx|fixvx)\\.com/(?:\\w+|i/web|i)/status(?:es)?/(\\d+).*$";
+const X_EDITOR = `${origin}/i/status/`;
+
+const links = id();
+const firstLink = id();
+const directX = id();
+const expanded = id();
+const expandedX = id();
 const inputType = id();
 const result = id();
-const expanded = id();
 const safariUrl = id();
+const hasLink = id();
+const isDirectX = id();
+const isExpandedX = id();
 const source = id();
 const problem = id();
+const isReddit = id();
+
+const variable = (reference) => ({ Type: "Variable", Variable: attachment(reference) });
+
+const toXEditor = (uuid, input) =>
+  action("text.replace", {
+    UUID: uuid,
+    WFInput: text(input),
+    WFReplaceTextRegularExpression: true,
+    WFReplaceTextFind: X_LINK,
+    WFReplaceTextReplace: `${X_EDITOR}$1`,
+  });
+
+const ifContains = (group, reference, value) =>
+  conditional(group, IF, {
+    WFCondition: CONTAINS,
+    WFConditionalActionString: value,
+    WFInput: variable(reference),
+  });
+
+const alert = (title, message) =>
+  action("alert", {
+    WFAlertActionTitle: title,
+    WFAlertActionMessage: message,
+    WFAlertActionCancelButtonShown: false,
+  });
 
 const workflow = {
   WFWorkflowClientVersion: "2607.0.5",
@@ -102,21 +148,44 @@ const workflow = {
   WFWorkflowMinimumClientVersionString: "900",
   WFWorkflowIcon: { WFWorkflowIconStartColor: 463140863, WFWorkflowIconGlyphNumber: 59511 },
   WFWorkflowTypes: ["ActionExtension"],
-  WFWorkflowInputContentItemClasses: ["WFSafariWebPageContentItem", "WFURLContentItem"],
+  WFWorkflowInputContentItemClasses: [
+    "WFSafariWebPageContentItem",
+    "WFURLContentItem",
+    "WFStringContentItem",
+  ],
+  // Run from the Home Screen, a widget, Siri or the Action button, it reads a
+  // copied link instead of asking for the Share sheet.
+  WFWorkflowNoInputBehavior: {
+    Name: "WFWorkflowNoInputBehaviorGetClipboard",
+    Parameters: {},
+  },
   WFWorkflowHasShortcutInputVariables: true,
   WFWorkflowActions: [
-    action("getitemtype", {
-      UUID: inputType,
-      WFInput: attachment(shortcutInput),
+    action("detect.link", { UUID: links, WFInput: attachment(shortcutInput) }),
+    action("getitemfromlist", {
+      UUID: firstLink,
+      WFInput: attachment(output(links, "URLs")),
+      WFItemSpecifier: "First Item",
     }),
-    conditional(source, IF, {
-      WFCondition: CONTAINS,
-      WFConditionalActionString: "Safari",
-      WFInput: {
-        Type: "Variable",
-        Variable: attachment(output(inputType, "Type")),
-      },
+    conditional(hasLink, IF, {
+      WFCondition: HAS_ANY_VALUE,
+      WFInput: variable(output(firstLink, "Item from List")),
     }),
+
+    toXEditor(directX, output(firstLink, "Item from List")),
+    ifContains(isDirectX, output(directX, "Updated Text"), X_EDITOR),
+    action("openurl", { WFInput: attachment(output(directX, "Updated Text")), Show: true }),
+    conditional(isDirectX, OTHERWISE),
+
+    // t.co and other short links only show where they go once followed.
+    action("url.expand", { UUID: expanded, URL: text(output(firstLink, "Item from List")) }),
+    toXEditor(expandedX, output(expanded, "Expanded URL")),
+    ifContains(isExpandedX, output(expandedX, "Updated Text"), X_EDITOR),
+    action("openurl", { WFInput: attachment(output(expandedX, "Updated Text")), Show: true }),
+    conditional(isExpandedX, OTHERWISE),
+
+    action("getitemtype", { UUID: inputType, WFInput: attachment(shortcutInput) }),
+    ifContains(source, output(inputType, "Type"), "Safari"),
     action("runjavascriptonwebpage", {
       UUID: result,
       WFInput: attachment(shortcutInput),
@@ -124,15 +193,13 @@ const workflow = {
     }),
     conditional(problem, IF, {
       WFCondition: HAS_ANY_VALUE,
-      WFInput: {
-        Type: "Variable",
-        Variable: attachment(output(result, "JavaScript Result")),
-      },
+      WFInput: variable(output(result, "JavaScript Result")),
     }),
     action("showresult", { Text: text(output(result, "JavaScript Result")) }),
     conditional(problem, END_IF),
     conditional(source, OTHERWISE),
-    action("url.expand", { UUID: expanded, URL: text(shortcutInput) }),
+
+    ifContains(isReddit, output(expanded, "Expanded URL"), "reddit.com"),
     // A plain https link to Reddit would bounce straight back to the Reddit app.
     action("text.replace", {
       UUID: safariUrl,
@@ -141,17 +208,25 @@ const workflow = {
       WFReplaceTextFind: "^https://",
       WFReplaceTextReplace: "x-safari-https://",
     }),
-    action("alert", {
-      WFAlertActionTitle: "Use Safari's Share button",
-      WFAlertActionMessage:
-        "Reddit's Share button only sends a link, so threadshot can't read the page. It will open in Safari. Then tap Safari's own Share button and choose threadshot.",
-      WFAlertActionCancelButtonShown: false,
-    }),
-    action("openurl", {
-      WFInput: attachment(output(safariUrl, "Updated Text")),
-      Show: true,
-    }),
+    alert(
+      "Use Safari's Share button",
+      "Reddit posts are read from the page, and a link alone can't do that. The post will open in Safari. Then tap Safari's own Share button and choose threadshot."
+    ),
+    action("openurl", { WFInput: attachment(output(safariUrl, "Updated Text")), Show: true }),
+    conditional(isReddit, OTHERWISE),
+    alert("Not a post on X or Reddit", "Share a post from X or Reddit, or copy a post's link and run threadshot again."),
+    conditional(isReddit, END_IF),
+
     conditional(source, END_IF),
+    conditional(isExpandedX, END_IF),
+    conditional(isDirectX, END_IF),
+
+    conditional(hasLink, OTHERWISE),
+    alert(
+      "No link to a post",
+      "Copy a link to a post on X or Reddit, then run threadshot again. Or tap Share on a post and choose threadshot."
+    ),
+    conditional(hasLink, END_IF),
   ],
 };
 

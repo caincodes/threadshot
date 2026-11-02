@@ -64,7 +64,18 @@ need to approve your app first.
 ## Posts on X
 
 Paste an x.com or twitter.com link on the home page, or swap the host of one for
-threadshot.app. X posts load without a key: the server reads them from X's
+threadshot.app. The bookmark, the Safari extension and the iOS Shortcut work on
+X too, and since X posts need nothing from the page, they only pass the link:
+
+- **Bookmark and extension:** on a post on x.com, they open the editor.
+- **iOS Shortcut:** share a post from the X app (or anywhere) and choose
+  threadshot. Run it with no input, from the Home Screen, a widget, Siri or the
+  Action button, and it reads a copied link instead, so no Share sheet is
+  needed. X links never run a script, so "Allow Running Scripts" is only for
+  Reddit.
+- **Android:** once the site is added to the Home screen, it appears in the
+  Share sheet (`share_target` in `public/manifest.json`), so posts can be shared
+  to it from the X app. X posts load without a key: the server reads them from X's
 syndication endpoint, the one its embedded posts use (`src/server/x.ts`). That
 endpoint includes the post being replied to and any quoted post, but not the
 replies, so an X image shows one post in its conversation.
@@ -113,6 +124,8 @@ shows the commit without a version.
 - `/r/{sub}/comments/{id}/...` and `/r/{sub}/s/{code}` - reddit URLs with the
   host swapped; redirect to the editor
 - `/{user}/status/{id}` - x.com URLs with the host swapped; redirect to the editor
+- `/open?url=` (or `text=`) - opens the first X or Reddit post link it finds in
+  the editor; the Android share target
 - `GET /api/x?id=` - fetches a post on X
 - `POST /api/reddit` - fetches a post and its comments with the visitor's credentials
 - `POST /api/resolve` - turns a `/s/` share link into a post

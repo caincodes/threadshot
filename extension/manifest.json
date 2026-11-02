@@ -21,7 +21,7 @@
       "prompt" : "make extension with toolbar button named \"threadshot\" (icon should be a camera of some sort)"
     }
   },
-  "description" : "Sends the Reddit post you are reading to threadshot.app.",
+  "description" : "Sends the Reddit or X post you are reading to threadshot.app.",
   "icon_variants" : [
     {
       "any" : "symbol:camera.fill"
@@ -33,5 +33,5 @@
     "activeTab",
     "scripting"
   ],
-  "version" : "1.1"
+  "version" : "1.2"
 }

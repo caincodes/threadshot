@@ -57,7 +57,7 @@ if ! sqlite3 "$DB" <<SQL
 .bail on
 BEGIN IMMEDIATE;
 INSERT INTO magic_extensions (id, version, creation_date, modified_date, name, description, selected_symbol, prompt, directory_name, symbol_color_name, crdt_generation, sync_state, sync_generation, sync_data)
-SELECT '$(uuidgen)', 1, strftime('%s','now') - 978307200.0, strftime('%s','now') - 978307200.0, 'Threadshot', 'Sends the Reddit post you are reading to threadshot.app.', 'camera.fill', 'make extension with toolbar button named "threadshot" (icon should be a camera of some sort)', '$folder', 'blue', '1 | $(uuidgen)', 0, value, NULL FROM metadata WHERE key = 'next_sync_generation';
+SELECT '$(uuidgen)', 1, strftime('%s','now') - 978307200.0, strftime('%s','now') - 978307200.0, 'Threadshot', 'Sends the Reddit or X post you are reading to threadshot.app.', 'camera.fill', 'make extension with toolbar button named "threadshot" (icon should be a camera of some sort)', '$folder', 'blue', '1 | $(uuidgen)', 0, value, NULL FROM metadata WHERE key = 'next_sync_generation';
 UPDATE metadata SET value = value + 1 WHERE key = 'next_sync_generation';
 COMMIT;
 SQL

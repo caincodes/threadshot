@@ -6,7 +6,7 @@ description: How to install the Threadshot Safari extension on a Mac with Safari
 
 # Install the Safari extension
 
-Adds a toolbar button that sends the Reddit post you are reading to
+Adds a toolbar button that sends the Reddit or X post you are reading to
 [threadshot.app](https://threadshot.app). Same idea as the bookmark, without a
 bookmarks bar.
 
@@ -40,7 +40,9 @@ copy of the database in a folder on your Desktop.
 
 ## Use it
 
-Open a Reddit post and click the Threadshot button in the toolbar. If Safari
-blocks the new window, allow pop-ups for reddit.com.
+Open a post on Reddit or X and click the Threadshot button in the toolbar. If
+Safari blocks the new window, allow pop-ups for reddit.com or x.com.
+
+Installed it before X was supported? Run the install script again to update it.
 
 If a Safari update removes the extension, run the install script again.
