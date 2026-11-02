@@ -1,7 +1,7 @@
 # threadshot.app
 
-Turn a Reddit post or comment thread into a clean, shareable screenshot at
-[threadshot.app](https://threadshot.app).
+Turn a Reddit post or comment thread, or a post on X, into a clean, shareable
+screenshot at [threadshot.app](https://threadshot.app).
 
 threadshot.app is a fork of [shareddit](https://github.com/logankuzyk/shareddit)
 by [Logan Kuzyk](https://github.com/logankuzyk), who created the project and
@@ -61,6 +61,14 @@ and never stores or logs the key. An app with no secret uses Reddit's
 installed-client login; with a secret it uses the standard app login. Reddit may
 need to approve your app first.
 
+## Posts on X
+
+Paste an x.com or twitter.com link on the home page, or swap the host of one for
+threadshot.app. X posts load without a key: the server reads them from X's
+syndication endpoint, the one its embedded posts use (`src/server/x.ts`). That
+endpoint includes the post being replied to and any quoted post, but not the
+replies, so an X image shows one post in its conversation.
+
 The "Try a sample post" link (`/generate?sample=1`) needs neither.
 
 ## Develop
@@ -100,12 +108,14 @@ shows the commit without a version.
   `/#bookmark` and `/#key` open an option
 - `/get-a-key` - how to create a Reddit app and copy its client ID
 - `/install-extension` - how to install the Safari extension
-- `/generate?sub=&postId=&commentId=` (or `sub=&share=`, or `sample=1`, or `from=reddit`) - the editor
+- `/generate?sub=&postId=&commentId=` (or `sub=&share=`, `x=`, `sample=1`, or `from=reddit`) - the editor
 - `/r/{sub}/comments/{id}/...` and `/r/{sub}/s/{code}` - reddit URLs with the
   host swapped; redirect to the editor
+- `/{user}/status/{id}` - x.com URLs with the host swapped; redirect to the editor
+- `GET /api/x?id=` - fetches a post on X
 - `POST /api/reddit` - fetches a post and its comments with the visitor's credentials
 - `POST /api/resolve` - turns a `/s/` share link into a post
-- `/api/img` - same-origin proxy for Reddit-hosted images
+- `/api/img` - same-origin proxy for Reddit- and X-hosted images
 
 ## Credits
 

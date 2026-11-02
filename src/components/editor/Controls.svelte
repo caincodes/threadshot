@@ -18,12 +18,18 @@
     hasBody,
     isAlbum,
     botCount,
+    platform = "reddit",
+    hasParent = false,
   }: {
     canDownload: boolean;
     hasBody: boolean;
     isAlbum: boolean;
     botCount: number;
+    platform?: "reddit" | "x";
+    hasParent?: boolean;
   } = $props();
+
+  const isX = $derived(platform === "x");
 
   const isTouch = isTouchDevice();
 
@@ -202,44 +208,56 @@
       </div>
     {/if}
 
-    <div class="py-2">
-      {@render heading("Comments")}
-      <Switch label="Show comments" bind:checked={editor.showComments} />
-      {#if editor.showComments}
-        {#if isAdvanced}
-          <Select
-            class="w-30 pointer-coarse:w-36"
-            label="Sort"
-            options={sortOptions}
-            bind:value={editor.commentSort}
-          />
-        {/if}
-        <NumberField
-          label="Top-level comments"
-          max={50}
-          min={0}
-          bind:value={editor.topLevelComments}
+    {#if isX && hasParent}
+      <div class="py-2">
+        {@render heading("Post")}
+        <Switch
+          label="Show the post it replies to"
+          bind:checked={editor.showParentPost}
         />
-        {#if isAdvanced}
+      </div>
+    {/if}
+
+    {#if !isX}
+      <div class="py-2">
+        {@render heading("Comments")}
+        <Switch label="Show comments" bind:checked={editor.showComments} />
+        {#if editor.showComments}
+          {#if isAdvanced}
+            <Select
+              class="w-30 pointer-coarse:w-36"
+              label="Sort"
+              options={sortOptions}
+              bind:value={editor.commentSort}
+            />
+          {/if}
           <NumberField
-            label="Replies per comment"
+            label="Top-level comments"
             max={50}
             min={0}
-            bind:value={editor.commentReplies}
+            bind:value={editor.topLevelComments}
           />
-          <NumberField
-            label="Reply depth"
-            max={50}
-            min={0}
-            bind:value={editor.replyDepth}
-          />
-          <Switch
-            label={botCount ? `Hide bot comments (${botCount} found)` : "Hide bot comments (none found)"}
-            bind:checked={editor.hideBots}
-          />
+          {#if isAdvanced}
+            <NumberField
+              label="Replies per comment"
+              max={50}
+              min={0}
+              bind:value={editor.commentReplies}
+            />
+            <NumberField
+              label="Reply depth"
+              max={50}
+              min={0}
+              bind:value={editor.replyDepth}
+            />
+            <Switch
+              label={botCount ? `Hide bot comments (${botCount} found)` : "Hide bot comments (none found)"}
+              bind:checked={editor.hideBots}
+            />
+          {/if}
         {/if}
-      {/if}
-    </div>
+      </div>
+    {/if}
 
     <div class="py-2">
       {@render heading("Date and time")}
@@ -274,8 +292,10 @@
     <div class="py-2">
       {@render heading("Privacy")}
       <Switch label="Redact usernames" bind:checked={editor.isCensorUsernames} />
-      <Switch label="Redact subreddit" bind:checked={editor.isCensorSubreddits} />
-      {#if isAdvanced && (editor.isCensorUsernames || editor.isCensorSubreddits)}
+      {#if !isX}
+        <Switch label="Redact subreddit" bind:checked={editor.isCensorSubreddits} />
+      {/if}
+      {#if isAdvanced && (editor.isCensorUsernames || (!isX && editor.isCensorSubreddits))}
         <Segmented
           label="Redact with"
           options={redactStyles}
@@ -288,9 +308,13 @@
       {@render heading("Appearance")}
       <Segmented label="Theme" options={themes} bind:value={editor.theme} />
       <Switch label="Hide watermark" bind:checked={editor.hideWatermark} />
-      <Switch label="Subreddit icon" bind:checked={editor.showSubredditIcon} />
-      <Switch label="Profile pictures" bind:checked={editor.showProfileIcons} />
-      {#if isAdvanced}
+      {#if isX}
+        <Switch label="Profile pictures" bind:checked={editor.showXProfileIcons} />
+      {:else}
+        <Switch label="Subreddit icon" bind:checked={editor.showSubredditIcon} />
+        <Switch label="Profile pictures" bind:checked={editor.showProfileIcons} />
+      {/if}
+      {#if isAdvanced && !isX}
         <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
         <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
       {/if}
