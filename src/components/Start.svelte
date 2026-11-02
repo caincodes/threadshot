@@ -44,10 +44,11 @@
   // Which site the visitor is sending from. The home page preview follows it.
   type Platform = "reddit" | "x";
   const PLATFORMS: Array<{ value: Platform; name: string; detail: string }> = [
-    { value: "reddit", name: "Reddit", detail: "Posts and comment threads" },
     { value: "x", name: "X", detail: "Posts and the replies they answer" },
+    { value: "reddit", name: "Reddit", detail: "Posts and comment threads" },
   ];
-  let platform = $state<Platform>("reddit");
+  // X comes first, unless a saved Reddit key says this visitor uses Reddit.
+  let platform = $state<Platform>(credentials.value ? "reddit" : "x");
 
   $effect(() => {
     document.body.dataset.platform = platform;

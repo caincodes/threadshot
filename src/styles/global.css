@@ -146,8 +146,8 @@
   }
 
   /* The home page preview shows a sample from the chosen platform. */
-  body:not([data-platform="x"]) [data-preview="x"],
-  body[data-platform="x"] [data-preview="reddit"] {
+  body:not([data-platform="reddit"]) [data-preview="reddit"],
+  body[data-platform="reddit"] [data-preview="x"] {
     display: none;
   }
 
