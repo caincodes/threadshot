@@ -68,6 +68,9 @@ export const redactedHtml = (name: string, style: RedactStyle) => {
 const MENTION = (prefix: string) =>
   new RegExp(`(?<!\\w)(\\/?${prefix}\\/)([\\w-]+)`, "gi");
 
+// An X handle: "@name", but not the middle of an email address.
+const HANDLE = /(?<![\w@])(@)(\w{1,15})/g;
+
 const TAG = /(<[^>]*>)/;
 
 // A mark can't go inside an attribute, so tags, which can hold a link to the
@@ -87,11 +90,19 @@ const censor = (html: string, mention: RegExp, style: RedactStyle) =>
 
 export const applyCensoring = (
   html: string,
-  options: { usernames: boolean; subreddits: boolean; style: RedactStyle }
+  options: {
+    usernames: boolean;
+    subreddits: boolean;
+    style: RedactStyle;
+    handles?: boolean;
+  }
 ) => {
   let result = html;
   if (options.usernames) {
     result = censor(result, MENTION("u(?:ser)?"), options.style);
+  }
+  if (options.handles) {
+    result = censor(result, HANDLE, options.style);
   }
   if (options.subreddits) {
     result = censor(result, MENTION("r"), options.style);

@@ -19,9 +19,12 @@
     type UserIcons,
   } from "../lib/redditData";
   import { decodeThread, THREAD_FRAGMENT } from "../lib/threadLink";
+  import { fetchXPost } from "../lib/xData";
+  import type { XPost } from "../types/x";
   import Connect from "./Connect.svelte";
   import Controls from "./editor/Controls.svelte";
   import ShareImage from "./thread/ShareImage.svelte";
+  import XShareImage from "./thread/x/XShareImage.svelte";
   import Spinner from "./ui/Spinner.svelte";
 
   const params = new URLSearchParams(window.location.search);
@@ -34,6 +37,9 @@
   // by the iOS Shortcut, which puts it in the URL fragment.
   const isFromBookmark = params.get("from") === "reddit";
   const bookmarkNonce = params.get("n");
+  // X posts load without a key, so an id is all they need.
+  const xPostId = params.get("x");
+  const isX = xPostId !== null;
 
   const hasTarget = Boolean(subreddit && (postId || shareCode));
   // A post to load from Reddit needs the visitor's own credentials.
@@ -48,6 +54,7 @@
   const zoom = $derived(Math.min(1, frameWidth / PREVIEW_WIDTH));
 
   let data = $state<RedditData>();
+  let xPost = $state<XPost>();
   let isLoading = $state(true);
   let errorMessage = $state("");
   let isCredentialError = $state(false);
@@ -109,7 +116,26 @@
   });
 
   $effect(() => {
-    if (isFromBookmark) {
+    if (!xPostId) {
+      return;
+    }
+    const controller = new AbortController();
+    fetchXPost(xPostId, controller.signal)
+      .then((post) => {
+        xPost = post;
+        isLoading = false;
+      })
+      .catch((error: Error) => {
+        if (!controller.signal.aborted) {
+          errorMessage = error.message;
+          isLoading = false;
+        }
+      });
+    return () => controller.abort();
+  });
+
+  $effect(() => {
+    if (isFromBookmark || isX) {
       return;
     }
     if (isSample) {
@@ -151,7 +177,7 @@
   });
 </script>
 
-{#if !isSample && !isFromBookmark && !hasTarget}
+{#if !isSample && !isFromBookmark && !hasTarget && !xPostId}
   <div class="mx-auto w-full max-w-[1280px] px-4 py-16 lg:px-8">
     <div class="max-w-xl">
       <h1 class="heading text-3xl">
@@ -159,7 +185,7 @@
       </h1>
       <p class="mt-3 text-ink-2">
         Send a post here from Reddit with the iOS Shortcut, Safari extension or
-        bookmark.
+        bookmark, or paste an X link on the home page.
       </p>
       <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
         <a class="btn btn-primary" href="/">Choose how to send a post</a>
@@ -186,7 +212,9 @@
   >
     <aside class="order-2 lg:sticky lg:top-6 lg:order-1">
       <Controls
-        canDownload={Boolean(data) && !errorMessage}
+        canDownload={Boolean(data ?? xPost) && !errorMessage}
+        platform={isX ? "x" : "reddit"}
+        hasParent={Boolean(xPost?.parent)}
         botCount={data ? countBotComments(data[1]) : 0}
         hasBody={Boolean(data?.[0].selftext_html)}
         isAlbum={data?.[0].linkType === "album"}
@@ -196,7 +224,13 @@
     <section
       class="order-1 min-h-64 min-w-0 border border-line bg-canvas p-3 sm:p-6 lg:order-2"
     >
-      {#if data}
+      {#if xPost}
+        <div bind:clientWidth={frameWidth}>
+          <div class="mx-auto w-fit" style:zoom={zoom}>
+            <XShareImage id="reddit-preview" post={xPost} />
+          </div>
+        </div>
+      {:else if data}
         <div bind:clientWidth={frameWidth}>
           <div
             class="mx-auto w-fit"
@@ -215,21 +249,27 @@
           <Spinner />
           {isFromBookmark
             ? "Waiting for the thread from Reddit. If nothing arrives, send it again."
-            : "Loading thread"}
+            : isX
+              ? "Loading post"
+              : "Loading thread"}
         </div>
       {/if}
 
       {#if errorMessage}
         <div class="mx-auto max-w-lg py-10" role="alert">
           <h1 class="heading text-2xl">
-            Could not load this thread
+            Could not load this {isX ? "post" : "thread"}
           </h1>
           <p class="mt-3 text-ink-2">{errorMessage}</p>
           {#if isCredentialError}
             <div class="mt-6"><Connect editing /></div>
           {/if}
           <p class="mt-4">
-            <a class="link" href="/#no-key">Send the post from Reddit instead</a>
+            {#if isX}
+              <a class="link" href="/">Try another link</a>
+            {:else}
+              <a class="link" href="/#no-key">Send the post from Reddit instead</a>
+            {/if}
           </p>
         </div>
       {/if}
