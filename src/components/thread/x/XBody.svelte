@@ -49,5 +49,5 @@
   <div class="mt-3"><XCard card={post.card} /></div>
 {/if}
 {#if post.quoted}
-  <div class="mt-3"><XQuoted post={post.quoted} /></div>
+  <div class="mt-3"><XQuoted post={post.quoted} quotedBy={post} /></div>
 {/if}

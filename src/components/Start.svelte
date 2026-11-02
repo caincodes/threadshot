@@ -41,14 +41,32 @@
   let method = $state(methods[0]);
   let isUsingKey = $state(credentials.value !== null);
 
+  // Which site the visitor is sending from. The home page preview follows it.
+  type Platform = "reddit" | "x";
+  const PLATFORMS: Array<{ value: Platform; name: string; detail: string }> = [
+    { value: "reddit", name: "Reddit", detail: "Posts and comment threads" },
+    { value: "x", name: "X", detail: "Posts and the replies they answer" },
+  ];
+  let platform = $state<Platform>("reddit");
+
+  $effect(() => {
+    document.body.dataset.platform = platform;
+  });
+
   // Panels are stacked, so the block takes its height from the open one.
   let heights = $state<Partial<Record<SendMethod, number>>>({});
 
   const readHash = () => {
     const hash = window.location.hash.slice(1);
+    if (hash === "x") {
+      platform = "x";
+      return;
+    }
     if (hash === "key") {
+      platform = "reddit";
       isUsingKey = true;
     } else if (hash === "no-key" || Object.hasOwn(METHODS, hash)) {
+      platform = "reddit";
       method = hash === "no-key" ? methods[0] : (hash as SendMethod);
       isUsingKey = false;
     }
@@ -57,6 +75,11 @@
 
   const clearHash = () =>
     history.replaceState(null, "", window.location.pathname);
+
+  const choosePlatform = (next: Platform) => {
+    platform = next;
+    clearHash();
+  };
 
   const chooseMethod = (next: SendMethod) => {
     method = next;
@@ -359,94 +382,113 @@
 {/snippet}
 
 <div class="mt-8 flex flex-col gap-3">
-  <section class="border-2 border-ink">
-    <div class="grid grid-cols-3 divide-x-2 divide-ink border-b-2 border-ink">
-      {#each methods as id (id)}
-        <button
-          class="block-control h-12"
-          aria-controls="{id}-panel"
-          aria-expanded={!isUsingKey && method === id}
-          onclick={() => chooseMethod(id)}
-          type="button"
-        >
-          {METHODS[id].tab}
-        </button>
-      {/each}
-    </div>
-    <div
-      class="tab-stack"
-      style:height={isUsingKey ? "0px" : heights[method] && `${heights[method]}px`}
-    >
-      {#each methods as id, index (id)}
-        {@const isOpen = !isUsingKey && method === id}
-        <div
-          id="{id}-panel"
-          class="tab-panel"
-          bind:offsetHeight={heights[id]}
-          data-open={isOpen || undefined}
-          inert={!isOpen}
-        >
-          {@render methodPanel(id, index)}
-        </div>
-      {/each}
-    </div>
-  </section>
+  <div class="grid grid-cols-2 gap-3" aria-label="Send from" role="group">
+    {#each PLATFORMS as option (option.value)}
+      <button
+        class="platform-option"
+        aria-pressed={platform === option.value}
+        onclick={() => choosePlatform(option.value)}
+        type="button"
+      >
+        <span class="heading text-2xl leading-none">{option.name}</span>
+        <span class="text-sm">{option.detail}</span>
+      </button>
+    {/each}
+  </div>
 
-  <section class="border border-line p-5">
-    <form class="flex flex-col gap-3" onsubmit={goToX} novalidate>
-      <label class="heading text-2xl" for="x-url-input">Post on X</label>
-      <p class="-mt-1 text-sm text-ink-2">
-        Paste a link to any public post. No key or extension needed.
-      </p>
-      <div class="flex flex-col gap-3 sm:flex-row">
-        <input
-          id="x-url-input"
-          class="field min-w-0 flex-1"
-          aria-describedby="x-url-error"
-          autocapitalize="off"
-          autocomplete="off"
-          bind:value={xLink}
-          inputmode="url"
-          placeholder="https://x.com/username/status/..."
-          spellcheck="false"
-          type="text"
-        />
-        <button class="btn btn-primary" type="submit">Generate</button>
-      </div>
-      {#if xError}
-        <p id="x-url-error" class="font-medium text-accent" role="alert">
-          {xError}
+  {#if platform === "x"}
+    <section class="border-2 border-ink p-5">
+      <form class="flex flex-col gap-3" onsubmit={goToX} novalidate>
+        <label class="heading text-2xl" for="x-url-input">Paste a link from X</label>
+        <p class="-mt-1 text-sm text-ink-2">
+          Any public post works. No key, extension or account needed.
         </p>
-      {/if}
-    </form>
-  </section>
-
-  <section class="border border-line">
-    <button
-      class="block-control block-header flex min-h-12 w-full items-center justify-between gap-3 px-5 text-left"
-      aria-controls="key-panel"
-      aria-expanded={isUsingKey}
-      onclick={toggleKey}
-      type="button"
-    >
-      I have a Reddit key
-      <span class={["accordion-caret", isUsingKey && "rotate-180"]}>
-        <CaretDown size={18} weight="bold" />
-      </span>
-    </button>
-    {#snippet keyContent()}
-      <div class="flex flex-col gap-4 px-5 pb-5">
-        {@render keyForm()}
+        <div class="flex flex-col gap-3 sm:flex-row">
+          <input
+            id="x-url-input"
+            class="field min-w-0 sm:flex-1"
+            aria-describedby="x-url-error"
+            autocapitalize="off"
+            autocomplete="off"
+            bind:value={xLink}
+            inputmode="url"
+            placeholder="https://x.com/username/status/..."
+            spellcheck="false"
+            type="text"
+          />
+          <button class="btn btn-primary" type="submit">Generate</button>
+        </div>
+        {#if xError}
+          <p id="x-url-error" class="font-medium text-accent" role="alert">
+            {xError}
+          </p>
+        {/if}
+      </form>
+      <p class="mt-4 text-sm text-ink-2">
+        Or <a class="link" href="/generate?sample=x">try a sample post from X</a>.
+      </p>
+    </section>
+  {:else}
+    <section class="border-2 border-ink">
+      <div class="grid grid-cols-3 divide-x-2 divide-ink border-b-2 border-ink">
+        {#each methods as id (id)}
+          <button
+            class="block-control h-12"
+            aria-controls="{id}-panel"
+            aria-expanded={!isUsingKey && method === id}
+            onclick={() => chooseMethod(id)}
+            type="button"
+          >
+            {METHODS[id].tab}
+          </button>
+        {/each}
       </div>
-    {/snippet}
-    {@render panel("key", isUsingKey, keyContent)}
-  </section>
+      <div
+        class="tab-stack"
+        style:height={isUsingKey ? "0px" : heights[method] && `${heights[method]}px`}
+      >
+        {#each methods as id, index (id)}
+          {@const isOpen = !isUsingKey && method === id}
+          <div
+            id="{id}-panel"
+            class="tab-panel"
+            bind:offsetHeight={heights[id]}
+            data-open={isOpen || undefined}
+            inert={!isOpen}
+          >
+            {@render methodPanel(id, index)}
+          </div>
+        {/each}
+      </div>
+    </section>
 
-  {#snippet fasterLine()}
-    <p class="text-sm text-ink-2">
-      For a faster experience,
-      <a class="link" href="/get-a-key">request a key from Reddit</a>.
-    </p>
-  {/snippet}
-  {@render panel("faster", !isUsingKey, fasterLine)}
+    <section class="border border-line">
+      <button
+        class="block-control block-header flex min-h-12 w-full items-center justify-between gap-3 px-5 text-left"
+        aria-controls="key-panel"
+        aria-expanded={isUsingKey}
+        onclick={toggleKey}
+        type="button"
+      >
+        I have a Reddit key
+        <span class={["accordion-caret", isUsingKey && "rotate-180"]}>
+          <CaretDown size={18} weight="bold" />
+        </span>
+      </button>
+      {#snippet keyContent()}
+        <div class="flex flex-col gap-4 px-5 pb-5">
+          {@render keyForm()}
+        </div>
+      {/snippet}
+      {@render panel("key", isUsingKey, keyContent)}
+    </section>
+
+    {#snippet fasterLine()}
+      <p class="text-sm text-ink-2">
+        For a faster experience,
+        <a class="link" href="/get-a-key">request a key from Reddit</a>.
+      </p>
+    {/snippet}
+    {@render panel("faster", !isUsingKey, fasterLine)}
+  {/if}
 </div>

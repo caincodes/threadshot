@@ -6,9 +6,11 @@
   import XMediaGrid from "./XMediaGrid.svelte";
   import XName from "./XName.svelte";
 
-  let { post }: { post: XPost } = $props();
+  let { post, quotedBy }: { post: XPost; quotedBy: XPost } = $props();
 
-  const timestamp = $derived(editor.timestamp(post.createdUtc));
+  const timestamp = $derived(
+    editor.commentTimestamp(post.createdUtc, quotedBy.createdUtc)
+  );
   const body = $derived(
     applyCensoring(post.html, {
       usernames: false,

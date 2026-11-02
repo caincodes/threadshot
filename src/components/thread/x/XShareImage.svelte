@@ -20,7 +20,7 @@
   const parent = $derived(editor.showParentPost ? post.parent : undefined);
   const timestamp = $derived(editor.timestamp(post.createdUtc));
   const parentTimestamp = $derived(
-    parent ? editor.timestamp(parent.createdUtc) : ""
+    parent ? editor.commentTimestamp(parent.createdUtc, post.createdUtc) : ""
   );
 </script>
 

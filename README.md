@@ -69,7 +69,8 @@ syndication endpoint, the one its embedded posts use (`src/server/x.ts`). That
 endpoint includes the post being replied to and any quoted post, but not the
 replies, so an X image shows one post in its conversation.
 
-The "Try a sample post" link (`/generate?sample=1`) needs neither.
+The sample links (`/generate?sample=1` for Reddit, `/generate?sample=x` for X)
+need neither.
 
 ## Develop
 
@@ -104,11 +105,11 @@ shows the commit without a version.
 
 ## Routes
 
-- `/` - choose how to send a post; `/#no-key`, `/#shortcut`, `/#extension`,
-  `/#bookmark` and `/#key` open an option
+- `/` - choose Reddit or X and how to send a post; `/#x`, `/#no-key`,
+  `/#shortcut`, `/#extension`, `/#bookmark` and `/#key` open an option
 - `/get-a-key` - how to create a Reddit app and copy its client ID
 - `/install-extension` - how to install the Safari extension
-- `/generate?sub=&postId=&commentId=` (or `sub=&share=`, `x=`, `sample=1`, or `from=reddit`) - the editor
+- `/generate?sub=&postId=&commentId=` (or `sub=&share=`, `x=`, `sample=1`, `sample=x`, or `from=reddit`) - the editor
 - `/r/{sub}/comments/{id}/...` and `/r/{sub}/s/{code}` - reddit URLs with the
   host swapped; redirect to the editor
 - `/{user}/status/{id}` - x.com URLs with the host swapped; redirect to the editor

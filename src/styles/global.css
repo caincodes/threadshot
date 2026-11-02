@@ -124,6 +124,33 @@
     @apply border-ink font-semibold text-ink;
   }
 
+  /* The Reddit / X choice at the top of the home page. */
+  .platform-option {
+    @apply flex cursor-pointer flex-col items-start gap-1.5 border-2 border-ink px-4 py-3.5 text-left text-ink-2 transition-colors duration-150 hover:bg-canvas active:bg-line;
+  }
+
+  .platform-option[aria-pressed="true"] {
+    @apply bg-ink text-white/75 hover:bg-ink active:bg-ink;
+  }
+
+  .platform-option[aria-pressed="true"] .heading {
+    @apply text-white;
+  }
+
+  .platform-option .heading {
+    @apply text-ink;
+  }
+
+  .platform-badge {
+    @apply rounded-ui border border-ink px-2 py-0.5 font-display text-sm font-extrabold text-ink;
+  }
+
+  /* The home page preview shows a sample from the chosen platform. */
+  body:not([data-platform="x"]) [data-preview="x"],
+  body[data-platform="x"] [data-preview="reddit"] {
+    display: none;
+  }
+
   /* Tabs and block headers share one hover and press. */
   .block-control {
     @apply cursor-pointer font-semibold transition-colors duration-150 hover:bg-canvas active:bg-line;

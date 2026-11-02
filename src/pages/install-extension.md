@@ -1,6 +1,6 @@
 ---
 layout: ../layouts/Guide.astro
-title: Install the Safari extension | Threadshot for Reddit
+title: Install the Safari extension | Threadshot for Reddit and X
 description: How to install the Threadshot Safari extension on a Mac with Safari 27 or later.
 ---
 

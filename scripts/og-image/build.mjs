@@ -1,5 +1,5 @@
 // Builds public/og.png (1200x630), the social preview image, from the real
-// renderer's sample thread.
+// renderer's sample Reddit thread and X post.
 //
 //   npm run dev          (in another terminal)
 //   node scripts/og-image/build.mjs
@@ -15,6 +15,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const origin = process.env.ORIGIN ?? "http://localhost:4321";
 const out = join(here, "..", "..", "public", "og.png");
 const sample = join(here, "sample.png");
+const sampleX = join(here, "sample-x.png");
 
 const browser = await chromium.launch();
 
@@ -26,6 +27,11 @@ await shot.getByText("Profile pictures").click();
 await shot.waitForTimeout(600);
 await shot.locator("#reddit-preview").screenshot({ path: sample });
 
+await shot.goto(`${origin}/generate?sample=x`, { waitUntil: "domcontentloaded" });
+await shot.waitForSelector("#reddit-preview");
+await shot.waitForTimeout(600);
+await shot.locator("#reddit-preview").screenshot({ path: sampleX });
+
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
 await page.goto(`file://${join(here, "og.html")}`);
 await page.evaluate(() => document.fonts.ready);
@@ -33,4 +39,5 @@ await page.screenshot({ path: out });
 
 await browser.close();
 rmSync(sample);
+rmSync(sampleX);
 console.log(`wrote ${out}`);

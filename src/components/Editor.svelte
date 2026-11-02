@@ -19,6 +19,7 @@
     type UserIcons,
   } from "../lib/redditData";
   import { decodeThread, THREAD_FRAGMENT } from "../lib/threadLink";
+  import { sampleXPost } from "../lib/sampleXPost";
   import { fetchXPost } from "../lib/xData";
   import type { XPost } from "../types/x";
   import Connect from "./Connect.svelte";
@@ -33,13 +34,14 @@
   const shareCode = params.get("share");
   const commentId = params.get("commentId");
   const isSample = params.get("sample") === "1";
+  const isXSample = params.get("sample") === "x";
   // Opened by the bookmark or Safari extension, which post the thread over, or
   // by the iOS Shortcut, which puts it in the URL fragment.
   const isFromBookmark = params.get("from") === "reddit";
   const bookmarkNonce = params.get("n");
   // X posts load without a key, so an id is all they need.
   const xPostId = params.get("x");
-  const isX = xPostId !== null;
+  const isX = xPostId !== null || isXSample;
 
   const hasTarget = Boolean(subreddit && (postId || shareCode));
   // A post to load from Reddit needs the visitor's own credentials.
@@ -116,6 +118,11 @@
   });
 
   $effect(() => {
+    if (isXSample) {
+      xPost = sampleXPost();
+      isLoading = false;
+      return;
+    }
     if (!xPostId) {
       return;
     }
@@ -177,7 +184,7 @@
   });
 </script>
 
-{#if !isSample && !isFromBookmark && !hasTarget && !xPostId}
+{#if !isSample && !isFromBookmark && !hasTarget && !isX}
   <div class="mx-auto w-full max-w-[1280px] px-4 py-16 lg:px-8">
     <div class="max-w-xl">
       <h1 class="heading text-3xl">
@@ -185,7 +192,7 @@
       </h1>
       <p class="mt-3 text-ink-2">
         Send a post here from Reddit with the iOS Shortcut, Safari extension or
-        bookmark, or paste an X link on the home page.
+        bookmark, or paste a link to a post on X.
       </p>
       <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
         <a class="btn btn-primary" href="/">Choose how to send a post</a>
