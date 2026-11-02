@@ -8,13 +8,11 @@
     name,
     size = 20,
     hasFallback = true,
-    isSquare = false,
   }: {
     src?: string;
     name: string;
     size?: number;
     hasFallback?: boolean;
-    isSquare?: boolean;
   } = $props();
 
   let hasFailed = $state(false);
@@ -23,10 +21,7 @@
 <!-- Reddit's pictures go through the proxy; the sample's own are served here. -->
 {#if src && !hasFailed}
   <img
-    class={[
-      "shrink-0 bg-ap-line object-cover",
-      isSquare ? "rounded-[22%]" : "rounded-full",
-    ]}
+    class="shrink-0 rounded-full bg-ap-line object-cover"
     alt=""
     height={size}
     onerror={() => (hasFailed = true)}

@@ -29,8 +29,6 @@ const SAVED_OPTIONS = [
   "hideUserFlair",
   "showSubredditIcon",
   "showProfileIcons",
-  "showXProfileIcons",
-  "showParentPost",
   "hideBots",
   "showComments",
   "topLevelComments",
@@ -70,9 +68,6 @@ class EditorState {
   hideUserFlair = $state(false);
   showSubredditIcon = $state(false);
   showProfileIcons = $state(false);
-  // X posts look bare without pictures, so they start on there.
-  showXProfileIcons = $state(true);
-  showParentPost = $state(true);
   hideBots = $state(true);
   showComments = $state(true);
   topLevelComments = $state(2);

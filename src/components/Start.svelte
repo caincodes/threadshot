@@ -10,7 +10,6 @@
   import { bookmarkletHref } from "../lib/bookmarklet";
   import { credentials } from "../lib/credentials.svelte";
   import { detectDevice, methodsFor, type SendMethod } from "../lib/device";
-  import { xPostIdFrom } from "../lib/xData";
   import Connect from "./Connect.svelte";
   import Segmented from "./ui/Segmented.svelte";
 
@@ -89,24 +88,25 @@
     setTimeout(() => (copied = null), 2000);
   };
 
-  const NOT_A_LINK = "That does not look like a Reddit or X post link.";
+  const go = (event: SubmitEvent) => {
+    event.preventDefault();
+    error = "";
+    const value = link.trim();
+    if (!value) {
+      error = "Paste a Reddit link first.";
+      return;
+    }
 
-  // Where a pasted link opens in the editor, or an error to show.
-  const editorUrlFor = (value: string): { url: string } | { error: string } => {
-    let parsed: URL;
+    let pathname: string;
     try {
-      parsed = new URL(value);
+      ({ pathname } = new URL(value));
     } catch {
-      return { error: NOT_A_LINK };
+      error = "That does not look like a Reddit post or comment link.";
+      return;
     }
 
-    const xPostId = xPostIdFrom(parsed);
-    if (xPostId) {
-      return { url: `/generate?${new URLSearchParams({ x: xPostId })}` };
-    }
-
-    const post = POST_PATH.exec(parsed.pathname);
-    const share = SHARE_PATH.exec(parsed.pathname);
+    const post = POST_PATH.exec(pathname);
+    const share = SHARE_PATH.exec(pathname);
     const params = new URLSearchParams();
     if (post) {
       params.set("sub", post[1]);
@@ -116,48 +116,10 @@
       params.set("sub", share[1]);
       params.set("share", share[2]);
     } else {
-      return { error: NOT_A_LINK };
-    }
-    return { url: `/generate?${params}` };
-  };
-
-  const go = (event: SubmitEvent) => {
-    event.preventDefault();
-    error = "";
-    const value = link.trim();
-    if (!value) {
-      error = "Paste a Reddit or X link first.";
+      error = "That does not look like a Reddit post or comment link.";
       return;
     }
-    const result = editorUrlFor(value);
-    if ("error" in result) {
-      error = result.error;
-      return;
-    }
-    window.location.href = result.url;
-  };
-
-  // X posts need no key, so their link field is always there.
-  let xLink = $state("");
-  let xError = $state("");
-
-  const goToX = (event: SubmitEvent) => {
-    event.preventDefault();
-    xError = "";
-    let parsed: URL | null = null;
-    try {
-      parsed = new URL(xLink.trim());
-    } catch {
-      // Handled below.
-    }
-    const xPostId = parsed && xPostIdFrom(parsed);
-    if (!xPostId) {
-      xError = xLink.trim()
-        ? "That does not look like a link to a post on X."
-        : "Paste a link to a post on X first.";
-      return;
-    }
-    window.location.href = `/generate?${new URLSearchParams({ x: xPostId })}`;
+    window.location.href = `/generate?${params}`;
   };
 </script>
 
@@ -260,7 +222,7 @@
   {#if isConnected}
     <form class="flex flex-col gap-3" onsubmit={go} novalidate>
       <label class="font-semibold" for="url-input">
-        Reddit or X post link
+        Reddit post or comment link
       </label>
       <input
         id="url-input"
@@ -390,35 +352,6 @@
         </div>
       {/each}
     </div>
-  </section>
-
-  <section class="border border-line p-5">
-    <form class="flex flex-col gap-3" onsubmit={goToX} novalidate>
-      <label class="heading text-2xl" for="x-url-input">Post on X</label>
-      <p class="-mt-1 text-sm text-ink-2">
-        Paste a link to any public post. No key or extension needed.
-      </p>
-      <div class="flex flex-col gap-3 sm:flex-row">
-        <input
-          id="x-url-input"
-          class="field min-w-0 flex-1"
-          aria-describedby="x-url-error"
-          autocapitalize="off"
-          autocomplete="off"
-          bind:value={xLink}
-          inputmode="url"
-          placeholder="https://x.com/username/status/..."
-          spellcheck="false"
-          type="text"
-        />
-        <button class="btn btn-primary" type="submit">Generate</button>
-      </div>
-      {#if xError}
-        <p id="x-url-error" class="font-medium text-accent" role="alert">
-          {xError}
-        </p>
-      {/if}
-    </form>
   </section>
 
   <section class="border border-line">
