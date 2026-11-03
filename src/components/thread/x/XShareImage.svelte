@@ -7,6 +7,7 @@
   import { editor } from "../../../lib/editor.svelte";
   import type { XPost } from "../../../types/x";
   import Avatar from "../Avatar.svelte";
+  import SiteLogo from "../SiteLogo.svelte";
   import Watermark from "../Watermark.svelte";
   import XBody from "./XBody.svelte";
   import XName from "./XName.svelte";
@@ -36,9 +37,12 @@
 <!-- The same 390px share card as a Reddit thread, laid out like a post on X. -->
 <div
   {id}
-  class="ap w-[390px] bg-ap-bg font-export text-left text-[15px] text-ap-text"
+  class="ap relative w-[390px] bg-ap-bg font-export text-left text-[15px] text-ap-text"
   data-theme={editor.theme}
 >
+  {#if editor.showLogo}
+    <SiteLogo site="x" size={20} class="absolute top-4 right-4" />
+  {/if}
   {#if parent}
     <div class="flex gap-3 px-4 pt-4">
       {#if showAvatars}
@@ -48,7 +52,7 @@
         </div>
       {/if}
       <div class={["min-w-0 flex-1 pb-4", !showAvatars && "border-b border-ap-line"]}>
-        <div class="flex items-center gap-1">
+        <div class={["flex items-center gap-1", editor.showLogo && "pr-7"]}>
           <XName author={parent.author} inline />
           {#if parentTimestamp}
             <span class="shrink-0 text-ap-muted">· {parentTimestamp}</span>
@@ -60,7 +64,7 @@
   {/if}
 
   <article class={["px-4 pb-3", parent ? "pt-1" : "pt-4"]}>
-    <header class="flex items-center gap-3">
+    <header class={["flex items-center gap-3", editor.showLogo && !parent && "pr-8"]}>
       {#if showAvatars}
         {@render avatar(post.author)}
       {/if}

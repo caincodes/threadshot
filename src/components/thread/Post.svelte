@@ -28,7 +28,10 @@
 <article
   class={["border-ap-line px-4 pt-5 pb-4", isPostLast ? "" : "border-b"]}
 >
-  <h1 class="text-[22px] leading-[1.2] font-bold">{submission.title}</h1>
+  <!-- Room for the logo in the corner, when it is shown. -->
+  <h1 class={["text-[22px] leading-[1.2] font-bold", editor.showLogo && "pr-9"]}>
+    {submission.title}
+  </h1>
 
   <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
     <!-- "r/" (or "u/" for a post on a profile) stays when the name is covered, and

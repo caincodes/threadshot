@@ -8,6 +8,7 @@
   } from "../../types/reddit";
   import Comment from "./Comment.svelte";
   import Post from "./Post.svelte";
+  import SiteLogo from "./SiteLogo.svelte";
   import Watermark from "./Watermark.svelte";
 
   interface Props {
@@ -33,9 +34,12 @@
 <!-- A 390px share card: phone width, exported at 3x for large, crisp type. -->
 <div
   {id}
-  class="ap w-[390px] bg-ap-bg font-export text-left text-ap-text"
+  class="ap relative w-[390px] bg-ap-bg font-export text-left text-ap-text"
   data-theme={editor.theme}
 >
+  {#if editor.showLogo}
+    <SiteLogo site="reddit" class="absolute top-5 right-4" />
+  {/if}
   <Post {submission} {isPostLast} />
 
   {#each shownComments as comment (comment.id)}

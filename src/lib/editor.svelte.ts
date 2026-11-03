@@ -31,6 +31,7 @@ const SAVED_OPTIONS = [
   "showProfileIcons",
   "showXProfileIcons",
   "showParentPost",
+  "showLogo",
   "hideBots",
   "showComments",
   "topLevelComments",
@@ -73,6 +74,7 @@ class EditorState {
   // X posts look bare without pictures, so they start on there.
   showXProfileIcons = $state(true);
   showParentPost = $state(true);
+  showLogo = $state(false);
   hideBots = $state(true);
   showComments = $state(true);
   topLevelComments = $state(2);
