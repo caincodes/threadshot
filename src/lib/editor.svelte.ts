@@ -149,6 +149,13 @@ class EditorState {
       this.redactStyle !== "box",
       this.hidePostTags,
       this.hideUserFlair,
+      this.showLogo,
+      this.showSubredditIcon,
+      this.showProfileIcons,
+      !this.showXProfileIcons,
+      this.imageColumns !== 3,
+      this.hiddenMedia.length > 0,
+      Object.keys(this.mediaCrops).length > 0,
     ].filter(Boolean).length;
   }
 

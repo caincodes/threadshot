@@ -217,7 +217,7 @@
       </div>
     {/if}
 
-    {#if media.length}
+    {#if isAdvanced && media.length}
       <div class="py-2">
         {@render heading(media.length > 1 ? "Pictures" : "Picture")}
         {#if media.length > 1}
@@ -378,16 +378,16 @@
       {@render heading("Appearance")}
       <Segmented label="Theme" options={themes} bind:value={editor.theme} />
       <Switch label="Hide watermark" bind:checked={editor.hideWatermark} />
-      <Switch label={isX ? "X logo" : "Reddit logo"} bind:checked={editor.showLogo} />
-      {#if isX}
-        <Switch label="Profile pictures" bind:checked={editor.showXProfileIcons} />
-      {:else}
-        <Switch label="Subreddit icon" bind:checked={editor.showSubredditIcon} />
-        <Switch label="Profile pictures" bind:checked={editor.showProfileIcons} />
-      {/if}
-      {#if isAdvanced && !isX}
-        <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
-        <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
+      {#if isAdvanced}
+        <Switch label={isX ? "X logo" : "Reddit logo"} bind:checked={editor.showLogo} />
+        {#if isX}
+          <Switch label="Profile pictures" bind:checked={editor.showXProfileIcons} />
+        {:else}
+          <Switch label="Subreddit icon" bind:checked={editor.showSubredditIcon} />
+          <Switch label="Profile pictures" bind:checked={editor.showProfileIcons} />
+          <Switch label="Hide post tags" bind:checked={editor.hidePostTags} />
+          <Switch label="Hide user flair" bind:checked={editor.hideUserFlair} />
+        {/if}
       {/if}
     </div>
   </div>
