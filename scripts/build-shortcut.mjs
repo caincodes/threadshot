@@ -32,7 +32,7 @@ import { dirname, join } from "node:path";
 const origin = process.argv[2] ?? "https://threadshot.app";
 const outputPath = process.argv[3] ?? "public/threadshot.shortcut";
 
-const SHORTCUT_VERSION = 2;
+const SHORTCUT_VERSION = 3;
 
 // The shape of the fragment must match decodeThread in src/lib/threadLink.ts.
 // CompressionStream has thrown on input in the shortcut's script environment, so
@@ -128,7 +128,6 @@ const MENU_END = 2;
 const IF = 0;
 const OTHERWISE = 1;
 const END_IF = 2;
-const IS_NOT = 5;
 const CONTAINS = 99;
 const HAS_ANY_VALUE = 100;
 
@@ -137,6 +136,7 @@ const HAS_ANY_VALUE = 100;
 const X_LINK =
   "^[\\s\\S]*?https?://(?:www\\.|mobile\\.)?(?:x|twitter|fxtwitter|vxtwitter|fixupx|fixvx)\\.com/(?:\\w+|i/web|i)/status(?:es)?/(\\d+)[\\s\\S]*$";
 const X_EDITOR = `${origin}/i/status/`;
+const UPDATE_AVAILABLE = "threadshot update available";
 
 const directX = id();
 const expanded = id();
@@ -151,7 +151,6 @@ const problem = id();
 const isReddit = id();
 const latest = id();
 const latestVersion = id();
-const hasLatest = id();
 const isOutdated = id();
 const updateMenu = id();
 
@@ -224,23 +223,19 @@ const workflow = {
     // Asks the site for the newest version. Being offline or the site being
     // down stops the shortcut here, as it would a few steps later anyway.
     action("downloadurl", { UUID: latest, WFURL: `${origin}/shortcut.json` }),
-    action("getvalueforkey", {
+    // Every If in this shortcut checks text with "contains", the one condition
+    // that has worked on iOS here: "is greater than" and "is not" on the version
+    // both stopped with "choose a value for each parameter". So the version is
+    // matched in the downloaded text instead. A page without it, such as a
+    // site with no shortcut.json, doesn't match and asks for no update.
+    action("text.replace", {
       UUID: latestVersion,
-      WFDictionaryKey: "version",
-      WFInput: attachment(output(latest, "Contents of URL")),
+      WFInput: text(output(latest, "Contents of URL")),
+      WFReplaceTextRegularExpression: true,
+      WFReplaceTextFind: `^[\\s\\S]*\\bversion"?\\s*:\\s*"?(?!${SHORTCUT_VERSION}(?!\\d))\\d+[\\s\\S]*$`,
+      WFReplaceTextReplace: UPDATE_AVAILABLE,
     }),
-    // A Dictionary Value has no set type, so the If action only offers text
-    // conditions for it, and "is greater than" left its value unset on iOS.
-    // A site without shortcut.json gives no value and asks for no update.
-    conditional(hasLatest, IF, {
-      WFCondition: HAS_ANY_VALUE,
-      WFInput: variable(output(latestVersion, "Dictionary Value")),
-    }),
-    conditional(isOutdated, IF, {
-      WFCondition: IS_NOT,
-      WFConditionalActionString: String(SHORTCUT_VERSION),
-      WFInput: variable(output(latestVersion, "Dictionary Value")),
-    }),
+    ifContains(isOutdated, output(latestVersion, "Updated Text"), UPDATE_AVAILABLE),
     action("choosefrommenu", {
       GroupingIdentifier: updateMenu,
       WFControlFlowMode: MENU_START,
@@ -263,7 +258,6 @@ const workflow = {
     }),
     action("choosefrommenu", { GroupingIdentifier: updateMenu, WFControlFlowMode: MENU_END }),
     conditional(isOutdated, END_IF),
-    conditional(hasLatest, END_IF),
 
     action("getitemtype", { UUID: inputType, WFInput: attachment(shortcutInput) }),
     // t.co and other short links only show where they go once followed.
@@ -337,7 +331,7 @@ try {
   execFileSync("shortcuts", ["sign", "--mode", "anyone", "--input", unsigned, "--output", outputPath]);
   writeFileSync(
     join(dirname(outputPath), "shortcut.json"),
-    // A string, to match the text condition the shortcut compares it with.
+    // A string, as the shortcut matches it in text.
     JSON.stringify({ version: String(SHORTCUT_VERSION) }) + "\n"
   );
 } finally {
