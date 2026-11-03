@@ -1,25 +1,35 @@
 <script lang="ts">
   import Play from "phosphor-svelte/lib/Play";
 
+  import { aspectRatio, editor } from "../../../lib/editor.svelte";
   import type { XMedia } from "../../../types/x";
-  import { proxiedImageSrc } from "../media/proxy";
+  import CroppedImage from "../media/CroppedImage.svelte";
+  import { xImageSrc } from "../media/proxy";
 
   // Flush media fills the bottom of a quoted post, which has its own border.
-  let { media, isFlush = false }: { media: XMedia[]; isFlush?: boolean } =
-    $props();
+  // Only the main post's pictures can be chosen, reshaped and cropped.
+  let {
+    media,
+    isFlush = false,
+    isEditable = false,
+  }: { media: XMedia[]; isFlush?: boolean; isEditable?: boolean } = $props();
 
-  const shown = $derived(media.slice(0, 4));
+  const shown = $derived(
+    (isEditable ? media.filter((item) => editor.isMediaShown(item.url)) : media)
+      .slice(0, 4)
+  );
   // One picture keeps its shape within limits; several share a 16:9 frame.
   const ratio = $derived.by(() => {
+    const chosen = isEditable && aspectRatio(editor.mediaAspect);
+    if (chosen) {
+      return chosen;
+    }
     if (shown.length !== 1) {
       return 16 / 9;
     }
     const [{ width, height }] = shown;
     return Math.min(16 / 9, Math.max(3 / 4, width / height));
   });
-
-  const sized = (url: string) =>
-    proxiedImageSrc(url.includes("?") ? url : `${url}?name=large`);
 </script>
 
 {#if shown.length}
@@ -40,13 +50,14 @@
           shown.length === 3 && index === 0 && "row-span-2",
         ]}
       >
-        <img
-          class="size-full object-cover"
+        <CroppedImage
+          class="size-full"
           alt={item.type === "photo" ? "Post image" : "Video thumbnail"}
-          src={sized(item.url)}
+          mediaKey={isEditable ? item.url : undefined}
+          src={xImageSrc(item.url)}
         />
         {#if item.type !== "photo"}
-          <span class="absolute inset-0 flex items-center justify-center">
+          <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
             <span
               class="flex size-12 items-center justify-center rounded-full bg-black/60 text-white"
               data-keep-size

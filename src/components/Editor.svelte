@@ -24,6 +24,7 @@
   import type { XPost } from "../types/x";
   import Connect from "./Connect.svelte";
   import Controls from "./editor/Controls.svelte";
+  import { proxiedImageSrc, xImageSrc } from "./thread/media/proxy";
   import ShareImage from "./thread/ShareImage.svelte";
   import XShareImage from "./thread/x/XShareImage.svelte";
   import Spinner from "./ui/Spinner.svelte";
@@ -61,6 +62,27 @@
   let errorMessage = $state("");
   let isCredentialError = $state(false);
   let received = $state<RawThread>();
+
+  // The pictures the options can choose between and crop.
+  const media = $derived.by(() => {
+    if (xPost) {
+      return xPost.media.map((item) => ({
+        key: item.url,
+        src: xImageSrc(item.url, "small"),
+      }));
+    }
+    const submission = data?.[0];
+    if (submission?.linkType === "image" && submission.url) {
+      return [{ key: submission.url, src: proxiedImageSrc(submission.url) }];
+    }
+    if (submission?.linkType === "album") {
+      return Object.values(submission.media_metadata ?? {}).map((img) => ({
+        key: img.s.u,
+        src: proxiedImageSrc(img.s.u),
+      }));
+    }
+    return [];
+  });
   let receivedIcons = $state<UserIcons>({});
 
   // A link can't prove where it came from, so unlike a window message this data
@@ -225,6 +247,7 @@
         botCount={data ? countBotComments(data[1]) : 0}
         hasBody={Boolean(data?.[0].selftext_html)}
         isAlbum={data?.[0].linkType === "album"}
+        {media}
       />
     </aside>
 

@@ -3,8 +3,9 @@
   import Play from "phosphor-svelte/lib/Play";
 
   import { applyCensoring } from "../../../functions/util/censorText";
-  import { editor } from "../../../lib/editor.svelte";
+  import { aspectRatio, editor } from "../../../lib/editor.svelte";
   import type { RedditSubmission } from "../../../types/reddit";
+  import CroppedImage from "./CroppedImage.svelte";
   import { proxiedImageSrc } from "./proxy";
   import { isBlack, isVideoUrl, videoFrame } from "./videoFrame";
 
@@ -26,6 +27,32 @@
         })
       : "";
   });
+  const aspect = $derived(aspectRatio(editor.mediaAspect));
+
+  // A lone picture keeps its own shape, up to the 520px height limit, until a
+  // shape or crop is chosen. Its shape is only known once it has loaded.
+  const PORTRAIT_LIMIT = 390 / 520;
+  let naturalAspect = $state<number | null>(null);
+  const imageAspect = $derived(
+    aspect ?? (naturalAspect && Math.max(PORTRAIT_LIMIT, naturalAspect))
+  );
+  const isImageFramed = $derived(
+    Boolean(submission.url && editor.mediaCrops[submission.url]) ||
+      aspect !== null
+  );
+
+  const openImageCrop = () => {
+    if (submission.url) {
+      editor.openCrop(submission.url, proxiedImageSrc(submission.url));
+    }
+  };
+
+  const albumItems = $derived(
+    Object.entries(submission.media_metadata ?? {})
+      .map(([key, img]) => ({ key, url: img.s.u }))
+      .filter((item) => editor.isMediaShown(item.url))
+  );
+
   const previewUrl = $derived(submission.preview?.images[0]?.source.url);
   let videoThumbnail = $state<string | null>(null);
 
@@ -65,19 +92,53 @@
 
 {#if submission.linkType === "image" && submission.url}
   <div class="overflow-hidden rounded-[10px]">
-    {@render picture(submission.url, "Post image")}
+    {#if isImageFramed && imageAspect}
+      <div style:aspect-ratio={imageAspect}>
+        <CroppedImage
+          class="size-full bg-ap-line"
+          alt="Post image"
+          mediaKey={submission.url}
+          src={proxiedImageSrc(submission.url)}
+        />
+      </div>
+    {:else}
+      <!-- Measured by the crop, which then frames it at this same shape. -->
+      <div
+        class="cursor-pointer"
+        data-media-key={submission.url}
+        onclick={openImageCrop}
+        onkeydown={(event) => event.key === "Enter" && openImageCrop()}
+        role="button"
+        tabindex="0"
+        title="Crop this picture"
+      >
+        <img
+          class="max-h-[520px] w-full bg-ap-line object-contain"
+          alt="Attached to the post"
+          onload={(event) => {
+            const { naturalWidth, naturalHeight } =
+              event.currentTarget as HTMLImageElement;
+            naturalAspect = naturalHeight ? naturalWidth / naturalHeight : null;
+          }}
+          src={proxiedImageSrc(submission.url)}
+        />
+      </div>
+    {/if}
   </div>
-{:else if submission.linkType === "album" && submission.media_metadata}
+{:else if submission.linkType === "album" && albumItems.length}
   <div
     class="grid gap-1 overflow-hidden rounded-[10px]"
     style:grid-template-columns="repeat({editor.imageColumns}, 1fr)"
   >
-    {#each Object.entries(submission.media_metadata) as [key, img] (key)}
-      <img
-        class="aspect-square w-full bg-ap-line object-cover"
-        alt="Album item"
-        src={proxiedImageSrc(img.s.u)}
-      />
+    {#each albumItems as item (item.key)}
+      <div style:aspect-ratio={aspect ?? 1}>
+        <CroppedImage
+          class="size-full bg-ap-line"
+          alt="Album item"
+          mediaKey={item.url}
+          src={proxiedImageSrc(item.url)}
+        />
+      </div>
     {/each}
   </div>
 {:else if submission.linkType === "video" && videoSrc}

@@ -44,7 +44,7 @@
   </div>
 {/if}
 {#if post.media.length}
-  <div class="mt-3"><XMediaGrid media={post.media} /></div>
+  <div class="mt-3"><XMediaGrid isEditable={isLarge} media={post.media} /></div>
 {:else if post.card}
   <div class="mt-3"><XCard card={post.card} /></div>
 {/if}

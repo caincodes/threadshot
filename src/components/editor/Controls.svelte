@@ -1,16 +1,18 @@
 <script lang="ts">
+  import Check from "phosphor-svelte/lib/Check";
   import DownloadSimple from "phosphor-svelte/lib/DownloadSimple";
   import Export from "phosphor-svelte/lib/Export";
 
   import { formatDate, type DateFormat } from "../../functions/util/format";
   import { snippetFromSelection } from "../../lib/bodySnippet";
-  import { editor, isTouchDevice } from "../../lib/editor.svelte";
+  import { editor, isTouchDevice, NO_CROP } from "../../lib/editor.svelte";
   import { SORT_TYPES } from "../../types/reddit";
   import NumberField from "../ui/NumberField.svelte";
   import Segmented from "../ui/Segmented.svelte";
   import Select from "../ui/Select.svelte";
   import Spinner from "../ui/Spinner.svelte";
   import Switch from "../ui/Switch.svelte";
+  import CropDialog from "./CropDialog.svelte";
   import ExportPreview from "./ExportPreview.svelte";
 
   let {
@@ -20,6 +22,7 @@
     botCount,
     platform = "reddit",
     hasParent = false,
+    media = [],
   }: {
     canDownload: boolean;
     hasBody: boolean;
@@ -27,7 +30,21 @@
     botCount: number;
     platform?: "reddit" | "x";
     hasParent?: boolean;
+    media?: { key: string; src: string }[];
   } = $props();
+
+  const shownCount = $derived(
+    media.filter((item) => editor.isMediaShown(item.key)).length
+  );
+  const hasCrops = $derived(
+    media.some((item) => editor.mediaCrops[item.key])
+  );
+
+  const resetCrops = () => {
+    for (const item of media) {
+      editor.setCrop(item.key, NO_CROP);
+    }
+  };
 
   const isX = $derived(platform === "x");
 
@@ -87,6 +104,15 @@
     { value: "box", text: "Box" },
     { value: "scribble", text: "Scribble" },
     { value: "hide", text: "Hide" },
+  ] as const;
+
+  const aspects = [
+    { value: "auto", text: "Auto" },
+    { value: "1:1", text: "Square 1:1" },
+    { value: "4:5", text: "Portrait 4:5" },
+    { value: "3:4", text: "Portrait 3:4" },
+    { value: "4:3", text: "Landscape 4:3" },
+    { value: "16:9", text: "Wide 16:9" },
   ] as const;
 
   const bodyModes = [
@@ -162,7 +188,7 @@
 
   <div class="divide-y divide-line pt-2">
     <!-- Only shown for posts these apply to. -->
-    {#if hasBody || isAlbum}
+    {#if hasBody}
       <div class="py-2">
         {@render heading("Post")}
         {#if hasBody}
@@ -197,6 +223,51 @@
             </div>
           {/if}
         {/if}
+      </div>
+    {/if}
+
+    {#if media.length}
+      <div class="py-2">
+        {@render heading(media.length > 1 ? "Pictures" : "Picture")}
+        {#if media.length > 1}
+          <p class="text-sm text-ink-2" aria-live="polite">
+            {shownCount} of {media.length} shown. Tap one to leave it out.
+          </p>
+          <div class="grid grid-cols-4 gap-2 py-2">
+            {#each media as item, index (item.key)}
+              {@const isShown = editor.isMediaShown(item.key)}
+              <button
+                class={[
+                  "relative aspect-square cursor-pointer overflow-hidden rounded-ui border-2 bg-canvas transition-colors duration-150",
+                  isShown ? "border-accent" : "border-line",
+                ]}
+                aria-label="Picture {index + 1}"
+                aria-pressed={isShown}
+                onclick={() => editor.toggleMedia(item.key)}
+                type="button"
+              >
+                <img
+                  class={["size-full object-cover", !isShown && "opacity-40 grayscale"]}
+                  alt=""
+                  src={item.src}
+                />
+                {#if isShown}
+                  <span
+                    class="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-accent text-white"
+                  >
+                    <Check size={12} weight="bold" />
+                  </span>
+                {/if}
+              </button>
+            {/each}
+          </div>
+        {/if}
+        <Select
+          class="w-36 pointer-coarse:w-44"
+          label="Aspect ratio"
+          options={aspects}
+          bind:value={editor.mediaAspect}
+        />
         {#if isAlbum}
           <NumberField
             label="Album columns"
@@ -205,6 +276,20 @@
             bind:value={editor.imageColumns}
           />
         {/if}
+        <div class="option-row">
+          <span class="text-sm text-ink-2">
+            Tap a picture in the preview to crop it.
+          </span>
+          {#if hasCrops}
+            <button
+              class="link shrink-0 cursor-pointer text-sm"
+              onclick={resetCrops}
+              type="button"
+            >
+              Reset crops
+            </button>
+          {/if}
+        </div>
       </div>
     {/if}
 
@@ -342,3 +427,8 @@
 </div>
 
 <ExportPreview />
+{#if editor.cropping}
+  {#key editor.cropping}
+    <CropDialog target={editor.cropping} />
+  {/key}
+{/if}
