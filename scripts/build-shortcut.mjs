@@ -244,8 +244,8 @@ const workflow = {
       WFControlFlowMode: MENU_ITEM,
       WFMenuItemTitle: "Update",
     }),
-    // Opening the file offers to add it. The old copy is replaced when its
-    // name is kept, so this run stops rather than carry on with the old one.
+    // Opening the file offers to add it, and iOS asks whether to replace the
+    // old copy. This run stops rather than carry on with the old one.
     action("openurl", { WFInput: textOf(`${origin}/threadshot.shortcut`), Show: true }),
     action("exit"),
     action("choosefrommenu", {
