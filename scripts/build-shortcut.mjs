@@ -9,6 +9,13 @@
 // clipboard, and opens the editor. No script runs, so this works without
 // "Allow Running Scripts".
 //
+// Updates: the shortcut asks {origin}/shortcut.json for the newest version and,
+// when that is higher than the SHORTCUT_VERSION it was built with, offers to
+// download the new copy before carrying on. Raise SHORTCUT_VERSION by one
+// whenever the shortcut's behavior changes, then rebuild. This script writes
+// shortcut.json next to the shortcut. Copies installed before this check
+// existed can't ask, so they have to be reinstalled once.
+//
 // Reddit: iOS Safari refuses javascript: bookmarks, but a shortcut may run a
 // script on the page it was shared from, with the visitor's own Reddit session.
 // Shared from Safari, it reads the post and opens the editor in the same tab,
@@ -20,10 +27,12 @@ import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 const origin = process.argv[2] ?? "https://threadshot.app";
 const outputPath = process.argv[3] ?? "public/threadshot.shortcut";
+
+const SHORTCUT_VERSION = 1;
 
 // The shape of the fragment must match decodeThread in src/lib/threadLink.ts.
 // CompressionStream has thrown on input in the shortcut's script environment, so
@@ -113,6 +122,10 @@ const conditional = (group, mode, parameters = {}) =>
     ...parameters,
   });
 
+const MENU_START = 0;
+const MENU_ITEM = 1;
+const MENU_END = 2;
+const GREATER_THAN = 2;
 const IF = 0;
 const OTHERWISE = 1;
 const END_IF = 2;
@@ -136,6 +149,10 @@ const isExpandedX = id();
 const source = id();
 const problem = id();
 const isReddit = id();
+const latest = id();
+const latestVersion = id();
+const isOutdated = id();
+const updateMenu = id();
 
 const variable = (reference) => ({ Type: "Variable", Variable: attachment(reference) });
 
@@ -203,6 +220,42 @@ const workflow = {
   // Only actions and conditions the first, Reddit-only version already used,
   // since "Get URLs from Input" lost a link shared from the X app.
   WFWorkflowActions: [
+    // Asks the site for the newest version. Being offline or the site being
+    // down stops the shortcut here, as it would a few steps later anyway.
+    action("downloadurl", { UUID: latest, WFURL: `${origin}/shortcut.json` }),
+    action("getvalueforkey", {
+      UUID: latestVersion,
+      WFDictionaryKey: "version",
+      WFInput: attachment(output(latest, "Contents of URL")),
+    }),
+    conditional(isOutdated, IF, {
+      WFCondition: GREATER_THAN,
+      WFNumberValue: String(SHORTCUT_VERSION),
+      WFInput: variable(output(latestVersion, "Dictionary Value")),
+    }),
+    action("choosefrommenu", {
+      GroupingIdentifier: updateMenu,
+      WFControlFlowMode: MENU_START,
+      WFMenuPrompt: "A new version of the threadshot shortcut is available.",
+      WFMenuItems: ["Update", "Not now"],
+    }),
+    action("choosefrommenu", {
+      GroupingIdentifier: updateMenu,
+      WFControlFlowMode: MENU_ITEM,
+      WFMenuItemTitle: "Update",
+    }),
+    // Opening the file offers to add it. The old copy is replaced when its
+    // name is kept, so this run stops rather than carry on with the old one.
+    action("openurl", { WFInput: textOf(`${origin}/threadshot.shortcut`), Show: true }),
+    action("exit"),
+    action("choosefrommenu", {
+      GroupingIdentifier: updateMenu,
+      WFControlFlowMode: MENU_ITEM,
+      WFMenuItemTitle: "Not now",
+    }),
+    action("choosefrommenu", { GroupingIdentifier: updateMenu, WFControlFlowMode: MENU_END }),
+    conditional(isOutdated, END_IF),
+
     action("getitemtype", { UUID: inputType, WFInput: attachment(shortcutInput) }),
     // t.co and other short links only show where they go once followed.
     action("url.expand", { UUID: expanded, URL: text(shortcutInput) }),
@@ -273,6 +326,10 @@ try {
   writeFileSync(json, JSON.stringify(workflow));
   execFileSync("plutil", ["-convert", "binary1", "-o", unsigned, json]);
   execFileSync("shortcuts", ["sign", "--mode", "anyone", "--input", unsigned, "--output", outputPath]);
+  writeFileSync(
+    join(dirname(outputPath), "shortcut.json"),
+    JSON.stringify({ version: SHORTCUT_VERSION }) + "\n"
+  );
 } finally {
   rmSync(scratch, { recursive: true });
 }

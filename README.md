@@ -37,7 +37,9 @@ user agent.
    with the compressed thread in the URL fragment, which is never sent to a
    server. A link can't prove where it came from, so thread HTML is sanitized
    before it is shown. Rebuild `public/threadshot.shortcut` with
-   `node scripts/build-shortcut.mjs` on a Mac.
+   `node scripts/build-shortcut.mjs` on a Mac. The shortcut checks
+   `/shortcut.json` on each run and offers to update when it is behind, so raise
+   `SHORTCUT_VERSION` in that script whenever the shortcut's behavior changes.
 2. **The Safari extension.** A toolbar button for Safari on a Mac, installed
    with a script. See [threadshot.app/install-extension](https://threadshot.app/install-extension)
    (source in [extension/](extension/)).
