@@ -78,6 +78,15 @@ const text = (reference) => ({
   WFSerializationType: "WFTextTokenString",
 });
 
+// Text with one variable inside it, such as "Received: <type>".
+const textAround = (before, reference, after = "") => ({
+  Value: {
+    string: `${before}￼${after}`,
+    attachmentsByRange: { [`{${before.length}, 1}`]: reference },
+  },
+  WFSerializationType: "WFTextTokenString",
+});
+
 const action = (name, parameters = {}) => ({
   WFWorkflowActionIdentifier: `is.workflow.actions.${name}`,
   WFWorkflowActionParameters: parameters,
@@ -135,6 +144,8 @@ const ifContains = (group, reference, value) =>
     WFInput: variable(reference),
   });
 
+const receivedType = id();
+
 const alert = (title, message) =>
   action("alert", {
     WFAlertActionTitle: title,
@@ -148,10 +159,29 @@ const workflow = {
   WFWorkflowMinimumClientVersionString: "900",
   WFWorkflowIcon: { WFWorkflowIconStartColor: 463140863, WFWorkflowIconGlyphNumber: 59511 },
   WFWorkflowTypes: ["ActionExtension"],
+  // Everything, as "Receive Any input" does. Apps share posts in different
+  // forms, and input of a type not listed here is dropped, which the shortcut
+  // would then mistake for being run with no input.
   WFWorkflowInputContentItemClasses: [
+    "WFAppContentItem",
+    "WFAppStoreAppContentItem",
+    "WFArticleContentItem",
+    "WFContactContentItem",
+    "WFDateContentItem",
+    "WFEmailAddressContentItem",
+    "WFFolderContentItem",
+    "WFGenericFileContentItem",
+    "WFImageContentItem",
+    "WFiTunesProductContentItem",
+    "WFLocationContentItem",
+    "WFDCMapsLinkContentItem",
+    "WFAVAssetContentItem",
+    "WFPDFContentItem",
+    "WFPhoneNumberContentItem",
+    "WFRichTextContentItem",
     "WFSafariWebPageContentItem",
-    "WFURLContentItem",
     "WFStringContentItem",
+    "WFURLContentItem",
   ],
   // Run from the Home Screen, a widget, Siri or the Action button, it reads a
   // copied link instead of asking for the Share sheet.
@@ -222,9 +252,15 @@ const workflow = {
     conditional(isDirectX, END_IF),
 
     conditional(hasLink, OTHERWISE),
+    // What arrived is named in the message, to tell a missed share from an
+    // empty clipboard.
+    action("getitemtype", { UUID: receivedType, WFInput: attachment(shortcutInput) }),
     alert(
       "No link to a post",
-      "Copy a link to a post on X or Reddit, then run threadshot again. Or tap Share on a post and choose threadshot."
+      textAround(
+        "Copy a link to a post on X or Reddit, then run threadshot again. Or tap Share on a post and choose threadshot.\n\nReceived: ",
+        output(receivedType, "Type")
+      )
     ),
     conditional(hasLink, END_IF),
   ],
