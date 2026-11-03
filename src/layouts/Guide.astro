@@ -11,7 +11,7 @@ interface Props {
 const { frontmatter } = Astro.props;
 const pageTitle = /\|/.test(frontmatter.title)
   ? frontmatter.title
-  : `${frontmatter.title} | Threadshot for Reddit and X`;
+  : `${frontmatter.title} | Threadshot`;
 ---
 
 <Base title={pageTitle} description={frontmatter.description}>
