@@ -9,12 +9,12 @@
 // clipboard, and opens the editor. No script runs, so this works without
 // "Allow Running Scripts".
 //
-// Updates: the shortcut asks {origin}/shortcut.json for the newest version and,
-// when that is higher than the SHORTCUT_VERSION it was built with, offers to
+// Updates: the shortcut asks {origin}/shortcut.json for the published version
+// and, when that differs from the SHORTCUT_VERSION it was built with, offers to
 // download the new copy before carrying on. Raise SHORTCUT_VERSION by one
 // whenever the shortcut's behavior changes, then rebuild. This script writes
 // shortcut.json next to the shortcut. Copies installed before this check
-// existed can't ask, so they have to be reinstalled once.
+// worked can't ask, so they have to be reinstalled once.
 //
 // Reddit: iOS Safari refuses javascript: bookmarks, but a shortcut may run a
 // script on the page it was shared from, with the visitor's own Reddit session.
@@ -32,7 +32,7 @@ import { dirname, join } from "node:path";
 const origin = process.argv[2] ?? "https://threadshot.app";
 const outputPath = process.argv[3] ?? "public/threadshot.shortcut";
 
-const SHORTCUT_VERSION = 1;
+const SHORTCUT_VERSION = 2;
 
 // The shape of the fragment must match decodeThread in src/lib/threadLink.ts.
 // CompressionStream has thrown on input in the shortcut's script environment, so
@@ -125,10 +125,10 @@ const conditional = (group, mode, parameters = {}) =>
 const MENU_START = 0;
 const MENU_ITEM = 1;
 const MENU_END = 2;
-const GREATER_THAN = 2;
 const IF = 0;
 const OTHERWISE = 1;
 const END_IF = 2;
+const IS_NOT = 5;
 const CONTAINS = 99;
 const HAS_ANY_VALUE = 100;
 
@@ -151,6 +151,7 @@ const problem = id();
 const isReddit = id();
 const latest = id();
 const latestVersion = id();
+const hasLatest = id();
 const isOutdated = id();
 const updateMenu = id();
 
@@ -228,9 +229,16 @@ const workflow = {
       WFDictionaryKey: "version",
       WFInput: attachment(output(latest, "Contents of URL")),
     }),
+    // A Dictionary Value has no set type, so the If action only offers text
+    // conditions for it, and "is greater than" left its value unset on iOS.
+    // A site without shortcut.json gives no value and asks for no update.
+    conditional(hasLatest, IF, {
+      WFCondition: HAS_ANY_VALUE,
+      WFInput: variable(output(latestVersion, "Dictionary Value")),
+    }),
     conditional(isOutdated, IF, {
-      WFCondition: GREATER_THAN,
-      WFNumberValue: String(SHORTCUT_VERSION),
+      WFCondition: IS_NOT,
+      WFConditionalActionString: String(SHORTCUT_VERSION),
       WFInput: variable(output(latestVersion, "Dictionary Value")),
     }),
     action("choosefrommenu", {
@@ -255,6 +263,7 @@ const workflow = {
     }),
     action("choosefrommenu", { GroupingIdentifier: updateMenu, WFControlFlowMode: MENU_END }),
     conditional(isOutdated, END_IF),
+    conditional(hasLatest, END_IF),
 
     action("getitemtype", { UUID: inputType, WFInput: attachment(shortcutInput) }),
     // t.co and other short links only show where they go once followed.
@@ -328,7 +337,8 @@ try {
   execFileSync("shortcuts", ["sign", "--mode", "anyone", "--input", unsigned, "--output", outputPath]);
   writeFileSync(
     join(dirname(outputPath), "shortcut.json"),
-    JSON.stringify({ version: SHORTCUT_VERSION }) + "\n"
+    // A string, to match the text condition the shortcut compares it with.
+    JSON.stringify({ version: String(SHORTCUT_VERSION) }) + "\n"
   );
 } finally {
   rmSync(scratch, { recursive: true });
