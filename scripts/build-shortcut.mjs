@@ -42,6 +42,14 @@ const compress = async (bytes) => {
   }
 };
 const read = async () => {
+  if (/(^|\\.)(x|twitter)\\.com$/.test(location.hostname)) {
+    const post = /^\\/(?:\\w+|i(?:\\/web)?)\\/status(?:es)?\\/(\\d+)/.exec(location.pathname);
+    if (!post) {
+      return "Open a post on X first, then run this shortcut again.";
+    }
+    location.href = origin + "/generate?x=" + post[1];
+    return;
+  }
   if (!/^\\/r\\/[\\w-]+\\/comments\\/\\w+/.test(location.pathname)) {
     return "Open a post on X or Reddit first, then run this shortcut again.";
   }
@@ -78,14 +86,20 @@ const text = (reference) => ({
   WFSerializationType: "WFTextTokenString",
 });
 
-// Text with one variable inside it, such as "Received: <type>".
-const textAround = (before, reference, after = "") => ({
-  Value: {
-    string: `${before}￼${after}`,
-    attachmentsByRange: { [`{${before.length}, 1}`]: reference },
-  },
-  WFSerializationType: "WFTextTokenString",
-});
+// Text mixing plain strings and variables, such as "Received: <type>".
+const textOf = (...parts) => {
+  let string = "";
+  const attachmentsByRange = {};
+  for (const part of parts) {
+    if (typeof part === "string") {
+      string += part;
+    } else {
+      attachmentsByRange[`{${string.length}, 1}`] = part;
+      string += "￼";
+    }
+  }
+  return { Value: { string, attachmentsByRange }, WFSerializationType: "WFTextTokenString" };
+};
 
 const action = (name, parameters = {}) => ({
   WFWorkflowActionIdentifier: `is.workflow.actions.${name}`,
@@ -105,21 +119,18 @@ const END_IF = 2;
 const CONTAINS = 99;
 const HAS_ANY_VALUE = 100;
 
-// Any X post link becomes this site's /i/status/{id}, which opens the editor.
-// A link that does not match is left as it was.
+// Text holding an X post link anywhere in it becomes this site's
+// /i/status/{id}, which opens the editor. Text without one is left as it was.
 const X_LINK =
-  "^https?://(?:www\\.|mobile\\.)?(?:x|twitter|fxtwitter|vxtwitter|fixupx|fixvx)\\.com/(?:\\w+|i/web|i)/status(?:es)?/(\\d+).*$";
+  "^[\\s\\S]*?https?://(?:www\\.|mobile\\.)?(?:x|twitter|fxtwitter|vxtwitter|fixupx|fixvx)\\.com/(?:\\w+|i/web|i)/status(?:es)?/(\\d+)[\\s\\S]*$";
 const X_EDITOR = `${origin}/i/status/`;
 
-const links = id();
-const firstLink = id();
 const directX = id();
 const expanded = id();
 const expandedX = id();
 const inputType = id();
 const result = id();
 const safariUrl = id();
-const hasLink = id();
 const isDirectX = id();
 const isExpandedX = id();
 const source = id();
@@ -144,7 +155,6 @@ const ifContains = (group, reference, value) =>
     WFInput: variable(reference),
   });
 
-const receivedType = id();
 
 const alert = (title, message) =>
   action("alert", {
@@ -190,31 +200,17 @@ const workflow = {
     Parameters: {},
   },
   WFWorkflowHasShortcutInputVariables: true,
+  // Only actions and conditions the first, Reddit-only version already used,
+  // since "Get URLs from Input" lost a link shared from the X app.
   WFWorkflowActions: [
-    action("detect.link", { UUID: links, WFInput: attachment(shortcutInput) }),
-    action("getitemfromlist", {
-      UUID: firstLink,
-      WFInput: attachment(output(links, "URLs")),
-      WFItemSpecifier: "First Item",
-    }),
-    conditional(hasLink, IF, {
-      WFCondition: HAS_ANY_VALUE,
-      WFInput: variable(output(firstLink, "Item from List")),
-    }),
-
-    toXEditor(directX, output(firstLink, "Item from List")),
-    ifContains(isDirectX, output(directX, "Updated Text"), X_EDITOR),
-    action("openurl", { WFInput: attachment(output(directX, "Updated Text")), Show: true }),
-    conditional(isDirectX, OTHERWISE),
-
+    action("getitemtype", { UUID: inputType, WFInput: attachment(shortcutInput) }),
     // t.co and other short links only show where they go once followed.
-    action("url.expand", { UUID: expanded, URL: text(output(firstLink, "Item from List")) }),
+    action("url.expand", { UUID: expanded, URL: text(shortcutInput) }),
     toXEditor(expandedX, output(expanded, "Expanded URL")),
     ifContains(isExpandedX, output(expandedX, "Updated Text"), X_EDITOR),
     action("openurl", { WFInput: attachment(output(expandedX, "Updated Text")), Show: true }),
     conditional(isExpandedX, OTHERWISE),
 
-    action("getitemtype", { UUID: inputType, WFInput: attachment(shortcutInput) }),
     ifContains(source, output(inputType, "Type"), "Safari"),
     action("runjavascriptonwebpage", {
       UUID: result,
@@ -228,6 +224,13 @@ const workflow = {
     action("showresult", { Text: text(output(result, "JavaScript Result")) }),
     conditional(problem, END_IF),
     conditional(source, OTHERWISE),
+
+    // X may send the shortcut's own request somewhere else, such as a login
+    // page, so the link as it arrived is checked too.
+    toXEditor(directX, shortcutInput),
+    ifContains(isDirectX, output(directX, "Updated Text"), X_EDITOR),
+    action("openurl", { WFInput: attachment(output(directX, "Updated Text")), Show: true }),
+    conditional(isDirectX, OTHERWISE),
 
     ifContains(isReddit, output(expanded, "Expanded URL"), "reddit.com"),
     // A plain https link to Reddit would bounce straight back to the Reddit app.
@@ -244,25 +247,22 @@ const workflow = {
     ),
     action("openurl", { WFInput: attachment(output(safariUrl, "Updated Text")), Show: true }),
     conditional(isReddit, OTHERWISE),
-    alert("Not a post on X or Reddit", "Share a post from X or Reddit, or copy a post's link and run threadshot again."),
-    conditional(isReddit, END_IF),
-
-    conditional(source, END_IF),
-    conditional(isExpandedX, END_IF),
-    conditional(isDirectX, END_IF),
-
-    conditional(hasLink, OTHERWISE),
-    // What arrived is named in the message, to tell a missed share from an
-    // empty clipboard.
-    action("getitemtype", { UUID: receivedType, WFInput: attachment(shortcutInput) }),
+    // What arrived is shown, to tell a missed share from an empty clipboard or
+    // a link this doesn't recognize.
     alert(
       "No link to a post",
-      textAround(
-        "Copy a link to a post on X or Reddit, then run threadshot again. Or tap Share on a post and choose threadshot.\n\nReceived: ",
-        output(receivedType, "Type")
+      textOf(
+        "Share a post from X or Reddit, or copy a post's link and run threadshot again.\n\nReceived (",
+        output(inputType, "Type"),
+        "): ",
+        shortcutInput
       )
     ),
-    conditional(hasLink, END_IF),
+    conditional(isReddit, END_IF),
+
+    conditional(isDirectX, END_IF),
+    conditional(source, END_IF),
+    conditional(isExpandedX, END_IF),
   ],
 };
 
