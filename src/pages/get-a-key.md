@@ -1,6 +1,6 @@
 ---
 layout: ../layouts/Guide.astro
-title: Get a Reddit API key | Threadshot for Reddit
+title: Get a Reddit API key | Threadshot
 description: How to create a Reddit app and copy its client ID for threadshot.app.
 ---
 

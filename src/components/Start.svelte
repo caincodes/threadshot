@@ -1,6 +1,7 @@
 <script lang="ts">
   import BookmarkSimple from "phosphor-svelte/lib/BookmarkSimple";
   import CaretDown from "phosphor-svelte/lib/CaretDown";
+  import ClipboardText from "phosphor-svelte/lib/ClipboardText";
   import Check from "phosphor-svelte/lib/Check";
   import Copy from "phosphor-svelte/lib/Copy";
   import Export from "phosphor-svelte/lib/Export";
@@ -10,11 +11,10 @@
   import { bookmarkletHref } from "../lib/bookmarklet";
   import { credentials } from "../lib/credentials.svelte";
   import { detectDevice, methodsFor, type SendMethod } from "../lib/device";
+  import { editorTargetInText } from "../lib/links";
   import Connect from "./Connect.svelte";
   import Segmented from "./ui/Segmented.svelte";
 
-  const POST_PATH = /^\/r\/([\w-]+)\/comments\/(\w+)(?:\/[^/]*)?(?:\/(\w+))?/;
-  const SHARE_PATH = /^\/r\/([\w-]+)\/s\/([\w-]+)/;
 
   const INSTALL_COMMANDS = {
     curl: "curl -fsSL https://threadshot.app/extension.sh | sh",
@@ -40,14 +40,36 @@
   let method = $state(methods[0]);
   let isUsingKey = $state(credentials.value !== null);
 
+  // Which site the visitor is sending from. The home page preview follows it.
+  type Platform = "reddit" | "x";
+  const PLATFORMS: Array<{ value: Platform; name: string; detail: string }> = [
+    { value: "x", name: "X", detail: "Posts and the replies they answer" },
+    { value: "reddit", name: "Reddit", detail: "Posts and comment threads" },
+  ];
+  // X comes first, unless a saved Reddit key says this visitor uses Reddit.
+  let platform = $state<Platform>(credentials.value ? "reddit" : "x");
+  const site = $derived(platform === "x" ? "X" : "Reddit");
+  // The key form closes the methods on the Reddit side only.
+  const showMethods = $derived(platform === "x" || !isUsingKey);
+
+  $effect(() => {
+    document.body.dataset.platform = platform;
+  });
+
   // Panels are stacked, so the block takes its height from the open one.
   let heights = $state<Partial<Record<SendMethod, number>>>({});
 
   const readHash = () => {
     const hash = window.location.hash.slice(1);
+    if (hash === "x") {
+      platform = "x";
+      return;
+    }
     if (hash === "key") {
+      platform = "reddit";
       isUsingKey = true;
     } else if (hash === "no-key" || Object.hasOwn(METHODS, hash)) {
+      platform = "reddit";
       method = hash === "no-key" ? methods[0] : (hash as SendMethod);
       isUsingKey = false;
     }
@@ -56,6 +78,11 @@
 
   const clearHash = () =>
     history.replaceState(null, "", window.location.pathname);
+
+  const choosePlatform = (next: Platform) => {
+    platform = next;
+    clearHash();
+  };
 
   const chooseMethod = (next: SendMethod) => {
     method = next;
@@ -88,38 +115,78 @@
     setTimeout(() => (copied = null), 2000);
   };
 
+  const NOT_A_LINK = "That does not look like a Reddit or X post link.";
+
+  // Where a pasted link opens in the editor, or an error to show.
+  const editorUrlFor = (value: string): { url: string } | { error: string } => {
+    const target = editorTargetInText(value, window.location.host);
+    return target ? { url: target.path } : { error: NOT_A_LINK };
+  };
+
   const go = (event: SubmitEvent) => {
     event.preventDefault();
     error = "";
     const value = link.trim();
     if (!value) {
-      error = "Paste a Reddit link first.";
+      error = "Paste a Reddit or X link first.";
       return;
     }
+    const result = editorUrlFor(value);
+    if ("error" in result) {
+      error = result.error;
+      return;
+    }
+    window.location.href = result.url;
+  };
 
-    let pathname: string;
+  // X posts need no key, so their link field is always there.
+  let xLink = $state("");
+  let xError = $state("");
+
+  const xPathIn = (text: string) => {
+    const target = editorTargetInText(text, window.location.host);
+    return target?.platform === "x" ? target.path : null;
+  };
+
+  const goToX = (event: SubmitEvent) => {
+    event.preventDefault();
+    xError = "";
+    const path = xPathIn(xLink);
+    if (!path) {
+      xError = xLink.trim()
+        ? "That does not look like a link to a post on X."
+        : "Paste a link to a post on X first.";
+      return;
+    }
+    window.location.href = path;
+  };
+
+  // Pasting a link is enough; there is nothing else to fill in.
+  const goOnPaste = (event: ClipboardEvent) => {
+    const path = xPathIn(event.clipboardData?.getData("text") ?? "");
+    if (path) {
+      event.preventDefault();
+      window.location.href = path;
+    }
+  };
+
+  // One tap where the browser allows reading the clipboard.
+  const canReadClipboard = Boolean(navigator.clipboard?.readText);
+  const pasteFromClipboard = async () => {
+    xError = "";
+    let text: string;
     try {
-      ({ pathname } = new URL(value));
+      text = await navigator.clipboard.readText();
     } catch {
-      error = "That does not look like a Reddit post or comment link.";
+      xError = "Your browser did not allow reading the clipboard. Paste the link into the field instead.";
       return;
     }
-
-    const post = POST_PATH.exec(pathname);
-    const share = SHARE_PATH.exec(pathname);
-    const params = new URLSearchParams();
-    if (post) {
-      params.set("sub", post[1]);
-      params.set("postId", post[2]);
-      if (post[3]) params.set("commentId", post[3]);
-    } else if (share) {
-      params.set("sub", share[1]);
-      params.set("share", share[2]);
+    const path = xPathIn(text);
+    if (path) {
+      window.location.href = path;
     } else {
-      error = "That does not look like a Reddit post or comment link.";
-      return;
+      xError = "The clipboard does not hold a link to a post on X. Copy one first.";
     }
-    window.location.href = `/generate?${params}`;
   };
 </script>
 
@@ -161,17 +228,31 @@
       </p>
     </div>
   {/if}
-  <ol class="flex flex-col gap-3">
-    {#snippet allowScripts()}
-      In Settings, go to Shortcuts, then Advanced, and turn on Allow Running
-      Scripts.
-    {/snippet}
-    {#snippet share()}
-      In Safari, tap Safari's Share button on a post and choose threadshot.
-    {/snippet}
-    {@render step(1, allowScripts)}
-    {@render step(2, share)}
-  </ol>
+  {#if platform === "x"}
+    <ol class="flex flex-col gap-3">
+      {#snippet shareFromX()}
+        In the X app, tap Share on a post and choose threadshot.
+      {/snippet}
+      {#snippet runWithCopiedLink()}
+        Or copy a post's link and run threadshot from your Home Screen, a
+        widget, Siri or the Action button. No Share sheet needed.
+      {/snippet}
+      {@render step(1, shareFromX)}
+      {@render step(2, runWithCopiedLink)}
+    </ol>
+  {:else}
+    <ol class="flex flex-col gap-3">
+      {#snippet allowScripts()}
+        In Settings, go to Shortcuts, then Advanced, and turn on Allow Running
+        Scripts.
+      {/snippet}
+      {#snippet share()}
+        In Safari, tap Safari's Share button on a post and choose threadshot.
+      {/snippet}
+      {@render step(1, allowScripts)}
+      {@render step(2, share)}
+    </ol>
+  {/if}
 {/snippet}
 
 {#snippet extensionSteps()}
@@ -203,7 +284,8 @@
       Quit Safari and run this in Terminal.
     {/snippet}
     {#snippet enable()}
-      Turn on Threadshot in Safari's Extensions settings.
+      Turn on Threadshot in Safari's Extensions settings, then click it on any
+      {site} post.
     {/snippet}
     {@render step(1, install)}
     {@render step(2, enable)}
@@ -222,7 +304,7 @@
   {#if isConnected}
     <form class="flex flex-col gap-3" onsubmit={go} novalidate>
       <label class="font-semibold" for="url-input">
-        Reddit post or comment link
+        Reddit or X post link
       </label>
       <input
         id="url-input"
@@ -268,11 +350,17 @@
         Save any page as a bookmark named threadshot, with this code as its URL.
       {/snippet}
       {#snippet open()}
-        On a Reddit post, type threadshot in the address bar and tap it.
+        On a {site} post, type threadshot in the address bar and tap it.
       {/snippet}
       {@render step(1, paste)}
       {@render step(2, open)}
     </ol>
+    {#if platform === "x"}
+      <p class="text-sm text-ink-2">
+        Using the X app? Add threadshot.app to your Home screen from your
+        browser's menu, then share posts to it from the X app.
+      </p>
+    {/if}
   {:else}
     <a
       class="btn btn-primary cursor-grab self-start active:cursor-grabbing"
@@ -287,7 +375,7 @@
         Drag this button to your bookmarks bar.
       {/snippet}
       {#snippet click()}
-        Click it on any Reddit post.
+        Click it on any {site} post.
       {/snippet}
       {@render step(1, drag)}
       {@render step(2, click)}
@@ -320,14 +408,59 @@
   </div>
 {/snippet}
 
-<div class="mt-8 flex flex-col gap-3">
+{#snippet xLinkSection()}
+  <section class="border-2 border-ink p-5">
+    <form class="flex flex-col gap-3" onsubmit={goToX} novalidate>
+      <label class="heading text-2xl" for="x-url-input">Paste a link from X</label>
+      <p class="-mt-1 text-sm text-ink-2">
+        Any public post works, with no key or account. Pasting a link opens it.
+      </p>
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <input
+          id="x-url-input"
+          onpaste={goOnPaste}
+          class="field min-w-0 sm:flex-1"
+          aria-describedby="x-url-error"
+          autocapitalize="off"
+          autocomplete="off"
+          bind:value={xLink}
+          inputmode="url"
+          placeholder="https://x.com/username/status/..."
+          spellcheck="false"
+          type="text"
+        />
+        <button class="btn btn-primary" type="submit">Generate</button>
+        {#if canReadClipboard}
+          <button
+            class="btn btn-secondary"
+            onclick={pasteFromClipboard}
+            type="button"
+          >
+            <ClipboardText size={20} weight="bold" />
+            Paste
+          </button>
+        {/if}
+      </div>
+      {#if xError}
+        <p id="x-url-error" class="font-medium text-accent" role="alert">
+          {xError}
+        </p>
+      {/if}
+    </form>
+    <p class="mt-4 text-sm text-ink-2">
+      Or <a class="link" href="/generate?sample=x">try a sample post from X</a>.
+    </p>
+  </section>
+{/snippet}
+
+{#snippet methodsSection()}
   <section class="border-2 border-ink">
     <div class="grid grid-cols-3 divide-x-2 divide-ink border-b-2 border-ink">
       {#each methods as id (id)}
         <button
           class="block-control h-12"
           aria-controls="{id}-panel"
-          aria-expanded={!isUsingKey && method === id}
+          aria-expanded={showMethods && method === id}
           onclick={() => chooseMethod(id)}
           type="button"
         >
@@ -337,10 +470,10 @@
     </div>
     <div
       class="tab-stack"
-      style:height={isUsingKey ? "0px" : heights[method] && `${heights[method]}px`}
+      style:height={showMethods ? heights[method] && `${heights[method]}px` : "0px"}
     >
       {#each methods as id, index (id)}
-        {@const isOpen = !isUsingKey && method === id}
+        {@const isOpen = showMethods && method === id}
         <div
           id="{id}-panel"
           class="tab-panel"
@@ -353,33 +486,57 @@
       {/each}
     </div>
   </section>
+{/snippet}
 
-  <section class="border border-line">
-    <button
-      class="block-control block-header flex min-h-12 w-full items-center justify-between gap-3 px-5 text-left"
-      aria-controls="key-panel"
-      aria-expanded={isUsingKey}
-      onclick={toggleKey}
-      type="button"
-    >
-      I have a Reddit key
-      <span class={["accordion-caret", isUsingKey && "rotate-180"]}>
-        <CaretDown size={18} weight="bold" />
-      </span>
-    </button>
-    {#snippet keyContent()}
-      <div class="flex flex-col gap-4 px-5 pb-5">
-        {@render keyForm()}
-      </div>
+<div class="mt-8 flex flex-col gap-3">
+  <div class="grid grid-cols-2 gap-3" aria-label="Send from" role="group">
+    {#each PLATFORMS as option (option.value)}
+      <button
+        class="platform-option"
+        aria-pressed={platform === option.value}
+        onclick={() => choosePlatform(option.value)}
+        type="button"
+      >
+        <span class="heading text-2xl leading-none">{option.name}</span>
+        <span class="text-sm">{option.detail}</span>
+      </button>
+    {/each}
+  </div>
+
+  {#if platform === "x"}
+    {@render xLinkSection()}
+    <p class="mt-2 font-semibold">Or send posts from X in one tap</p>
+    {@render methodsSection()}
+  {:else}
+    {@render methodsSection()}
+
+    <section class="border border-line">
+      <button
+        class="block-control block-header flex min-h-12 w-full items-center justify-between gap-3 px-5 text-left"
+        aria-controls="key-panel"
+        aria-expanded={isUsingKey}
+        onclick={toggleKey}
+        type="button"
+      >
+        I have a Reddit key
+        <span class={["accordion-caret", isUsingKey && "rotate-180"]}>
+          <CaretDown size={18} weight="bold" />
+        </span>
+      </button>
+      {#snippet keyContent()}
+        <div class="flex flex-col gap-4 px-5 pb-5">
+          {@render keyForm()}
+        </div>
+      {/snippet}
+      {@render panel("key", isUsingKey, keyContent)}
+    </section>
+
+    {#snippet fasterLine()}
+      <p class="text-sm text-ink-2">
+        For a faster experience,
+        <a class="link" href="/get-a-key">request a key from Reddit</a>.
+      </p>
     {/snippet}
-    {@render panel("key", isUsingKey, keyContent)}
-  </section>
-
-  {#snippet fasterLine()}
-    <p class="text-sm text-ink-2">
-      For a faster experience,
-      <a class="link" href="/get-a-key">request a key from Reddit</a>.
-    </p>
-  {/snippet}
-  {@render panel("faster", !isUsingKey, fasterLine)}
+    {@render panel("faster", !isUsingKey, fasterLine)}
+  {/if}
 </div>

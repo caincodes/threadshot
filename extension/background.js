@@ -12,8 +12,19 @@ browser.action.onClicked.addListener(async (tab) => {
       world: "MAIN",
       func: () => {
         const origin = "https://threadshot.app";
+        // Posts on X load on threadshot.app's server, so only the id is needed.
+        if (/(^|\.)(x|twitter)\.com$/.test(location.hostname)) {
+          const post = /^\/(?:\w+|i(?:\/web)?)\/status(?:es)?\/(\d+)/.exec(location.pathname);
+          if (!post) {
+            alert("Open a post on X first, then click this button again.");
+            return;
+          }
+          const url = origin + "/generate?x=" + post[1];
+          if (!window.open(url, "threadshot")) location.href = url;
+          return;
+        }
         if (!/^\/r\/[\w-]+\/comments\/\w+/.test(location.pathname)) {
-          alert("Open a Reddit post first, then click this button again.");
+          alert("Open a Reddit or X post first, then click this button again.");
           return;
         }
         const nonce = Math.random().toString(36).slice(2);

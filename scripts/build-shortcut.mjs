@@ -1,14 +1,21 @@
 // Builds and signs public/threadshot.shortcut, the iOS way to send a post here.
-// iOS Safari refuses javascript: bookmarks, but a shortcut may run a script on
-// the page it was shared from, with the visitor's own Reddit session. Signing
-// needs macOS and an iCloud account:
+// Signing needs macOS and an iCloud account:
 //
 //   node scripts/build-shortcut.mjs [origin] [output path]
 //
+// X: posts load on this app's server, so a link is all it needs. It takes the
+// link from the Share sheet (the X app, Safari or anywhere else) or, when run
+// with no input (Home Screen, widget, Siri, the Action button), from the
+// clipboard, and opens the editor. No script runs, so this works without
+// "Allow Running Scripts".
+//
+// Reddit: iOS Safari refuses javascript: bookmarks, but a shortcut may run a
+// script on the page it was shared from, with the visitor's own Reddit session.
 // Shared from Safari, it reads the post and opens the editor in the same tab,
-// because window.open is blocked there. Shared from the Reddit app, or from the
-// Share buttons on Reddit's own pages, it has only a URL: Reddit blocks downloads
-// made by the shortcut itself, so it opens the post in Safari to be shared again.
+// because window.open is blocked there. With only a link (the Reddit app, the
+// Share buttons on Reddit's own pages, or the clipboard), Reddit blocks
+// downloads made by the shortcut itself, so it opens the post in Safari to be
+// shared again.
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
@@ -35,8 +42,16 @@ const compress = async (bytes) => {
   }
 };
 const read = async () => {
+  if (/(^|\\.)(x|twitter)\\.com$/.test(location.hostname)) {
+    const post = /^\\/(?:\\w+|i(?:\\/web)?)\\/status(?:es)?\\/(\\d+)/.exec(location.pathname);
+    if (!post) {
+      return "Open a post on X first, then run this shortcut again.";
+    }
+    location.href = origin + "/generate?x=" + post[1];
+    return;
+  }
   if (!/^\\/r\\/[\\w-]+\\/comments\\/\\w+/.test(location.pathname)) {
-    return "Open a Reddit post first, then run this shortcut again.";
+    return "Open a post on X or Reddit first, then run this shortcut again.";
   }
   const path = location.pathname.replace(/\\/$/, "");
   const response = await fetch(path + ".json?raw_json=1&context=10000&limit=500");
@@ -71,6 +86,21 @@ const text = (reference) => ({
   WFSerializationType: "WFTextTokenString",
 });
 
+// Text mixing plain strings and variables, such as "Received: <type>".
+const textOf = (...parts) => {
+  let string = "";
+  const attachmentsByRange = {};
+  for (const part of parts) {
+    if (typeof part === "string") {
+      string += part;
+    } else {
+      attachmentsByRange[`{${string.length}, 1}`] = part;
+      string += "￼";
+    }
+  }
+  return { Value: { string, attachmentsByRange }, WFSerializationType: "WFTextTokenString" };
+};
+
 const action = (name, parameters = {}) => ({
   WFWorkflowActionIdentifier: `is.workflow.actions.${name}`,
   WFWorkflowActionParameters: parameters,
@@ -89,12 +119,49 @@ const END_IF = 2;
 const CONTAINS = 99;
 const HAS_ANY_VALUE = 100;
 
+// Text holding an X post link anywhere in it becomes this site's
+// /i/status/{id}, which opens the editor. Text without one is left as it was.
+const X_LINK =
+  "^[\\s\\S]*?https?://(?:www\\.|mobile\\.)?(?:x|twitter|fxtwitter|vxtwitter|fixupx|fixvx)\\.com/(?:\\w+|i/web|i)/status(?:es)?/(\\d+)[\\s\\S]*$";
+const X_EDITOR = `${origin}/i/status/`;
+
+const directX = id();
+const expanded = id();
+const expandedX = id();
 const inputType = id();
 const result = id();
-const expanded = id();
 const safariUrl = id();
+const isDirectX = id();
+const isExpandedX = id();
 const source = id();
 const problem = id();
+const isReddit = id();
+
+const variable = (reference) => ({ Type: "Variable", Variable: attachment(reference) });
+
+const toXEditor = (uuid, input) =>
+  action("text.replace", {
+    UUID: uuid,
+    WFInput: text(input),
+    WFReplaceTextRegularExpression: true,
+    WFReplaceTextFind: X_LINK,
+    WFReplaceTextReplace: `${X_EDITOR}$1`,
+  });
+
+const ifContains = (group, reference, value) =>
+  conditional(group, IF, {
+    WFCondition: CONTAINS,
+    WFConditionalActionString: value,
+    WFInput: variable(reference),
+  });
+
+
+const alert = (title, message) =>
+  action("alert", {
+    WFAlertActionTitle: title,
+    WFAlertActionMessage: message,
+    WFAlertActionCancelButtonShown: false,
+  });
 
 const workflow = {
   WFWorkflowClientVersion: "2607.0.5",
@@ -102,21 +169,49 @@ const workflow = {
   WFWorkflowMinimumClientVersionString: "900",
   WFWorkflowIcon: { WFWorkflowIconStartColor: 463140863, WFWorkflowIconGlyphNumber: 59511 },
   WFWorkflowTypes: ["ActionExtension"],
-  WFWorkflowInputContentItemClasses: ["WFSafariWebPageContentItem", "WFURLContentItem"],
+  // Everything, as "Receive Any input" does. Apps share posts in different
+  // forms, and input of a type not listed here is dropped, which the shortcut
+  // would then mistake for being run with no input.
+  WFWorkflowInputContentItemClasses: [
+    "WFAppContentItem",
+    "WFAppStoreAppContentItem",
+    "WFArticleContentItem",
+    "WFContactContentItem",
+    "WFDateContentItem",
+    "WFEmailAddressContentItem",
+    "WFFolderContentItem",
+    "WFGenericFileContentItem",
+    "WFImageContentItem",
+    "WFiTunesProductContentItem",
+    "WFLocationContentItem",
+    "WFDCMapsLinkContentItem",
+    "WFAVAssetContentItem",
+    "WFPDFContentItem",
+    "WFPhoneNumberContentItem",
+    "WFRichTextContentItem",
+    "WFSafariWebPageContentItem",
+    "WFStringContentItem",
+    "WFURLContentItem",
+  ],
+  // Run from the Home Screen, a widget, Siri or the Action button, it reads a
+  // copied link instead of asking for the Share sheet.
+  WFWorkflowNoInputBehavior: {
+    Name: "WFWorkflowNoInputBehaviorGetClipboard",
+    Parameters: {},
+  },
   WFWorkflowHasShortcutInputVariables: true,
+  // Only actions and conditions the first, Reddit-only version already used,
+  // since "Get URLs from Input" lost a link shared from the X app.
   WFWorkflowActions: [
-    action("getitemtype", {
-      UUID: inputType,
-      WFInput: attachment(shortcutInput),
-    }),
-    conditional(source, IF, {
-      WFCondition: CONTAINS,
-      WFConditionalActionString: "Safari",
-      WFInput: {
-        Type: "Variable",
-        Variable: attachment(output(inputType, "Type")),
-      },
-    }),
+    action("getitemtype", { UUID: inputType, WFInput: attachment(shortcutInput) }),
+    // t.co and other short links only show where they go once followed.
+    action("url.expand", { UUID: expanded, URL: text(shortcutInput) }),
+    toXEditor(expandedX, output(expanded, "Expanded URL")),
+    ifContains(isExpandedX, output(expandedX, "Updated Text"), X_EDITOR),
+    action("openurl", { WFInput: attachment(output(expandedX, "Updated Text")), Show: true }),
+    conditional(isExpandedX, OTHERWISE),
+
+    ifContains(source, output(inputType, "Type"), "Safari"),
     action("runjavascriptonwebpage", {
       UUID: result,
       WFInput: attachment(shortcutInput),
@@ -124,15 +219,20 @@ const workflow = {
     }),
     conditional(problem, IF, {
       WFCondition: HAS_ANY_VALUE,
-      WFInput: {
-        Type: "Variable",
-        Variable: attachment(output(result, "JavaScript Result")),
-      },
+      WFInput: variable(output(result, "JavaScript Result")),
     }),
     action("showresult", { Text: text(output(result, "JavaScript Result")) }),
     conditional(problem, END_IF),
     conditional(source, OTHERWISE),
-    action("url.expand", { UUID: expanded, URL: text(shortcutInput) }),
+
+    // X may send the shortcut's own request somewhere else, such as a login
+    // page, so the link as it arrived is checked too.
+    toXEditor(directX, shortcutInput),
+    ifContains(isDirectX, output(directX, "Updated Text"), X_EDITOR),
+    action("openurl", { WFInput: attachment(output(directX, "Updated Text")), Show: true }),
+    conditional(isDirectX, OTHERWISE),
+
+    ifContains(isReddit, output(expanded, "Expanded URL"), "reddit.com"),
     // A plain https link to Reddit would bounce straight back to the Reddit app.
     action("text.replace", {
       UUID: safariUrl,
@@ -141,17 +241,28 @@ const workflow = {
       WFReplaceTextFind: "^https://",
       WFReplaceTextReplace: "x-safari-https://",
     }),
-    action("alert", {
-      WFAlertActionTitle: "Use Safari's Share button",
-      WFAlertActionMessage:
-        "Reddit's Share button only sends a link, so threadshot can't read the page. It will open in Safari. Then tap Safari's own Share button and choose threadshot.",
-      WFAlertActionCancelButtonShown: false,
-    }),
-    action("openurl", {
-      WFInput: attachment(output(safariUrl, "Updated Text")),
-      Show: true,
-    }),
+    alert(
+      "Use Safari's Share button",
+      "Reddit posts are read from the page, and a link alone can't do that. The post will open in Safari. Then tap Safari's own Share button and choose threadshot."
+    ),
+    action("openurl", { WFInput: attachment(output(safariUrl, "Updated Text")), Show: true }),
+    conditional(isReddit, OTHERWISE),
+    // What arrived is shown, to tell a missed share from an empty clipboard or
+    // a link this doesn't recognize.
+    alert(
+      "No link to a post",
+      textOf(
+        "Share a post from X or Reddit, or copy a post's link and run threadshot again.\n\nReceived (",
+        output(inputType, "Type"),
+        "): ",
+        shortcutInput
+      )
+    ),
+    conditional(isReddit, END_IF),
+
+    conditional(isDirectX, END_IF),
     conditional(source, END_IF),
+    conditional(isExpandedX, END_IF),
   ],
 };
 

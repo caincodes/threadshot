@@ -26,10 +26,11 @@
     background: #e9edf0; border-left: 1px solid #d3d9df;
   }
   .card {
-    position: absolute; left: 720px; top: 52px; width: 440px;
-    border: 1px solid #d3d9df; background: #fff;
+    position: absolute; border: 1px solid #d3d9df; background: #fff; overflow: hidden;
   }
-  .card img { display: block; width: 440px; height: auto; }
+  .card img { display: block; width: 100%; height: auto; }
+  .card.reddit { left: 712px; top: 44px; width: 360px; height: 600px; }
+  .card.x { left: 860px; top: 300px; width: 300px; border-color: #0f1419; }
   .copy { position: absolute; left: 72px; top: 0; bottom: 0; width: 560px; display: flex; flex-direction: column; justify-content: center; }
   .brand { position: absolute; left: 72px; top: 56px; font: 800 30px/1 "Archivo"; letter-spacing: -0.02em; }
   h1 { font: 800 76px/1.02 "Archivo"; letter-spacing: -0.025em; text-wrap: pretty; }
@@ -43,11 +44,12 @@
 <body>
 <div class="stage">
   <div class="panel"></div>
-  <div class="card"><img src="sample.png" alt="" /></div>
+  <div class="card reddit"><img src="sample.png" alt="" /></div>
+  <div class="card x"><img src="sample-x.png" alt="" /></div>
   <div class="brand">threadshot.app</div>
   <div class="copy">
-    <h1>Turn a Reddit thread into a <em>clean image</em></h1>
-    <p>Download any post or comment as a phone-sized PNG.</p>
+    <h1>Reddit and X, as <em>clean images</em></h1>
+    <p>Download any thread or post as a phone-sized PNG.</p>
   </div>
   <div class="tag"><span class="accent">Free</span><span>No account</span><span>Hide usernames</span></div>
 </div>

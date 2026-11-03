@@ -1,4 +1,7 @@
-// A bookmark that runs on a reddit.com post page. Because it runs on reddit.com
+// A bookmark that runs on a post page on X or Reddit. Posts on X load on this
+// app's server with no key, so on X it only opens the editor with the post's id.
+//
+// On a reddit.com post page Because it runs on reddit.com
 // itself, the request for the post's JSON is an ordinary same-origin load with
 // the visitor's own session, IP and user agent. It then hands the result to
 // this app in a new window with postMessage, so nothing is fetched by a server.
@@ -21,8 +24,18 @@ export const REDDIT_ORIGINS = new Set([
 export const bookmarkletHref = (appOrigin: string): string => {
   const source = `(() => {
   const origin = ${JSON.stringify(appOrigin)};
+  if (/(^|\\.)(x|twitter)\\.com$/.test(location.hostname)) {
+    const post = /^\\/(?:\\w+|i(?:\\/web)?)\\/status(?:es)?\\/(\\d+)/.exec(location.pathname);
+    if (!post) {
+      alert("Open a post on X first, then click this bookmark again.");
+      return;
+    }
+    const url = origin + "/generate?x=" + post[1];
+    if (!window.open(url, "threadshot")) location.href = url;
+    return;
+  }
   if (!/^\\/r\\/[\\w-]+\\/comments\\/\\w+/.test(location.pathname)) {
-    alert("Open a Reddit post first, then click this bookmark again.");
+    alert("Open a Reddit or X post first, then click this bookmark again.");
     return;
   }
   const nonce = Math.random().toString(36).slice(2);

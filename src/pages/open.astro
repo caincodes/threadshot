@@ -1,0 +1,31 @@
+---
+import Base from "../layouts/Base.astro";
+import { editorTargetInText } from "../lib/links";
+
+// Opens whatever link it is given in the editor. The iOS Shortcut sends X links
+// here, and Android lists the installed site in its Share sheet with this as
+// the target (see public/manifest.json), so a post shared from the X or Reddit
+// app arrives as `url`, or inside `text`.
+const params = Astro.url.searchParams;
+const shared = ["url", "text", "title"]
+  .map((name) => params.get(name) ?? "")
+  .join(" ");
+const target = editorTargetInText(shared, Astro.url.host);
+
+if (target) {
+  return Astro.redirect(target.path, 303);
+}
+
+Astro.response.status = 400;
+---
+
+<Base title="Link not found | Threadshot" noindex>
+  <div class="mx-auto max-w-[1280px] px-4 py-16 lg:px-8">
+    <h1 class="heading text-3xl">
+      That does not look like a link to a post on X or Reddit.
+    </h1>
+    <p class="mt-4">
+      <a href="/" class="link">Try another link</a>
+    </p>
+  </div>
+</Base>

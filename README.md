@@ -1,7 +1,7 @@
 # threadshot.app
 
-Turn a Reddit post or comment thread into a clean, shareable screenshot at
-[threadshot.app](https://threadshot.app).
+Turn a Reddit post or comment thread, or a post on X, into a clean, shareable
+screenshot at [threadshot.app](https://threadshot.app).
 
 threadshot.app is a fork of [shareddit](https://github.com/logankuzyk/shareddit)
 by [Logan Kuzyk](https://github.com/logankuzyk), who created the project and
@@ -61,7 +61,27 @@ and never stores or logs the key. An app with no secret uses Reddit's
 installed-client login; with a secret it uses the standard app login. Reddit may
 need to approve your app first.
 
-The "Try a sample post" link (`/generate?sample=1`) needs neither.
+## Posts on X
+
+Paste an x.com or twitter.com link on the home page, or swap the host of one for
+threadshot.app. The bookmark, the Safari extension and the iOS Shortcut work on
+X too, and since X posts need nothing from the page, they only pass the link:
+
+- **Bookmark and extension:** on a post on x.com, they open the editor.
+- **iOS Shortcut:** share a post from the X app (or anywhere) and choose
+  threadshot. Run it with no input, from the Home Screen, a widget, Siri or the
+  Action button, and it reads a copied link instead, so no Share sheet is
+  needed. X links never run a script, so "Allow Running Scripts" is only for
+  Reddit.
+- **Android:** once the site is added to the Home screen, it appears in the
+  Share sheet (`share_target` in `public/manifest.json`), so posts can be shared
+  to it from the X app. X posts load without a key: the server reads them from X's
+syndication endpoint, the one its embedded posts use (`src/server/x.ts`). That
+endpoint includes the post being replied to and any quoted post, but not the
+replies, so an X image shows one post in its conversation.
+
+The sample links (`/generate?sample=1` for Reddit, `/generate?sample=x` for X)
+need neither.
 
 ## Develop
 
@@ -96,16 +116,20 @@ shows the commit without a version.
 
 ## Routes
 
-- `/` - choose how to send a post; `/#no-key`, `/#shortcut`, `/#extension`,
-  `/#bookmark` and `/#key` open an option
+- `/` - choose Reddit or X and how to send a post; `/#x`, `/#no-key`,
+  `/#shortcut`, `/#extension`, `/#bookmark` and `/#key` open an option
 - `/get-a-key` - how to create a Reddit app and copy its client ID
 - `/install-extension` - how to install the Safari extension
-- `/generate?sub=&postId=&commentId=` (or `sub=&share=`, or `sample=1`, or `from=reddit`) - the editor
+- `/generate?sub=&postId=&commentId=` (or `sub=&share=`, `x=`, `sample=1`, `sample=x`, or `from=reddit`) - the editor
 - `/r/{sub}/comments/{id}/...` and `/r/{sub}/s/{code}` - reddit URLs with the
   host swapped; redirect to the editor
+- `/{user}/status/{id}` - x.com URLs with the host swapped; redirect to the editor
+- `/open?url=` (or `text=`) - opens the first X or Reddit post link it finds in
+  the editor; the Android share target
+- `GET /api/x?id=` - fetches a post on X
 - `POST /api/reddit` - fetches a post and its comments with the visitor's credentials
 - `POST /api/resolve` - turns a `/s/` share link into a post
-- `/api/img` - same-origin proxy for Reddit-hosted images
+- `/api/img` - same-origin proxy for Reddit- and X-hosted images
 
 ## Credits
 
