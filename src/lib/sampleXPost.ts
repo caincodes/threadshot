@@ -1,7 +1,8 @@
 import type { XPost } from "../types/x";
 
 // A made-up post on X for the home page preview, in the same woodworking world
-// as the sample Reddit thread. The people in it are not real.
+// as the sample Reddit thread. The people in it are not real. The photo is a
+// CC0 stock photo from Unsplash, via Wikimedia Commons ("Shaving wood").
 const NOW = Math.floor(Date.now() / 1000);
 
 export const sampleXPost = (): XPost => ({
@@ -20,7 +21,9 @@ export const sampleXPost = (): XPost => ({
   likes: 2412,
   replies: 187,
   reposts: 96,
-  media: [],
+  media: [
+    { type: "photo", url: "/sample/hand-plane.jpg", width: 1280, height: 778 },
+  ],
   parent: {
     id: "sample-parent",
     author: {

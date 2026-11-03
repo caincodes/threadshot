@@ -141,10 +141,6 @@
     @apply text-ink;
   }
 
-  .platform-badge {
-    @apply rounded-ui border border-ink px-2 py-0.5 font-display text-sm font-extrabold text-ink;
-  }
-
   /* The home page preview shows a sample from the chosen platform. */
   body:not([data-platform="reddit"]) [data-preview="reddit"],
   body[data-platform="reddit"] [data-preview="x"] {

@@ -356,8 +356,9 @@ export const sampleRedditResponse = (): [
               num_comments: 187,
               title:
                 "Finished my first dovetailed drawer after three failed attempts",
-              domain: "self.woodworking",
-              is_self: true,
+              domain: "reddit.com",
+              url: "https://www.reddit.com/gallery/sample01",
+              is_self: false,
               locked: false,
               // eslint-disable-next-line id-length -- reddit's richtext keys
               link_flair_richtext: [{ e: "text", t: "Project" }],
@@ -370,10 +371,19 @@ export const sampleRedditResponse = (): [
               ),
               is_original_content: true,
               clicked: false,
-              thumbnail: "self",
+              thumbnail: "",
               is_video: false,
-              is_gallery: false,
-              media_metadata: {},
+              is_gallery: true,
+              // CC0 stock photos from Unsplash, via Wikimedia Commons:
+              // "Woodworker in a workshop", "Workbench and tools" and
+              // "Stacked wood planks".
+              /* eslint-disable id-length -- reddit's media keys */
+              media_metadata: {
+                shaping: { s: { u: "/sample/shaping-board.jpg" } },
+                workbench: { s: { u: "/sample/workbench.jpg" } },
+                lumber: { s: { u: "/sample/lumber.jpg" } },
+              },
+              /* eslint-enable id-length */
             },
           },
         ],
