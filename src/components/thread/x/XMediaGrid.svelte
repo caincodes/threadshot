@@ -1,7 +1,7 @@
 <script lang="ts">
   import Play from "phosphor-svelte/lib/Play";
 
-  import { aspectRatio, editor } from "../../../lib/editor.svelte";
+  import { editor } from "../../../lib/editor.svelte";
   import type { XMedia } from "../../../types/x";
   import CroppedImage from "../media/CroppedImage.svelte";
   import { xImageSrc } from "../media/proxy";
@@ -18,16 +18,17 @@
     (isEditable ? media.filter((item) => editor.isMediaShown(item.url)) : media)
       .slice(0, 4)
   );
-  // One picture keeps its shape within limits; several share a 16:9 frame.
+  // One picture keeps its shape within limits, or takes the shape it was
+  // cropped to; several share a 16:9 frame.
   const ratio = $derived.by(() => {
-    const chosen = isEditable && aspectRatio(editor.mediaAspect);
-    if (chosen) {
-      return chosen;
-    }
     if (shown.length !== 1) {
       return 16 / 9;
     }
-    const [{ width, height }] = shown;
+    const [{ url, width, height }] = shown;
+    const crop = isEditable && editor.mediaCrops[url];
+    if (crop) {
+      return crop.aspect;
+    }
     return Math.min(16 / 9, Math.max(3 / 4, width / height));
   });
 </script>

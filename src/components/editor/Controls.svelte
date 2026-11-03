@@ -5,7 +5,7 @@
 
   import { formatDate, type DateFormat } from "../../functions/util/format";
   import { snippetFromSelection } from "../../lib/bodySnippet";
-  import { editor, isTouchDevice, NO_CROP } from "../../lib/editor.svelte";
+  import { editor, isTouchDevice } from "../../lib/editor.svelte";
   import { SORT_TYPES } from "../../types/reddit";
   import NumberField from "../ui/NumberField.svelte";
   import Segmented from "../ui/Segmented.svelte";
@@ -42,7 +42,7 @@
 
   const resetCrops = () => {
     for (const item of media) {
-      editor.setCrop(item.key, NO_CROP);
+      editor.setCrop(item.key, null);
     }
   };
 
@@ -104,15 +104,6 @@
     { value: "box", text: "Box" },
     { value: "scribble", text: "Scribble" },
     { value: "hide", text: "Hide" },
-  ] as const;
-
-  const aspects = [
-    { value: "auto", text: "Auto" },
-    { value: "1:1", text: "Square 1:1" },
-    { value: "4:5", text: "Portrait 4:5" },
-    { value: "3:4", text: "Portrait 3:4" },
-    { value: "4:3", text: "Landscape 4:3" },
-    { value: "16:9", text: "Wide 16:9" },
   ] as const;
 
   const bodyModes = [
@@ -262,12 +253,6 @@
             {/each}
           </div>
         {/if}
-        <Select
-          class="w-36 pointer-coarse:w-44"
-          label="Aspect ratio"
-          options={aspects}
-          bind:value={editor.mediaAspect}
-        />
         {#if isAlbum}
           <NumberField
             label="Album columns"

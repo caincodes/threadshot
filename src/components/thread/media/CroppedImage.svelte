@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { editor, type MediaCrop } from "../../../lib/editor.svelte";
+  import { editor } from "../../../lib/editor.svelte";
 
   // A picture filling its frame, cropped as chosen in the editor. The frame
   // takes its size from the class it is given. Tapping it in the preview opens
@@ -8,21 +8,34 @@
     src,
     alt,
     mediaKey,
-    crop: draft,
     class: className = "",
-    onload,
   }: {
     src: string;
     alt: string;
     mediaKey?: string;
-    // Shown instead of the saved crop while one is being changed.
-    crop?: MediaCrop;
     class?: string;
-    onload?: (image: HTMLImageElement) => void;
   } = $props();
 
-  const crop = $derived(draft ?? (mediaKey && editor.mediaCrops[mediaKey]));
-  const origin = $derived(crop ? `${crop.x}% ${crop.y}%` : undefined);
+  const crop = $derived(mediaKey ? editor.mediaCrops[mediaKey] : undefined);
+
+  // The cropped part covers the frame, centred, the way object-cover would.
+  // It is sized against the frame with container units, and the whole picture
+  // is then laid out around it. The image keeps these sizes in the export.
+  const placement = $derived.by(() => {
+    if (!crop) {
+      return null;
+    }
+    const part = {
+      width: `max(100cqw, 100cqh * ${crop.aspect})`,
+      height: `max(100cqh, 100cqw / ${crop.aspect})`,
+    };
+    return {
+      width: `calc(${part.width} / ${crop.width})`,
+      height: `calc(${part.height} / ${crop.height})`,
+      left: `calc((100cqw - ${part.width}) / 2 - ${part.width} * ${crop.x / crop.width})`,
+      top: `calc((100cqh - ${part.height}) / 2 - ${part.height} * ${crop.y / crop.height})`,
+    };
+  });
 
   const openCrop = () => {
     if (mediaKey) {
@@ -33,9 +46,8 @@
 
 {#if mediaKey}
   <div
-    class={["relative cursor-pointer overflow-hidden", className]}
+    class={["@container-size relative cursor-pointer overflow-hidden", className]}
     data-keep-size
-    data-media-key={mediaKey}
     onclick={openCrop}
     onkeydown={(event) => event.key === "Enter" && openCrop()}
     role="button"
@@ -51,14 +63,18 @@
 {/if}
 
 {#snippet picture()}
-  <img
-    class="size-full object-cover"
-    style:object-position={origin}
-    style:transform={crop && crop.zoom !== 1 ? `scale(${crop.zoom})` : undefined}
-    style:transform-origin={origin}
-    {alt}
-    draggable="false"
-    onload={(event) => onload?.(event.currentTarget as HTMLImageElement)}
-    {src}
-  />
+  {#if placement}
+    <img
+      class="absolute max-w-none"
+      style:width={placement.width}
+      style:height={placement.height}
+      style:left={placement.left}
+      style:top={placement.top}
+      {alt}
+      draggable="false"
+      {src}
+    />
+  {:else}
+    <img class="size-full object-cover" {alt} draggable="false" {src} />
+  {/if}
 {/snippet}

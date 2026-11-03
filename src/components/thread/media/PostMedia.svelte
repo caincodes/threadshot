@@ -3,7 +3,7 @@
   import Play from "phosphor-svelte/lib/Play";
 
   import { applyCensoring } from "../../../functions/util/censorText";
-  import { aspectRatio, editor } from "../../../lib/editor.svelte";
+  import { editor } from "../../../lib/editor.svelte";
   import type { RedditSubmission } from "../../../types/reddit";
   import CroppedImage from "./CroppedImage.svelte";
   import { proxiedImageSrc } from "./proxy";
@@ -27,18 +27,9 @@
         })
       : "";
   });
-  const aspect = $derived(aspectRatio(editor.mediaAspect));
-
-  // A lone picture keeps its own shape, up to the 520px height limit, until a
-  // shape or crop is chosen. Its shape is only known once it has loaded.
-  const PORTRAIT_LIMIT = 390 / 520;
-  let naturalAspect = $state<number | null>(null);
-  const imageAspect = $derived(
-    aspect ?? (naturalAspect && Math.max(PORTRAIT_LIMIT, naturalAspect))
-  );
-  const isImageFramed = $derived(
-    Boolean(submission.url && editor.mediaCrops[submission.url]) ||
-      aspect !== null
+  // A lone picture takes the shape it was cropped to.
+  const imageCrop = $derived(
+    submission.url ? editor.mediaCrops[submission.url] : undefined
   );
 
   const openImageCrop = () => {
@@ -92,8 +83,8 @@
 
 {#if submission.linkType === "image" && submission.url}
   <div class="overflow-hidden rounded-[10px]">
-    {#if isImageFramed && imageAspect}
-      <div style:aspect-ratio={imageAspect}>
+    {#if imageCrop}
+      <div style:aspect-ratio={imageCrop.aspect}>
         <CroppedImage
           class="size-full bg-ap-line"
           alt="Post image"
@@ -102,26 +93,15 @@
         />
       </div>
     {:else}
-      <!-- Measured by the crop, which then frames it at this same shape. -->
       <div
         class="cursor-pointer"
-        data-media-key={submission.url}
         onclick={openImageCrop}
         onkeydown={(event) => event.key === "Enter" && openImageCrop()}
         role="button"
         tabindex="0"
         title="Crop this picture"
       >
-        <img
-          class="max-h-[520px] w-full bg-ap-line object-contain"
-          alt="Attached to the post"
-          onload={(event) => {
-            const { naturalWidth, naturalHeight } =
-              event.currentTarget as HTMLImageElement;
-            naturalAspect = naturalHeight ? naturalWidth / naturalHeight : null;
-          }}
-          src={proxiedImageSrc(submission.url)}
-        />
+        {@render picture(submission.url, "Post image")}
       </div>
     {/if}
   </div>
@@ -131,7 +111,7 @@
     style:grid-template-columns="repeat({editor.imageColumns}, 1fr)"
   >
     {#each albumItems as item (item.key)}
-      <div style:aspect-ratio={aspect ?? 1}>
+      <div class="aspect-square">
         <CroppedImage
           class="size-full bg-ap-line"
           alt="Album item"

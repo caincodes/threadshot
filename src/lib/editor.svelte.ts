@@ -12,26 +12,16 @@ import type { CommentSort } from "../types/reddit";
 
 export type ScreenshotTheme = "light" | "dark";
 export type PostBodyMode = "full" | "snippet" | "off";
-export type MediaAspect = "auto" | "1:1" | "4:5" | "3:4" | "4:3" | "16:9";
 
-// A crop is the point of the picture kept in view (as object-position
-// percentages) and how far it is zoomed in past filling its frame.
+// A crop is the part of the picture kept, as fractions of its full width and
+// height, with the shape that part has in pixels (width over height).
 export interface MediaCrop {
   x: number;
   y: number;
-  zoom: number;
+  width: number;
+  height: number;
+  aspect: number;
 }
-
-export const NO_CROP: MediaCrop = { x: 50, y: 50, zoom: 1 };
-
-// The frame shape as width over height, or null to keep the layout's own.
-export const aspectRatio = (aspect: MediaAspect) => {
-  if (aspect === "auto") {
-    return null;
-  }
-  const [width, height] = aspect.split(":").map(Number);
-  return width / height;
-};
 
 const FILE_NAME = "threadshot.png";
 
@@ -41,7 +31,6 @@ const SAVED_OPTIONS = [
   "theme",
   "hideWatermark",
   "imageColumns",
-  "mediaAspect",
   "postBody",
   "isCensorUsernames",
   "isCensorSubreddits",
@@ -81,12 +70,11 @@ class EditorState {
   theme = $state<ScreenshotTheme>("light");
   hideWatermark = $state(false);
   imageColumns = $state(3);
-  mediaAspect = $state<MediaAspect>("auto");
   // Pictures are keyed by their original URL, which is unique within a post.
   hiddenMedia = $state<string[]>([]);
   mediaCrops = $state<Record<string, MediaCrop>>({});
-  // The picture being cropped, and the shape of its frame in the preview.
-  cropping = $state<{ key: string; src: string; aspect: number } | null>(null);
+  // The picture being cropped.
+  cropping = $state<{ key: string; src: string } | null>(null);
   postBody = $state<PostBodyMode>("full");
   // The snippet shown in the image, and the text highlighted to become it.
   bodySnippet = $state<string | null>(null);
@@ -172,27 +160,16 @@ class EditorState {
       : this.hiddenMedia.filter((hidden) => hidden !== key);
   };
 
-  // The crop works in whatever frame the picture has in the preview, so its
-  // shape is measured from there.
   openCrop = (key: string, src: string) => {
-    const frame = document.querySelector(
-      `#reddit-preview [data-media-key="${CSS.escape(key)}"]`
-    );
-    if (frame instanceof HTMLElement && frame.offsetHeight) {
-      this.cropping = {
-        key,
-        src,
-        aspect: frame.offsetWidth / frame.offsetHeight,
-      };
-    }
+    this.cropping = { key, src };
   };
 
-  setCrop = (key: string, crop: MediaCrop) => {
+  // No crop, or one that keeps the whole picture, shows it uncropped.
+  setCrop = (key: string, crop: MediaCrop | null) => {
     const rest = { ...this.mediaCrops };
     delete rest[key];
-    const isUncropped =
-      crop.zoom === NO_CROP.zoom && crop.x === NO_CROP.x && crop.y === NO_CROP.y;
-    this.mediaCrops = isUncropped ? rest : { ...rest, [key]: crop };
+    const isWhole = !crop || (crop.width >= 1 && crop.height >= 1);
+    this.mediaCrops = isWhole ? rest : { ...rest, [key]: crop };
   };
 
   timestamp = (createdUtc: number) => formatTimestamp(createdUtc, this);
