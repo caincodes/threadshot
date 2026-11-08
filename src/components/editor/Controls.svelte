@@ -100,6 +100,12 @@
     { value: "24h", text: "24-hour" },
   ] as const;
 
+  const inlineNames = [
+    { value: "both", text: "Both" },
+    { value: "name", text: "Name" },
+    { value: "handle", text: "Handle" },
+  ] as const;
+
   const redactStyles = [
     { value: "box", text: "Box" },
     { value: "scribble", text: "Scribble" },
@@ -382,6 +388,11 @@
         <Switch label={isX ? "X logo" : "Reddit logo"} bind:checked={editor.showLogo} />
         {#if isX}
           <Switch label="Profile pictures" bind:checked={editor.showXProfileIcons} />
+          <Segmented
+            label="Reply and quote names"
+            options={inlineNames}
+            bind:value={editor.xInlineNames}
+          />
         {:else}
           <Switch label="Subreddit icon" bind:checked={editor.showSubredditIcon} />
           <Switch label="Profile pictures" bind:checked={editor.showProfileIcons} />

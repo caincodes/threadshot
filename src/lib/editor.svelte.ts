@@ -40,6 +40,7 @@ const SAVED_OPTIONS = [
   "showSubredditIcon",
   "showProfileIcons",
   "showXProfileIcons",
+  "xInlineNames",
   "showParentPost",
   "showLogo",
   "hideBots",
@@ -88,6 +89,8 @@ class EditorState {
   showProfileIcons = $state(false);
   // X posts look bare without pictures, so they start on there.
   showXProfileIcons = $state(true);
+  // What a reply's parent and a quoted post show beside their picture.
+  xInlineNames = $state<"both" | "name" | "handle">("both");
   showParentPost = $state(true);
   showLogo = $state(false);
   hideBots = $state(true);
@@ -153,6 +156,7 @@ class EditorState {
       this.showSubredditIcon,
       this.showProfileIcons,
       !this.showXProfileIcons,
+      this.xInlineNames !== "both",
       this.imageColumns !== 3,
       this.hiddenMedia.length > 0,
       Object.keys(this.mediaCrops).length > 0,
