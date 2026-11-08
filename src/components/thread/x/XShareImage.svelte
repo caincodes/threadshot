@@ -48,7 +48,7 @@
       {#if showAvatars}
         <div class="flex shrink-0 flex-col items-center">
           {@render avatar(parent.author)}
-          <span class="mt-1 w-0.5 flex-1 bg-ap-line"></span>
+          <span class="mt-1 w-0.5 min-w-0.5 flex-1 bg-ap-line"></span>
         </div>
       {/if}
       <div class={["min-w-0 flex-1 pb-4", !showAvatars && "border-b border-ap-line"]}>
@@ -95,7 +95,7 @@
         {formatCount(post.likes)}
       </span>
       {#if !editor.hideWatermark}
-        <Watermark class="ml-auto" />
+        <Watermark class="grow text-right" />
       {/if}
     </footer>
   </article>
