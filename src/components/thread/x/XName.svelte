@@ -12,19 +12,23 @@
 
 <span
   class={[
-    "flex min-w-0",
+    "flex min-w-0 leading-5",
     inline ? "items-center gap-x-1" : "flex-col",
   ]}
 >
-  <span class={["flex min-w-0 items-center gap-1 font-bold", inline && "shrink"]}>
-    {#if !editor.isCensorUsernames}
-      <span class="truncate">{author.name}</span>
-    {:else if editor.redactStyle !== "hide"}
-      <Redacted name={author.name} />
-    {/if}
-    <VerifiedBadge kind={author.verified} size={inline ? 15 : 17} />
-  </span>
-  <span class={["truncate text-ap-muted", inline && "shrink-[2]"]}
-    ><Username name={author.handle} prefix="@" /></span
-  >
+  {#if !inline || editor.xInlineNames !== "handle"}
+    <span class={["flex min-w-0 items-center gap-1 font-bold", inline && "shrink"]}>
+      {#if !editor.isCensorUsernames}
+        <span class="truncate">{author.name}</span>
+      {:else if editor.redactStyle !== "hide"}
+        <Redacted name={author.name} />
+      {/if}
+      <VerifiedBadge kind={author.verified} size={inline ? 15 : 17} />
+    </span>
+  {/if}
+  {#if !inline || editor.xInlineNames !== "name"}
+    <span class={["truncate text-ap-muted", inline && "shrink-[2]"]}
+      ><Username name={author.handle} prefix="@" /></span
+    >
+  {/if}
 </span>
