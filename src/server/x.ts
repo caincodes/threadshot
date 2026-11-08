@@ -191,7 +191,10 @@ const cardOf = (card?: RawCard): XLinkCard | undefined => {
   };
 };
 
-const toPost = (raw: RawPost, depth = 0): XPost => {
+// A quote shows no quote of its own, and only the main post shows its parent.
+type Level = "main" | "parent" | "quote";
+
+const toPost = (raw: RawPost, level: Level = "main"): XPost => {
   const card = cardOf(raw.card);
   return {
     id: raw.id_str,
@@ -204,12 +207,13 @@ const toPost = (raw: RawPost, depth = 0): XPost => {
     media: mediaOf(raw.mediaDetails),
     card,
     replyingTo: raw.in_reply_to_screen_name,
-    quoted: raw.quoted_tweet && depth < 1 ? toPost(raw.quoted_tweet, depth + 1) : undefined,
-    parent: raw.parent && depth < 1 ? toPost(raw.parent, depth + 1) : undefined,
+    quoted:
+      raw.quoted_tweet && level !== "quote" ? toPost(raw.quoted_tweet, "quote") : undefined,
+    parent: raw.parent && level === "main" ? toPost(raw.parent, "parent") : undefined,
   };
 };
 
-export const fetchXPost = async (id: string): Promise<XPost> => {
+const fetchRaw = async (id: string): Promise<RawPost> => {
   const url = new URL(SYNDICATION_URL);
   url.searchParams.set("id", id);
   url.searchParams.set("lang", "en");
@@ -228,6 +232,16 @@ export const fetchXPost = async (id: string): Promise<XPost> => {
   }
   if (!data?.id_str || !data.user) {
     throw new XApiError(404, "X could not find that post.");
+  }
+  return data;
+};
+
+// X sends the parent without the post it quotes, so it is loaded on its own.
+// If that fails, the parent X sent is still good enough to show.
+export const fetchXPost = async (id: string): Promise<XPost> => {
+  const data = await fetchRaw(id);
+  if (data.parent) {
+    data.parent = await fetchRaw(data.parent.id_str).catch(() => data.parent);
   }
   return toPost(data);
 };

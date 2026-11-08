@@ -18,7 +18,7 @@ const isPost = (value: unknown, depth = 0): value is XPost => {
     Array.isArray(post.media) &&
     post.media.every((item) => isHttpsUrl(item?.url)) &&
     isHttpsUrl(post.card?.image) &&
-    depth < 2 &&
+    depth < 3 &&
     (post.quoted === undefined || isPost(post.quoted, depth + 1)) &&
     (post.parent === undefined || isPost(post.parent, depth + 1))
   );

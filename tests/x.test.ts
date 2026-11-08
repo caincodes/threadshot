@@ -91,3 +91,28 @@ test("reports deleted and missing posts", async () => {
   respondWith({}, 404);
   await assert.rejects(fetchXPost("4"), (error: unknown) => error instanceof XApiError && error.status === 404);
 });
+
+test("loads the parent on its own to get the post it quotes", async () => {
+  const raw = (id: string, extra = {}) => ({
+    id_str: id,
+    created_at: "2023-01-01T00:00:00.000Z",
+    text: `post ${id}`,
+    user,
+    ...extra,
+  });
+  const posts: Record<string, unknown> = {
+    "10": raw("10", { parent: raw("11") }),
+    "11": raw("11", { quoted_tweet: raw("12") }),
+  };
+  globalThis.fetch = async (input) => {
+    const id = new URL(String(input)).searchParams.get("id") ?? "";
+    return Response.json(posts[id] ?? {}, { status: posts[id] ? 200 : 404 });
+  };
+  const post = await fetchXPost("10");
+  assert.equal(post.parent?.quoted?.html, "<p>post 12</p>");
+
+  delete posts["11"];
+  const fallback = await fetchXPost("10");
+  assert.equal(fallback.parent?.html, "<p>post 11</p>");
+  assert.equal(fallback.parent?.quoted, undefined);
+});
