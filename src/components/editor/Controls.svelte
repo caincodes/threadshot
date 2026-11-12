@@ -30,7 +30,7 @@
     botCount: number;
     platform?: "reddit" | "x";
     hasParent?: boolean;
-    media?: { key: string; src: string }[];
+    media?: { key: string; src: string; isVideo?: boolean }[];
   } = $props();
 
   const shownCount = $derived(
@@ -39,10 +39,15 @@
   const hasCrops = $derived(
     media.some((item) => editor.mediaCrops[item.key])
   );
+  const hasFrames = $derived(
+    media.some((item) => editor.mediaFrames[item.key])
+  );
+  const hasVideo = $derived(media.some((item) => item.isVideo));
 
   const resetCrops = () => {
     for (const item of media) {
       editor.setCrop(item.key, null);
+      editor.setFrame(item.key, null);
     }
   };
 
@@ -269,15 +274,17 @@
         {/if}
         <div class="option-row">
           <span class="text-sm text-ink-2">
-            Tap a picture in the preview to crop it.
+            {hasVideo
+              ? "Tap a picture in the preview to crop it, or a video to pick its frame."
+              : "Tap a picture in the preview to crop it."}
           </span>
-          {#if hasCrops}
+          {#if hasCrops || hasFrames}
             <button
               class="link shrink-0 cursor-pointer text-sm"
               onclick={resetCrops}
               type="button"
             >
-              Reset crops
+              {hasFrames ? (hasCrops ? "Reset crops and frames" : "Reset frames") : "Reset crops"}
             </button>
           {/if}
         </div>

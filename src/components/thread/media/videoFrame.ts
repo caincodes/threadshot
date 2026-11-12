@@ -1,16 +1,38 @@
 // Reddit's thumbnail is a video's first frame, so a video that opens on black
-// gets a black thumbnail. v.redd.it allows cross-origin reads, so the browser
-// can take a better frame from the video itself.
+// gets a black thumbnail. v.redd.it and X's video host allow cross-origin
+// reads, so the browser can take a better frame from the video itself, or let
+// a frame be picked by hand.
 
 // Average brightness out of 255, below which a frame counts as black.
 const BLACK_LUMA = 12;
 const TIMEOUT_MS = 10000;
 
-// Thread data can come from a crafted link, so only Reddit's video host loads.
-const VIDEO_URL = /^https:\/\/v\.redd\.it\//;
+// Thread data can come from a crafted link, so only Reddit's and X's video
+// hosts load.
+const VIDEO_URL = /^https:\/\/(v\.redd\.it|video\.twimg\.com)\//;
 
 export const isVideoUrl = (url: string | undefined): url is string =>
   url !== undefined && VIDEO_URL.test(url);
+
+// X's video host turns away requests that name another site as the referrer,
+// which a video element always does, so its videos are fetched whole without
+// one. The URL returned is revoked with releaseVideo.
+export const loadVideo = async (url: string) => {
+  if (!url.startsWith("https://video.twimg.com/")) {
+    return url;
+  }
+  const res = await fetch(url, { referrerPolicy: "no-referrer" });
+  if (!res.ok) {
+    throw new Error(`The video host returned ${res.status}.`);
+  }
+  return URL.createObjectURL(await res.blob());
+};
+
+export const releaseVideo = (src: string) => {
+  if (src.startsWith("blob:")) {
+    URL.revokeObjectURL(src);
+  }
+};
 
 export const isBlack = (source: CanvasImageSource) => {
   const canvas = document.createElement("canvas");
@@ -35,13 +57,13 @@ const once = (video: HTMLVideoElement, event: string) =>
     video.addEventListener("error", () => reject(video.error), { once: true });
   });
 
-const seek = (video: HTMLVideoElement, time: number) => {
+export const seek = (video: HTMLVideoElement, time: number) => {
   const seeked = once(video, "seeked");
   video.currentTime = time;
   return seeked;
 };
 
-const capture = (video: HTMLVideoElement) => {
+export const capture = (video: HTMLVideoElement) => {
   const canvas = document.createElement("canvas");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;

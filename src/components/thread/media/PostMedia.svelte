@@ -6,6 +6,7 @@
   import { editor } from "../../../lib/editor.svelte";
   import type { RedditSubmission } from "../../../types/reddit";
   import CroppedImage from "./CroppedImage.svelte";
+  import MediaTag from "./MediaTag.svelte";
   import { proxiedImageSrc } from "./proxy";
   import { isBlack, isVideoUrl, videoFrame } from "./videoFrame";
 
@@ -52,6 +53,18 @@
     videoThumbnail ?? (previewUrl && proxiedImageSrc(previewUrl))
   );
 
+  const isGif = $derived(Boolean(submission.media?.reddit_video?.is_gif));
+  // The video is keyed by its own URL, like a picture, for its crop and frame.
+  const videoKey = $derived(isVideoUrl(videoUrl) ? videoUrl : undefined);
+  const videoCrop = $derived(videoKey ? editor.mediaCrops[videoKey] : undefined);
+  const pickedFrame = $derived(videoKey ? editor.mediaFrames[videoKey]?.src : undefined);
+
+  const openVideoCrop = () => {
+    if (videoKey && videoSrc) {
+      editor.openCrop(videoKey, videoSrc, videoKey);
+    }
+  };
+
   const loadVideoFrame = async () => {
     if (isVideoUrl(videoUrl)) {
       videoThumbnail = await videoFrame(videoUrl);
@@ -78,6 +91,19 @@
     class="max-h-[520px] w-full bg-ap-line object-contain"
     {alt}
     src={proxiedImageSrc(src)}
+  />
+{/snippet}
+
+{#snippet thumbnail(src: string)}
+  <img
+    class="max-h-[520px] w-full bg-ap-line object-contain"
+    alt="Video thumbnail"
+    onload={(event) => {
+      if (!videoThumbnail && !pickedFrame && isBlack(event.currentTarget as HTMLImageElement)) {
+        loadVideoFrame();
+      }
+    }}
+    {src}
   />
 {/snippet}
 
@@ -123,24 +149,47 @@
   </div>
 {:else if submission.linkType === "video" && videoSrc}
   <div class="relative overflow-hidden rounded-[10px]">
-    <img
-      class="max-h-[520px] w-full bg-ap-line object-contain"
-      alt="Video thumbnail"
-      onload={(event) => {
-        if (!videoThumbnail && isBlack(event.currentTarget)) {
-          loadVideoFrame();
-        }
-      }}
-      src={videoSrc}
-    />
-    <span class="absolute inset-0 flex items-center justify-center bg-black/10">
-      <span
-        class="flex size-14 items-center justify-center rounded-full bg-black/60 text-white"
-        data-keep-size
+    {#if videoKey && videoCrop}
+      <div style:aspect-ratio={videoCrop.aspect}>
+        <CroppedImage
+          class="size-full bg-ap-line"
+          alt="Video thumbnail"
+          mediaKey={videoKey}
+          src={videoSrc}
+          video={videoKey}
+        />
+      </div>
+    {:else if videoKey}
+      <div
+        class="cursor-pointer"
+        onclick={openVideoCrop}
+        onkeydown={(event) => event.key === "Enter" && openVideoCrop()}
+        role="button"
+        tabindex="0"
+        title="Crop or pick a frame"
       >
-        <Play size={26} weight="fill" />
+        {@render thumbnail(pickedFrame ?? videoSrc)}
+      </div>
+    {:else}
+      {@render thumbnail(videoSrc)}
+    {/if}
+    {#if !pickedFrame}
+      <span
+        class="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/10"
+      >
+        <span
+          class="flex size-14 items-center justify-center rounded-full bg-black/60 text-white"
+          data-keep-size
+        >
+          <Play size={26} weight="fill" />
+        </span>
       </span>
-    </span>
+    {/if}
+    {#if isGif}
+      <MediaTag label="GIF" />
+    {:else if pickedFrame}
+      <MediaTag label="Video" />
+    {/if}
   </div>
 {:else if submission.linkType === "external" && previewUrl}
   <div class="relative overflow-hidden rounded-[10px]">

@@ -16,7 +16,7 @@ const isPost = (value: unknown, depth = 0): value is XPost => {
     typeof post.author.handle === "string" &&
     isHttpsUrl(post.author.avatar) &&
     Array.isArray(post.media) &&
-    post.media.every((item) => isHttpsUrl(item?.url)) &&
+    post.media.every((item) => isHttpsUrl(item?.url) && isHttpsUrl(item.video)) &&
     isHttpsUrl(post.card?.image) &&
     depth < 3 &&
     (post.quoted === undefined || isPost(post.quoted, depth + 1)) &&

@@ -42,6 +42,10 @@ interface RawMedia {
   type: "photo" | "video" | "animated_gif";
   media_url_https: string;
   original_info?: { width: number; height: number };
+  video_info?: {
+    duration_millis?: number;
+    variants?: { content_type: string; url: string; bitrate?: number }[];
+  };
 }
 
 interface RawCard {
@@ -162,6 +166,20 @@ const authorOf = (user: RawUser): XAuthor => ({
   verified: verifiedOf(user),
 });
 
+// The browser downloads the whole MP4 to pick a frame from it, so it gets the
+// sharpest one that stays around this size, in bits.
+const MAX_VIDEO_BITS = 200_000_000;
+const MAX_BITRATE = 2_500_000;
+
+const videoOf = (item: RawMedia) => {
+  const seconds = (item.video_info?.duration_millis ?? 0) / 1000;
+  const limit = Math.min(MAX_BITRATE, MAX_VIDEO_BITS / Math.max(seconds, 1));
+  const mp4s = (item.video_info?.variants ?? [])
+    .filter((variant) => variant.content_type === "video/mp4")
+    .sort((a, b) => (a.bitrate ?? 0) - (b.bitrate ?? 0));
+  return (mp4s.findLast((variant) => (variant.bitrate ?? 0) <= limit) ?? mp4s[0])?.url;
+};
+
 const mediaOf = (media: RawMedia[] = []): XMedia[] =>
   media.map((item) => ({
     type:
@@ -169,6 +187,7 @@ const mediaOf = (media: RawMedia[] = []): XMedia[] =>
     url: item.media_url_https,
     width: item.original_info?.width ?? 16,
     height: item.original_info?.height ?? 9,
+    video: item.type === "photo" ? undefined : videoOf(item),
   }));
 
 const CARD_IMAGES = [

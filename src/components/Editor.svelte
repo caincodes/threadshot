@@ -25,6 +25,7 @@
   import Connect from "./Connect.svelte";
   import Controls from "./editor/Controls.svelte";
   import { proxiedImageSrc, xImageSrc } from "./thread/media/proxy";
+  import { isVideoUrl } from "./thread/media/videoFrame";
   import ShareImage from "./thread/ShareImage.svelte";
   import XShareImage from "./thread/x/XShareImage.svelte";
   import Spinner from "./ui/Spinner.svelte";
@@ -63,17 +64,24 @@
   let isCredentialError = $state(false);
   let received = $state<RawThread>();
 
-  // The pictures the options can choose between and crop.
+  // The pictures the options can choose between and crop, and the videos they
+  // can pick a frame from.
   const media = $derived.by(() => {
     if (xPost) {
       return xPost.media.map((item) => ({
         key: item.url,
         src: xImageSrc(item.url, "small"),
+        isVideo: Boolean(item.video),
       }));
     }
     const submission = data?.[0];
     if (submission?.linkType === "image" && submission.url) {
       return [{ key: submission.url, src: proxiedImageSrc(submission.url) }];
+    }
+    const videoUrl = submission?.media?.reddit_video?.fallback_url;
+    const previewUrl = submission?.preview?.images[0]?.source.url;
+    if (submission?.linkType === "video" && isVideoUrl(videoUrl) && previewUrl) {
+      return [{ key: videoUrl, src: proxiedImageSrc(previewUrl), isVideo: true }];
     }
     if (submission?.linkType === "album") {
       return Object.values(submission.media_metadata ?? {}).map((img) => ({

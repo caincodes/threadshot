@@ -23,6 +23,20 @@ export interface MediaCrop {
   aspect: number;
 }
 
+// A frame picked from a video or GIF to show in its place: where it was taken
+// from, in seconds, and the frame itself as a data URL.
+export interface MediaFrame {
+  time: number;
+  src: string;
+}
+
+// The picture being cropped, and the video its frame can be picked from.
+export interface CropTarget {
+  key: string;
+  src: string;
+  video?: string;
+}
+
 const FILE_NAME = "threadshot.png";
 
 // The options "Save as default" keeps in the browser's local storage.
@@ -74,8 +88,8 @@ class EditorState {
   // Pictures are keyed by their original URL, which is unique within a post.
   hiddenMedia = $state<string[]>([]);
   mediaCrops = $state<Record<string, MediaCrop>>({});
-  // The picture being cropped.
-  cropping = $state<{ key: string; src: string } | null>(null);
+  mediaFrames = $state<Record<string, MediaFrame>>({});
+  cropping = $state<CropTarget | null>(null);
   postBody = $state<PostBodyMode>("full");
   // The snippet shown in the image, and the text highlighted to become it.
   bodySnippet = $state<string | null>(null);
@@ -160,6 +174,7 @@ class EditorState {
       this.imageColumns !== 3,
       this.hiddenMedia.length > 0,
       Object.keys(this.mediaCrops).length > 0,
+      Object.keys(this.mediaFrames).length > 0,
     ].filter(Boolean).length;
   }
 
@@ -171,8 +186,14 @@ class EditorState {
       : this.hiddenMedia.filter((hidden) => hidden !== key);
   };
 
-  openCrop = (key: string, src: string) => {
-    this.cropping = { key, src };
+  openCrop = (key: string, src: string, video?: string) => {
+    this.cropping = { key, src, video };
+  };
+
+  setFrame = (key: string, frame: MediaFrame | null) => {
+    const rest = { ...this.mediaFrames };
+    delete rest[key];
+    this.mediaFrames = frame ? { ...rest, [key]: frame } : rest;
   };
 
   // No crop, or one that keeps the whole picture, shows it uncropped.

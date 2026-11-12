@@ -13,6 +13,8 @@ export interface XMedia {
   url: string;
   width: number;
   height: number;
+  // An MP4 of a video or GIF, to pick a frame from.
+  video?: string;
 }
 
 export interface XLinkCard {

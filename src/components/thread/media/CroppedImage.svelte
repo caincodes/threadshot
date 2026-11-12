@@ -3,20 +3,23 @@
 
   // A picture filling its frame, cropped as chosen in the editor. The frame
   // takes its size from the class it is given. Tapping it in the preview opens
-  // the crop.
+  // the crop, and for a video, picking the frame shown in place of src.
   let {
     src,
     alt,
     mediaKey,
+    video,
     class: className = "",
   }: {
     src: string;
     alt: string;
     mediaKey?: string;
+    video?: string;
     class?: string;
   } = $props();
 
   const crop = $derived(mediaKey ? editor.mediaCrops[mediaKey] : undefined);
+  const shownSrc = $derived((mediaKey && editor.mediaFrames[mediaKey]?.src) || src);
 
   let frameWidth = $state(0);
   let frameHeight = $state(0);
@@ -43,7 +46,7 @@
 
   const openCrop = () => {
     if (mediaKey) {
-      editor.openCrop(mediaKey, src);
+      editor.openCrop(mediaKey, src, video);
     }
   };
 </script>
@@ -58,7 +61,7 @@
     onkeydown={(event) => event.key === "Enter" && openCrop()}
     role="button"
     tabindex="0"
-    title="Crop this picture"
+    title={video ? "Crop or pick a frame" : "Crop this picture"}
   >
     {@render picture()}
   </div>
@@ -78,9 +81,9 @@
       style:top={placement.top}
       {alt}
       draggable="false"
-      {src}
+      src={shownSrc}
     />
   {:else}
-    <img class="size-full object-cover" {alt} draggable="false" {src} />
+    <img class="size-full object-cover" {alt} draggable="false" src={shownSrc} />
   {/if}
 {/snippet}

@@ -84,7 +84,7 @@ export interface RawSubmission extends RedditContent {
   clicked: boolean;
   thumbnail: string;
   is_video: boolean;
-  media?: { reddit_video?: { fallback_url: string } } | null;
+  media?: { reddit_video?: { fallback_url: string; is_gif?: boolean } } | null;
   preview?: {
     images: { source: PreviewEntry; resolutions: PreviewEntry[] }[];
   };

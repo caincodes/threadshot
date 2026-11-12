@@ -4,6 +4,7 @@
   import { editor } from "../../../lib/editor.svelte";
   import type { XMedia } from "../../../types/x";
   import CroppedImage from "../media/CroppedImage.svelte";
+  import MediaTag from "../media/MediaTag.svelte";
   import { xImageSrc } from "../media/proxy";
 
   // Flush media fills the bottom of a quoted post, which has its own border.
@@ -31,6 +32,8 @@
     }
     return Math.min(16 / 9, Math.max(3 / 4, width / height));
   });
+  // A video showing a frame picked from it is tagged instead of given a play
+  // button. GIFs are always tagged.
 </script>
 
 {#if shown.length}
@@ -45,6 +48,7 @@
     data-keep-size
   >
     {#each shown as item, index (item.url)}
+      {@const hasFrame = isEditable && Boolean(editor.mediaFrames[item.url])}
       <div
         class={[
           "relative min-h-0 overflow-hidden bg-ap-line",
@@ -56,8 +60,9 @@
           alt={item.type === "photo" ? "Post image" : "Video thumbnail"}
           mediaKey={isEditable ? item.url : undefined}
           src={xImageSrc(item.url)}
+          video={item.video}
         />
-        {#if item.type !== "photo"}
+        {#if item.type !== "photo" && !hasFrame}
           <span class="pointer-events-none absolute inset-0 flex items-center justify-center">
             <span
               class="flex size-12 items-center justify-center rounded-full bg-black/60 text-white"
@@ -68,10 +73,9 @@
           </span>
         {/if}
         {#if item.type === "gif"}
-          <span
-            class="absolute bottom-2 left-2 rounded-[4px] bg-black/70 px-1 text-[11px] font-bold text-white"
-            >GIF</span
-          >
+          <MediaTag label="GIF" />
+        {:else if item.type === "video" && hasFrame}
+          <MediaTag label="Video" />
         {/if}
       </div>
     {/each}
