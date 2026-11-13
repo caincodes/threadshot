@@ -116,3 +116,22 @@ test("loads the parent on its own to get the post it quotes", async () => {
   assert.equal(fallback.parent?.html, "<p>post 11</p>");
   assert.equal(fallback.parent?.quoted, undefined);
 });
+
+test("ends a long quote, loaded on its own, with an ellipsis", async () => {
+  const raw = (id: string, extra = {}) => ({
+    id_str: id,
+    created_at: "2023-01-01T00:00:00.000Z",
+    text: `post ${id} `,
+    user,
+    ...extra,
+  });
+  const posts: Record<string, unknown> = {
+    "20": raw("20", { quoted_tweet: raw("21") }),
+    "21": raw("21", { note_tweet: { id: "1" } }),
+  };
+  globalThis.fetch = async (input) => {
+    const id = new URL(String(input)).searchParams.get("id") ?? "";
+    return Response.json(posts[id] ?? {}, { status: posts[id] ? 200 : 404 });
+  };
+  assert.equal((await fetchXPost("20")).quoted?.html, "<p>post 21…</p>");
+});

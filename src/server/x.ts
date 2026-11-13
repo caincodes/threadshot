@@ -78,6 +78,8 @@ interface RawPost {
   card?: RawCard;
   quoted_tweet?: RawPost;
   parent?: RawPost;
+  // Set on a long post, whose text X cuts short.
+  note_tweet?: { id: string };
   in_reply_to_screen_name?: string;
 }
 
@@ -143,9 +145,12 @@ const postHtml = (post: RawPost, cardUrl?: string) => {
     at = link.indices[1];
   }
   html += escapeHtml(unescapeHtml(chars.slice(at, end).join("")));
+  html = html.trim();
+  if (post.note_tweet && html) {
+    html += "…";
+  }
 
   return html
-    .trim()
     .split(/\n{2,}/)
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
     .join("");
@@ -255,12 +260,16 @@ const fetchRaw = async (id: string): Promise<RawPost> => {
   return data;
 };
 
-// X sends the parent without the post it quotes, so it is loaded on its own.
-// If that fails, the parent X sent is still good enough to show.
+// X sends the parent without the post it quotes, and a quote without the
+// mark of a long post, so both are loaded on their own. If that fails, the
+// version X sent is still good enough to show.
 export const fetchXPost = async (id: string): Promise<XPost> => {
   const data = await fetchRaw(id);
-  if (data.parent) {
-    data.parent = await fetchRaw(data.parent.id_str).catch(() => data.parent);
-  }
+  const reload = (post?: RawPost) =>
+    post && fetchRaw(post.id_str).catch(() => post);
+  [data.parent, data.quoted_tweet] = await Promise.all([
+    reload(data.parent),
+    reload(data.quoted_tweet),
+  ]);
   return toPost(data);
 };
