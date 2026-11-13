@@ -19,8 +19,8 @@
     (isEditable ? media.filter((item) => editor.isMediaShown(item.url)) : media)
       .slice(0, 4)
   );
-  // One picture keeps its shape within limits, or takes the shape it was
-  // cropped to; several share a 16:9 frame.
+  // One picture keeps its shape, cut down only when very tall, or takes the
+  // shape it was cropped to; several share a 16:9 frame.
   const ratio = $derived.by(() => {
     if (shown.length !== 1) {
       return 16 / 9;
@@ -30,7 +30,7 @@
     if (crop) {
       return crop.aspect;
     }
-    return Math.min(16 / 9, Math.max(3 / 4, width / height));
+    return Math.max(3 / 4, width / height);
   });
   // A video showing a frame picked from it is tagged instead of given a play
   // button. GIFs are always tagged.

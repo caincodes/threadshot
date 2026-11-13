@@ -196,12 +196,12 @@ class EditorState {
     this.mediaFrames = frame ? { ...rest, [key]: frame } : rest;
   };
 
-  // No crop, or one that keeps the whole picture, shows it uncropped.
+  // A crop of the whole picture is kept, so a picture its frame would cut
+  // down can be shown in full.
   setCrop = (key: string, crop: MediaCrop | null) => {
     const rest = { ...this.mediaCrops };
     delete rest[key];
-    const isWhole = !crop || (crop.width >= 1 && crop.height >= 1);
-    this.mediaCrops = isWhole ? rest : { ...rest, [key]: crop };
+    this.mediaCrops = crop ? { ...rest, [key]: crop } : rest;
   };
 
   timestamp = (createdUtc: number) => formatTimestamp(createdUtc, this);
