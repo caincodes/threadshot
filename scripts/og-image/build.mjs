@@ -22,6 +22,7 @@ const browser = await chromium.launch();
 const shot = await browser.newPage({ viewport: { width: 1200, height: 1000 }, deviceScaleFactor: 2 });
 await shot.goto(`${origin}/generate?sample=1`, { waitUntil: "domcontentloaded" });
 await shot.waitForSelector("#reddit-preview");
+await shot.getByText("Advanced", { exact: true }).click();
 await shot.getByText("Subreddit icon").click();
 await shot.getByText("Profile pictures").click();
 await shot.waitForTimeout(600);
