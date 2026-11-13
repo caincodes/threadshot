@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">threadshot concept B: snapshot bubble</title>
+  <path fill="#0f1419" fill-rule="evenodd" d="M64 32 H192 A32 32 0 0 1 224 64 V168 A32 32 0 0 1 192 200 H112 L64 236 V200 A32 32 0 0 1 32 168 V64 A32 32 0 0 1 64 32 Z
+    M64 56 A8 8 0 0 0 56 64 V168 A8 8 0 0 0 64 176 H192 A8 8 0 0 0 200 168 V64 A8 8 0 0 0 192 56 Z
+    M88 80 H168 A12 12 0 0 1 168 104 H88 A12 12 0 0 1 88 80 Z
+    M88 112 A12 12 0 0 1 100 112 V124 A8 8 0 0 0 108 132 H140 A12 12 0 0 1 140 156 H108 A32 32 0 0 1 76 124 V112 A12 12 0 0 1 88 112 Z"/>
+</svg>

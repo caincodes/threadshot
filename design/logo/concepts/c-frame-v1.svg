@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">threadshot concept C: captured bubble</title>
+  <path fill="#0f1419" d="M32 104 V64 A32 32 0 0 1 64 32 H104 V56 H64 A8 8 0 0 0 56 64 V104 Z
+    M152 32 H192 A32 32 0 0 1 224 64 V104 H200 V64 A8 8 0 0 0 192 56 H152 Z
+    M224 152 V192 A32 32 0 0 1 192 224 H152 V200 H192 A8 8 0 0 0 200 192 V152 Z
+    M104 224 H32 V152 H56 V182 L84 200 H104 Z
+    M92 100 H164 A12 12 0 0 1 164 124 H92 A12 12 0 0 1 92 100 Z
+    M92 140 H136 A12 12 0 0 1 136 164 H92 A12 12 0 0 1 92 140 Z"/>
+</svg>

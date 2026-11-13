@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="title">
+  <title id="title">threadshot concept A: thread block</title>
+  <path fill="#0f1419" d="M48 40 H208 A16 16 0 0 1 224 56 V80 A16 16 0 0 1 208 96 H48 A16 16 0 0 1 32 80 V56 A16 16 0 0 1 48 40 Z
+    M32 120 A8 8 0 0 1 40 112 H56 A8 8 0 0 1 64 120 V168 A16 16 0 0 0 80 184 H176 A16 16 0 0 1 192 200 V200 A16 16 0 0 1 176 216 H72 A40 40 0 0 1 32 176 Z
+    M96 112 H208 A16 16 0 0 1 224 128 A16 16 0 0 1 208 144 H96 A16 16 0 0 1 80 128 A16 16 0 0 1 96 112 Z"/>
+</svg>
