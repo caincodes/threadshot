@@ -22,6 +22,7 @@
     botCount,
     platform = "reddit",
     hasParent = false,
+    hasLongText = false,
     media = [],
   }: {
     canDownload: boolean;
@@ -30,6 +31,7 @@
     botCount: number;
     platform?: "reddit" | "x";
     hasParent?: boolean;
+    hasLongText?: boolean;
     media?: { key: string; src: string; isVideo?: boolean }[];
   } = $props();
 
@@ -291,13 +293,18 @@
       </div>
     {/if}
 
-    {#if isX && hasParent}
+    {#if isX && (hasParent || hasLongText)}
       <div class="py-2">
         {@render heading("Post")}
-        <Switch
-          label="Show the post it replies to"
-          bind:checked={editor.showParentPost}
-        />
+        {#if hasParent}
+          <Switch
+            label="Show the post it replies to"
+            bind:checked={editor.showParentPost}
+          />
+        {/if}
+        {#if hasLongText}
+          <Switch label="Full text of long posts" bind:checked={editor.showFullText} />
+        {/if}
       </div>
     {/if}
 

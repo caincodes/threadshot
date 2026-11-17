@@ -56,6 +56,7 @@ const SAVED_OPTIONS = [
   "showXProfileIcons",
   "xInlineNames",
   "showParentPost",
+  "showFullText",
   "showLogo",
   "hideBots",
   "showComments",
@@ -106,6 +107,7 @@ class EditorState {
   // What a reply's parent and a quoted post show beside their picture.
   xInlineNames = $state<"both" | "name" | "handle">("both");
   showParentPost = $state(true);
+  showFullText = $state(true);
   showLogo = $state(false);
   hideBots = $state(true);
   showComments = $state(true);

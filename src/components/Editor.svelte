@@ -255,6 +255,7 @@
         canDownload={Boolean(data ?? xPost) && !errorMessage}
         platform={isX ? "x" : "reddit"}
         hasParent={Boolean(xPost?.parent)}
+        hasLongText={[xPost, xPost?.parent, xPost?.quoted].some((post) => post?.fullHtml)}
         botCount={data ? countBotComments(data[1]) : 0}
         hasBody={Boolean(data?.[0].selftext_html)}
         isAlbum={data?.[0].linkType === "album"}

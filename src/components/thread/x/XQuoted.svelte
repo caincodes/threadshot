@@ -16,7 +16,7 @@
     editor.commentTimestamp(post.createdUtc, quotedBy.createdUtc)
   );
   const body = $derived(
-    applyCensoring(post.html, {
+    applyCensoring((editor.showFullText && post.fullHtml) || post.html, {
       usernames: false,
       subreddits: false,
       handles: editor.isCensorUsernames,

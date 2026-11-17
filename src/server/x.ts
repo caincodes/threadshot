@@ -1,5 +1,9 @@
 import type { XAuthor, XLinkCard, XMedia, XPost, XVerified } from "../types/x";
 
+// FxTwitter's public API, which has the whole text of a long post.
+const FULL_TEXT_URL = "https://api.fxtwitter.com/status/";
+const FULL_TEXT_TIMEOUT_MS = 4000;
+
 // X's syndication endpoint, the one its embedded posts load from. It needs no
 // key; the token is derived from the id the same way X's embed script does.
 const SYNDICATION_URL = "https://cdn.syndication.twimg.com/tweet-result";
@@ -81,6 +85,17 @@ interface RawPost {
   // Set on a long post, whose text X cuts short.
   note_tweet?: { id: string };
   in_reply_to_screen_name?: string;
+  // The whole text of a long post, from FxTwitter.
+  full?: FullText;
+}
+
+type FullText = Pick<RawPost, "text" | "display_text_range" | "entities">;
+
+interface FxFacet {
+  type: string;
+  indices: Indices;
+  original?: string;
+  display?: string;
 }
 
 const HTML_ESCAPES: Record<string, string> = {
@@ -101,7 +116,7 @@ const unescapeHtml = (text: string) =>
 // Indices count code points, so the text is split the same way. Links are
 // plain anchors with no href: the image needs the colour, not the target, and
 // a mention's href would keep a redacted handle in the page.
-const postHtml = (post: RawPost, cardUrl?: string) => {
+const postHtml = (post: RawPost, cardUrl?: string, isFull = false) => {
   const chars = Array.from(post.text);
   const [start, rangeEnd] = post.display_text_range ?? [0, chars.length];
   const { entities = {} } = post;
@@ -146,7 +161,7 @@ const postHtml = (post: RawPost, cardUrl?: string) => {
   }
   html += escapeHtml(unescapeHtml(chars.slice(at, end).join("")));
   html = html.trim();
-  if (post.note_tweet && html) {
+  if (post.note_tweet && !isFull && html) {
     html += "…";
   }
 
@@ -225,6 +240,7 @@ const toPost = (raw: RawPost, level: Level = "main"): XPost => {
     author: authorOf(raw.user),
     createdUtc: Math.floor(Date.parse(raw.created_at) / 1000),
     html: postHtml(raw, card ? raw.card?.url : undefined),
+    fullHtml: raw.full && postHtml({ ...raw, ...raw.full }, card ? raw.card?.url : undefined, true),
     likes: raw.favorite_count ?? 0,
     replies: raw.conversation_count ?? raw.reply_count ?? 0,
     reposts: raw.retweet_count,
@@ -260,6 +276,87 @@ const fetchRaw = async (id: string): Promise<RawPost> => {
   return data;
 };
 
+// What a facet should cover in the text, to tell whether its positions count
+// code points, as X's do, or UTF-16 units.
+const facetText = (facet: FxFacet) => {
+  if (facet.type === "hashtag") return `#${facet.original}`;
+  if (facet.type === "cashtag") return `$${facet.original}`;
+  if (facet.type === "mention") return `@${facet.original}`;
+  return facet.original;
+};
+
+const codePointIndex = (text: string, units: number) =>
+  Array.from(text.slice(0, units)).length;
+
+// FxTwitter's facets as the entities postHtml reads. A facet whose positions
+// don't cover its own text is left out, and so are media links, which can
+// point into the cut-short text.
+const entitiesOf = (text: string, facets: FxFacet[]): RawPost["entities"] => {
+  const chars = Array.from(text);
+  const entities = {
+    hashtags: [] as RawEntity[],
+    user_mentions: [] as RawEntity[],
+    urls: [] as RawEntity[],
+    symbols: [] as RawEntity[],
+  };
+  for (const facet of facets) {
+    if (!Array.isArray(facet?.indices)) {
+      continue;
+    }
+    const expected = facetText(facet);
+    let indices: Indices = facet.indices;
+    if (chars.slice(indices[0], indices[1]).join("") !== expected) {
+      if (text.slice(indices[0], indices[1]) !== expected) {
+        continue;
+      }
+      indices = [codePointIndex(text, indices[0]), codePointIndex(text, indices[1])];
+    }
+    const original = facet.original ?? "";
+    if (facet.type === "hashtag") {
+      entities.hashtags.push({ indices, text: original });
+    } else if (facet.type === "cashtag") {
+      entities.symbols.push({ indices, text: original });
+    } else if (facet.type === "mention") {
+      entities.user_mentions.push({ indices, screen_name: original });
+    } else if (facet.type === "url") {
+      entities.urls.push({ indices, url: original, display_url: facet.display });
+    }
+  }
+  return entities;
+};
+
+// Best effort: without it, a long post keeps X's cut-short text.
+const fetchFullText = async (post: RawPost): Promise<FullText | undefined> => {
+  try {
+    const res = await fetch(FULL_TEXT_URL + post.id_str, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(FULL_TEXT_TIMEOUT_MS),
+    });
+    const body = (await res.json()) as {
+      tweet?: {
+        raw_text?: { text?: unknown; display_text_range?: Indices; facets?: unknown };
+      };
+    };
+    const raw = body.tweet?.raw_text;
+    if (!res.ok || typeof raw?.text !== "string" || raw.text.length <= post.text.length) {
+      return undefined;
+    }
+    return {
+      text: raw.text,
+      display_text_range: raw.display_text_range,
+      entities: entitiesOf(raw.text, Array.isArray(raw.facets) ? raw.facets : []),
+    };
+  } catch {
+    return undefined;
+  }
+};
+
+const addFullText = async (post?: RawPost) => {
+  if (post?.note_tweet) {
+    post.full = await fetchFullText(post);
+  }
+};
+
 // X sends the parent without the post it quotes, and a quote without the
 // mark of a long post, so both are loaded on their own. If that fails, the
 // version X sent is still good enough to show.
@@ -271,5 +368,6 @@ export const fetchXPost = async (id: string): Promise<XPost> => {
     reload(data.parent),
     reload(data.quoted_tweet),
   ]);
+  await Promise.all([data, data.parent, data.quoted_tweet].map(addFullText));
   return toPost(data);
 };

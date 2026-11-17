@@ -135,3 +135,47 @@ test("ends a long quote, loaded on its own, with an ellipsis", async () => {
   };
   assert.equal((await fetchXPost("20")).quoted?.html, "<p>post 21…</p>");
 });
+
+test("adds a long post's whole text from FxTwitter, keeping the short one", async () => {
+  const full = "Long 😀 #tag and @ann then https://t.co/x\n\nEnd";
+  const at = (part: string) => span(full, part);
+  let isFxUp = true;
+  globalThis.fetch = async (input) => {
+    const url = new URL(String(input));
+    if (url.hostname === "api.fxtwitter.com") {
+      if (!isFxUp) return Response.json({}, { status: 500 });
+      return Response.json({
+        tweet: {
+          raw_text: {
+            text: full,
+            display_text_range: [0, Array.from(full).length],
+            facets: [
+              { type: "hashtag", indices: at("#tag"), original: "tag" },
+              { type: "mention", indices: at("@ann"), original: "ann" },
+              { type: "url", indices: at("https://t.co/x"), original: "https://t.co/x", display: "example.com" },
+              { type: "media", indices: [0, 4], original: "https://t.co/pic" },
+            ],
+          },
+        },
+      });
+    }
+    return Response.json({
+      id_str: "30",
+      created_at: "2023-01-01T00:00:00.000Z",
+      text: "Long 😀",
+      note_tweet: { id: "n" },
+      user,
+    });
+  };
+  const post = await fetchXPost("30");
+  assert.equal(post.html, "<p>Long 😀…</p>");
+  assert.equal(
+    post.fullHtml,
+    "<p>Long 😀 <a>#tag</a> and <a>@ann</a> then <a>example.com</a></p><p>End</p>"
+  );
+
+  isFxUp = false;
+  const fallback = await fetchXPost("30");
+  assert.equal(fallback.html, "<p>Long 😀…</p>");
+  assert.equal(fallback.fullHtml, undefined);
+});

@@ -28,6 +28,8 @@ export interface XPost {
   author: XAuthor;
   createdUtc: number;
   html: string;
+  // The whole text of a long post, when it could be loaded.
+  fullHtml?: string;
   likes: number;
   replies: number;
   reposts?: number;

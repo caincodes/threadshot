@@ -11,6 +11,7 @@ const isPost = (value: unknown, depth = 0): value is XPost => {
     post !== null &&
     typeof post.id === "string" &&
     typeof post.html === "string" &&
+    (post.fullHtml === undefined || typeof post.fullHtml === "string") &&
     typeof post.createdUtc === "number" &&
     typeof post.author?.name === "string" &&
     typeof post.author.handle === "string" &&
@@ -27,6 +28,7 @@ const isPost = (value: unknown, depth = 0): value is XPost => {
 const cleaned = (post: XPost): XPost => ({
   ...post,
   html: sanitizeHtml(post.html),
+  fullHtml: post.fullHtml && sanitizeHtml(post.fullHtml),
   quoted: post.quoted && cleaned(post.quoted),
   parent: post.parent && cleaned(post.parent),
 });
