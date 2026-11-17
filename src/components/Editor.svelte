@@ -65,14 +65,17 @@
   let received = $state<RawThread>();
 
   // The pictures the options can choose between and crop, and the videos they
-  // can pick a frame from.
+  // can pick a frame from. On X that includes the quoted post's.
   const media = $derived.by(() => {
     if (xPost) {
-      return xPost.media.map((item) => ({
-        key: item.url,
-        src: xImageSrc(item.url, "small"),
-        isVideo: Boolean(item.video),
-      }));
+      const items = [...xPost.media, ...(xPost.quoted?.media ?? [])];
+      return [...new Map(items.map((item) => [item.url, item])).values()].map(
+        (item) => ({
+          key: item.url,
+          src: xImageSrc(item.url, "small"),
+          isVideo: Boolean(item.video),
+        })
+      );
     }
     const submission = data?.[0];
     if (submission?.linkType === "image" && submission.url) {

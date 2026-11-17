@@ -8,7 +8,8 @@
   import { xImageSrc } from "../media/proxy";
 
   // Flush media fills the bottom of a quoted post, which has its own border.
-  // Only the main post's pictures can be chosen, reshaped and cropped.
+  // Only the pictures of the main post and the post it quotes can be chosen,
+  // reshaped and cropped.
   let {
     media,
     isFlush = false,

@@ -6,7 +6,11 @@
   import XMediaGrid from "./XMediaGrid.svelte";
   import XName from "./XName.svelte";
 
-  let { post, quotedBy }: { post: XPost; quotedBy: XPost } = $props();
+  let {
+    post,
+    quotedBy,
+    isEditable = false,
+  }: { post: XPost; quotedBy: XPost; isEditable?: boolean } = $props();
 
   const timestamp = $derived(
     editor.commentTimestamp(post.createdUtc, quotedBy.createdUtc)
@@ -44,6 +48,6 @@
     {/if}
   </div>
   {#if post.media.length}
-    <XMediaGrid media={post.media} isFlush />
+    <XMediaGrid media={post.media} {isEditable} isFlush />
   {/if}
 </div>
