@@ -48,3 +48,15 @@ export const fetchXPost = async (
   }
   return cleaned(body);
 };
+
+export const fetchXReplies = async (
+  id: string,
+  signal?: AbortSignal
+): Promise<XPost[]> => {
+  const res = await fetch(`/api/x-replies?${new URLSearchParams({ id })}`, { signal });
+  const body: unknown = await res.json().catch(() => null);
+  if (!res.ok || !Array.isArray(body)) {
+    throw new Error("Could not load the replies.");
+  }
+  return body.filter((reply) => isPost(reply)).map(cleaned);
+};

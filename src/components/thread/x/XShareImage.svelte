@@ -11,8 +11,27 @@
   import Watermark from "../Watermark.svelte";
   import XBody from "./XBody.svelte";
   import XName from "./XName.svelte";
+  import XReply from "./XReply.svelte";
 
-  let { id, post }: { id?: string; post: XPost } = $props();
+  let {
+    id,
+    post,
+    replies,
+  }: { id?: string; post: XPost; replies?: XPost[] } = $props();
+
+  // X's own order is "top"; the others sort a copy.
+  const shownReplies = $derived.by(() => {
+    if (!replies) {
+      return [];
+    }
+    const sorted =
+      editor.xReplySort === "likes"
+        ? replies.toSorted((a, b) => b.likes - a.likes)
+        : editor.xReplySort === "new"
+          ? replies.toSorted((a, b) => b.createdUtc - a.createdUtc)
+          : replies;
+    return sorted.slice(0, editor.xReplyCount);
+  });
 
   // Pictures would give people away, so they go with redacted names.
   const showAvatars = $derived(
@@ -94,9 +113,17 @@
         <span class="text-[#f91880]"><Heart size={16} weight="fill" /></span>
         {formatCount(post.likes)}
       </span>
-      {#if !editor.hideWatermark}
+      {#if !editor.hideWatermark && !shownReplies.length}
         <Watermark class="grow text-right" />
       {/if}
     </footer>
   </article>
+
+  {#each shownReplies as reply (reply.id)}
+    <XReply {reply} postUtc={post.createdUtc} />
+  {/each}
+
+  {#if !editor.hideWatermark && shownReplies.length}
+    <Watermark class="border-t border-ap-line px-4 py-3 text-right" />
+  {/if}
 </div>

@@ -165,6 +165,9 @@ const postHtml = (post: RawPost, cardUrl?: string, isFull = false) => {
     html += "…";
   }
 
+  if (!html) {
+    return "";
+  }
   return html
     .split(/\n{2,}/)
     .map((paragraph) => `<p>${paragraph.replace(/\n/g, "<br>")}</p>`)
@@ -370,4 +373,95 @@ export const fetchXPost = async (id: string): Promise<XPost> => {
   ]);
   await Promise.all([data, data.parent, data.quoted_tweet].map(addFullText));
   return toPost(data);
+};
+
+interface FxMedia {
+  type?: string;
+  url?: string;
+  thumbnail_url?: string;
+  width?: number;
+  height?: number;
+}
+
+interface FxStatus {
+  id?: string;
+  created_timestamp?: number;
+  raw_text?: { text?: unknown; display_text_range?: Indices; facets?: unknown };
+  author?: {
+    name?: string;
+    screen_name?: string;
+    avatar_url?: string;
+    verification?: { verified?: boolean; type?: string };
+  };
+  likes?: number;
+  replies?: number;
+  reposts?: number;
+  media?: { all?: FxMedia[] };
+}
+
+const REPLIES_URL = "https://api.fxtwitter.com/2/conversation/";
+const MAX_REPLIES = 20;
+
+// A reply from FxTwitter, in the shape X's own posts arrive in, so it is
+// turned into HTML the same way. Its leading @mentions fall outside the
+// displayed range, as on X.
+const rawOfFx = (status: FxStatus): RawPost | undefined => {
+  const text = status.raw_text?.text;
+  const { author } = status;
+  if (!status.id || typeof text !== "string" || !author?.screen_name) {
+    return undefined;
+  }
+  const verifiedType = author.verification?.type;
+  return {
+    id_str: status.id,
+    created_at: new Date((status.created_timestamp ?? 0) * 1000).toISOString(),
+    text,
+    display_text_range: status.raw_text?.display_text_range,
+    entities: entitiesOf(text, Array.isArray(status.raw_text?.facets) ? status.raw_text.facets : []),
+    user: {
+      name: author.name ?? author.screen_name,
+      screen_name: author.screen_name,
+      // The small listed size, which authorOf swaps for the 400px one.
+      profile_image_url_https: author.avatar_url?.replace(/_\d+x\d+(\.\w+)$/, "_normal$1"),
+      is_blue_verified: Boolean(author.verification?.verified),
+      verified_type:
+        verifiedType === "business" ? "Business" : verifiedType === "government" ? "Government" : undefined,
+    },
+    favorite_count: status.likes,
+    conversation_count: status.replies,
+    retweet_count: status.reposts,
+    mediaDetails: (status.media?.all ?? []).flatMap((item): RawMedia[] => {
+      const isPhoto = item.type === "photo";
+      const url = isPhoto ? item.url?.replace(/\?.*$/, "") : item.thumbnail_url;
+      if (!url?.startsWith("https://")) {
+        return [];
+      }
+      return [
+        {
+          type: isPhoto ? "photo" : item.type === "gif" ? "animated_gif" : "video",
+          media_url_https: url,
+          original_info: item.width && item.height ? { width: item.width, height: item.height } : undefined,
+        },
+      ];
+    }),
+  };
+};
+
+// The replies to a post, in the order X ranks them. X's embed API has none,
+// so they come from FxTwitter.
+export const fetchXReplies = async (id: string): Promise<XPost[]> => {
+  const res = await fetch(REPLIES_URL + id, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(8000),
+  }).catch(() => null);
+  if (!res?.ok) {
+    throw new XApiError(502, "Could not load the replies.");
+  }
+  const body = (await res.json().catch(() => null)) as { replies?: unknown } | null;
+  const replies = Array.isArray(body?.replies) ? (body.replies as FxStatus[]) : [];
+  return replies
+    .map(rawOfFx)
+    .filter((raw): raw is RawPost => raw !== undefined)
+    .slice(0, MAX_REPLIES)
+    .map((raw) => toPost(raw, "quote"));
 };

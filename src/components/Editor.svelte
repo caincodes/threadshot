@@ -20,7 +20,7 @@
   } from "../lib/redditData";
   import { decodeThread, THREAD_FRAGMENT } from "../lib/threadLink";
   import { sampleXPost } from "../lib/sampleXPost";
-  import { fetchXPost } from "../lib/xData";
+  import { fetchXPost, fetchXReplies } from "../lib/xData";
   import type { XPost } from "../types/x";
   import Connect from "./Connect.svelte";
   import Controls from "./editor/Controls.svelte";
@@ -59,6 +59,11 @@
 
   let data = $state<RedditData>();
   let xPost = $state<XPost>();
+  let xReplies = $state<XPost[]>();
+  let isReplyError = $state(false);
+  const replyStatus = $derived(
+    xReplies ? (xReplies.length ? "ready" : "empty") : isReplyError ? "error" : "loading"
+  );
   let isLoading = $state(true);
   let errorMessage = $state("");
   let isCredentialError = $state(false);
@@ -174,6 +179,27 @@
     return () => controller.abort();
   });
 
+  // Replies are loaded only once they are asked for.
+  $effect(() => {
+    if (!editor.showXReplies || !xPost || xReplies) {
+      return;
+    }
+    if (isXSample) {
+      xReplies = [];
+      return;
+    }
+    const controller = new AbortController();
+    isReplyError = false;
+    fetchXReplies(xPost.id, controller.signal)
+      .then((replies) => (xReplies = replies))
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          isReplyError = true;
+        }
+      });
+    return () => controller.abort();
+  });
+
   $effect(() => {
     if (isFromBookmark || isX) {
       return;
@@ -257,7 +283,8 @@
         hasParent={Boolean(xPost?.parent)}
         hasLongText={[xPost, xPost?.parent, xPost?.quoted].some((post) => post?.fullHtml)}
         botCount={data ? countBotComments(data[1]) : 0}
-        hasBody={Boolean(data?.[0].selftext_html)}
+        hasBody={Boolean(data?.[0].selftext_html || xPost?.html)}
+        {replyStatus}
         isAlbum={data?.[0].linkType === "album"}
         {media}
       />
@@ -269,7 +296,11 @@
       {#if xPost}
         <div bind:clientWidth={frameWidth}>
           <div class="mx-auto w-fit" style:zoom={zoom}>
-            <XShareImage id="reddit-preview" post={xPost} />
+            <XShareImage
+              id="reddit-preview"
+              post={xPost}
+              replies={editor.showXReplies ? xReplies : undefined}
+            />
           </div>
         </div>
       {:else if data}

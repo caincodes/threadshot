@@ -57,6 +57,9 @@ const SAVED_OPTIONS = [
   "xInlineNames",
   "showParentPost",
   "showFullText",
+  "showXReplies",
+  "xReplyCount",
+  "xReplySort",
   "showLogo",
   "hideBots",
   "showComments",
@@ -108,6 +111,10 @@ class EditorState {
   xInlineNames = $state<"both" | "name" | "handle">("both");
   showParentPost = $state(true);
   showFullText = $state(true);
+  // X posts had no replies at first, so they stay off until asked for.
+  showXReplies = $state(false);
+  xReplyCount = $state(2);
+  xReplySort = $state<"top" | "likes" | "new">("top");
   showLogo = $state(false);
   hideBots = $state(true);
   showComments = $state(true);
@@ -159,6 +166,7 @@ class EditorState {
   get changedAdvancedCount() {
     return [
       this.commentSort !== "best",
+      this.xReplySort !== "top",
       this.commentReplies !== 1,
       this.replyDepth !== 3,
       !this.hideBots,

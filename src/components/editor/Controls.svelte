@@ -23,6 +23,7 @@
     platform = "reddit",
     hasParent = false,
     hasLongText = false,
+    replyStatus = "ready",
     media = [],
   }: {
     canDownload: boolean;
@@ -32,6 +33,7 @@
     platform?: "reddit" | "x";
     hasParent?: boolean;
     hasLongText?: boolean;
+    replyStatus?: "loading" | "error" | "empty" | "ready";
     media?: { key: string; src: string; isVideo?: boolean }[];
   } = $props();
 
@@ -79,6 +81,12 @@
   const themes = [
     { value: "light", text: "Light" },
     { value: "dark", text: "Dark" },
+  ] as const;
+
+  const xReplySorts = [
+    { value: "top", text: "Top" },
+    { value: "likes", text: "Most liked" },
+    { value: "new", text: "Newest" },
   ] as const;
 
   const sortOptions = SORT_TYPES.map((value) => ({
@@ -192,9 +200,18 @@
 
   <div class="divide-y divide-line pt-2">
     <!-- Only shown for posts these apply to. -->
-    {#if hasBody}
+    {#if hasBody || (isX && (hasParent || hasLongText))}
       <div class="py-2">
         {@render heading("Post")}
+        {#if isX && hasParent}
+          <Switch
+            label="Show the post it replies to"
+            bind:checked={editor.showParentPost}
+          />
+        {/if}
+        {#if isX && hasLongText}
+          <Switch label="Full text of long posts" bind:checked={editor.showFullText} />
+        {/if}
         {#if hasBody}
           <Segmented
             label="Post body"
@@ -293,17 +310,34 @@
       </div>
     {/if}
 
-    {#if isX && (hasParent || hasLongText)}
+    {#if isX}
       <div class="py-2">
-        {@render heading("Post")}
-        {#if hasParent}
-          <Switch
-            label="Show the post it replies to"
-            bind:checked={editor.showParentPost}
+        {@render heading("Replies")}
+        <Switch label="Show replies" bind:checked={editor.showXReplies} />
+        {#if editor.showXReplies}
+          {#if isAdvanced}
+            <Select
+              class="w-30 pointer-coarse:w-36"
+              label="Sort"
+              options={xReplySorts}
+              bind:value={editor.xReplySort}
+            />
+          {/if}
+          <NumberField
+            label="Replies"
+            max={20}
+            min={1}
+            bind:value={editor.xReplyCount}
           />
-        {/if}
-        {#if hasLongText}
-          <Switch label="Full text of long posts" bind:checked={editor.showFullText} />
+          {#if replyStatus !== "ready"}
+            <p class="text-sm text-ink-2" aria-live="polite">
+              {replyStatus === "loading"
+                ? "Loading replies…"
+                : replyStatus === "error"
+                  ? "Could not load the replies. Try again later."
+                  : "This post has no replies yet."}
+            </p>
+          {/if}
         {/if}
       </div>
     {/if}

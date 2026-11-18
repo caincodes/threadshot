@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 
-import { fetchXPost, XApiError } from "../src/server/x.ts";
+import { fetchXPost, fetchXReplies, XApiError } from "../src/server/x.ts";
 
 const realFetch = globalThis.fetch;
 afterEach(() => {
@@ -178,4 +178,56 @@ test("adds a long post's whole text from FxTwitter, keeping the short one", asyn
   const fallback = await fetchXPost("30");
   assert.equal(fallback.html, "<p>Long 😀…</p>");
   assert.equal(fallback.fullHtml, undefined);
+});
+
+test("turns FxTwitter's replies into posts, without their leading mentions", async () => {
+  const text = "@op Agreed #yes";
+  globalThis.fetch = async (input) => {
+    assert.equal(String(input), "https://api.fxtwitter.com/2/conversation/40");
+    return Response.json({
+      replies: [
+        {
+          id: "41",
+          created_timestamp: 1690313015,
+          raw_text: {
+            text,
+            display_text_range: [4, Array.from(text).length],
+            facets: [
+              { type: "mention", indices: span(text, "@op"), original: "op" },
+              { type: "hashtag", indices: span(text, "#yes"), original: "yes" },
+            ],
+          },
+          author: {
+            name: "Ann",
+            screen_name: "ann",
+            avatar_url: "https://pbs.twimg.com/profile_images/1/a_200x200.jpg",
+            verification: { verified: true, type: "business" },
+          },
+          likes: 9,
+          replies: 1,
+          media: {
+            all: [
+              { type: "photo", url: "https://pbs.twimg.com/media/p.jpg?name=orig", width: 4, height: 3 },
+              { type: "gif", thumbnail_url: "https://pbs.twimg.com/tweet_video_thumb/g.jpg", width: 2, height: 2 },
+            ],
+          },
+        },
+        { id: "42" },
+      ],
+    });
+  };
+  const replies = await fetchXReplies("40");
+  assert.equal(replies.length, 1);
+  const [reply] = replies;
+  assert.equal(reply.html, "<p>Agreed <a>#yes</a></p>");
+  assert.equal(reply.author.avatar, "https://pbs.twimg.com/profile_images/1/a_400x400.jpg");
+  assert.equal(reply.author.verified, "business");
+  assert.equal(reply.createdUtc, 1690313015);
+  assert.deepEqual(
+    reply.media.map(({ type, url }) => [type, url]),
+    [
+      ["photo", "https://pbs.twimg.com/media/p.jpg"],
+      ["gif", "https://pbs.twimg.com/tweet_video_thumb/g.jpg"],
+    ]
+  );
 });

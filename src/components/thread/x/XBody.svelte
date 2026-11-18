@@ -7,16 +7,26 @@
   import XMediaGrid from "./XMediaGrid.svelte";
   import XQuoted from "./XQuoted.svelte";
 
-  // A post's text and attachments, shared by the main post and the one it
-  // replies to.
+  // A post's text and attachments, shared by the main post, the one it replies
+  // to and its replies. Only the main post's text can be cut to a snippet or
+  // left out, as a Reddit post's can.
   let {
     post,
     isLarge = false,
     showReplyingTo = false,
   }: { post: XPost; isLarge?: boolean; showReplyingTo?: boolean } = $props();
 
+  const html = $derived.by(() => {
+    if (isLarge && editor.postBody === "off") {
+      return "";
+    }
+    if (isLarge && editor.postBody === "snippet" && editor.bodySnippet) {
+      return editor.bodySnippet;
+    }
+    return (editor.showFullText && post.fullHtml) || post.html;
+  });
   const body = $derived(
-    applyCensoring((editor.showFullText && post.fullHtml) || post.html, {
+    applyCensoring(html, {
       usernames: false,
       subreddits: false,
       handles: editor.isCensorUsernames,
@@ -38,6 +48,7 @@
       "md",
       isLarge ? "mt-3 text-[17px] leading-6" : "mt-0.5 text-[15px] leading-5",
     ]}
+    data-post-body={isLarge ? "" : undefined}
   >
     <!-- eslint-disable-next-line svelte/no-at-html-tags -- cleaned by fetchXPost -->
     {@html body}
